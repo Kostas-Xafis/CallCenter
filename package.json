@@ -1,0 +1,17 @@
+{
+  "name": "callcenter",
+  "private": true,
+  "module": "server.ts",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/papaparse": "^5.5.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "fuse.js": "^7.1.0",
+    "papaparse": "^5.5.3"
+  }
+}
