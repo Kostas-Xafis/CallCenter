@@ -1,6 +1,6 @@
 import { createDbConnection } from "./db.js";
 import type { Client, ResultSet } from "@libsql/client";
-import Fuse from "fuse.js";
+import FuzzySearch from "./fuzzy_search.js";
 
 export type PhoneRecord = {
     id: number;
@@ -81,25 +81,18 @@ export class PhoneRepository {
         // Get all records
         const allRecords = await this.getAll();
 
-        // Configure Fuse.js for fuzzy searching on service and code fields
-        const fuse = new Fuse(allRecords, {
-            keys: [
-                { name: 'service', weight: 0.6 },  // Service is more important
-                { name: 'code', weight: 0.4 }      // Code is less important
-            ],
-            threshold: options?.threshold ?? 0.4,  // How fuzzy the search should be
-            includeScore: true,
-            minMatchCharLength: query.length,
-            ignoreLocation: true  // Search anywhere in the string
+        // Perform fuzzy search in-memory
+        const fuzzySearch = new FuzzySearch(
+            allRecords.map(record => `${record.service} ${record.code}`), // Searchable strings
+        );
+        const results = fuzzySearch.search(query, 0.4); // Use default threshold for relevance
+
+        // Map back to phone records
+        return results.map(result => {
+            const [service, code] = result.split(' ');
+            return allRecords.find(record => record.service === service && record.code === code)!;
         });
 
-        // Perform the search
-        const results = fuse.search(query);
-
-        // Extract records and apply limit if specified
-        const records = results.map(result => result.item);
-
-        return options?.limit ? records.slice(0, options.limit) : records;
     }
 
     /**

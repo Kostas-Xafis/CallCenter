@@ -2,6 +2,10 @@
   "name": "callcenter",
   "private": true,
   "module": "server.ts",
+  "scripts": {
+    "dev": "bun run server.ts",
+    "db:reset": "bun run reset_db.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/papaparse": "^5.5.2"
