@@ -80,18 +80,37 @@ export class PhoneRepository {
     }): Promise<PhoneRecord[]> {
         // Get all records
         const allRecords = await this.getAll();
+        const threshold = options?.threshold ?? 0.4;
+        const searchableItems = allRecords.map(record => `${record.service} ${record.code}`);
+
+        const recordsBySearchItem = new Map<string, PhoneRecord[]>();
+        allRecords.forEach(record => {
+            const key = `${record.service} ${record.code}`;
+            const bucket = recordsBySearchItem.get(key) ?? [];
+            bucket.push(record);
+            recordsBySearchItem.set(key, bucket);
+        });
 
         // Perform fuzzy search in-memory
-        const fuzzySearch = new FuzzySearch(
-            allRecords.map(record => `${record.service} ${record.code}`), // Searchable strings
-        );
-        const results = fuzzySearch.search(query, 0.4); // Use default threshold for relevance
+        const fuzzySearch = new FuzzySearch(searchableItems);
+        const results = fuzzySearch.search(query, threshold);
 
         // Map back to phone records
-        return results.map(result => {
-            const [service, code] = result.split(' ');
-            return allRecords.find(record => record.service === service && record.code === code)!;
-        });
+        return results
+            .flatMap(result => {
+                const bucket = recordsBySearchItem.get(result.item);
+                const matchedRecord = bucket?.shift();
+
+                if (!matchedRecord) {
+                    return [];
+                }
+
+                return [{
+                    ...matchedRecord,
+                    matchesIdx: result.matchesIdx
+                } as PhoneRecord];
+            })
+            .slice(0, options?.limit); // Apply limit if specified
 
     }
 

@@ -6,7 +6,6 @@ class FuzzySearch {
     }
 
     private customDistance(q: string, s: string) {
-        console.log(`Calculating custom distance between "${q}" and "${s}"...`);
         let distance = 0;
         let lastMatchIndex = -1;
         let matchedChars = 0;
@@ -34,7 +33,6 @@ class FuzzySearch {
             }
         }
         distance += s.length - matchedChars; // Penalty for unmatched characters in s
-        console.log(`Custom distance between "${q}" and "${s}": ${distance}\n\n`);
         return [distance, matchesIdx] as const;
     }
 
@@ -43,13 +41,13 @@ class FuzzySearch {
             const [distance, matchesIdx] = this.customDistance(query.toLowerCase(), item.toLowerCase());
             const maxLen = Math.max(query.length, item.length);
             const score = Math.exp(-distance / (maxLen * 2));
-            console.log(`Item: "${item}", Distance: ${distance}, Score: ${score.toFixed(4)}, Matches at indices: [${matchesIdx.join(', ')}]`);
             return { item, score, matchesIdx };
         }).filter(result => result.score >= threshold);
-
         // Sort results by score in descending order
         results.sort((a, b) => b.score - a.score);
-        return results.map(result => result.item);
+        return results.map(result => {
+            return { item: result.item, matchesIdx: result.matchesIdx };
+        }) as { item: string, matchesIdx: number[]; }[];
     }
 }
 

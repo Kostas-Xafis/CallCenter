@@ -351,10 +351,10 @@
                     <option value="">All Types</option>
                 </select>
                 <select id="thresholdSelect" onchange="performSearch()">
-                    <option value="0.2">Very Strict</option>
-                    <option value="0.4" selected>Normal</option>
-                    <option value="0.6">Fuzzy</option>
-                    <option value="0.8">Very Fuzzy</option>
+                    <option value="0.6">Very Strict</option>
+                    <option value="0.4">Normal</option>
+                    <option value="0.3" selected>Fuzzy</option>
+                    <option value="0.2">Very Fuzzy</option>
                 </select>
             </div>
         </div>
@@ -377,6 +377,49 @@
         const API_BASE = '';
         const THEME_STORAGE_KEY = 'callcenter-theme';
         let allRecords = [];
+
+        const highlightString = (text) => `<span class="highlight">${text}</span>`;
+        const highlightStringAt = (text, indices) => {
+            if (!indices || indices.length === 0) {
+                return text;
+            }
+
+            const normalizedIndices = [...new Set(indices)]
+                .filter(index => Number.isInteger(index) && index >= 0 && index < text.length)
+                .sort((a, b) => a - b);
+
+            if (normalizedIndices.length === 0) {
+                return text;
+            }
+
+            let result = '';
+            let lastIndex = 0;
+
+            let rangeStart = normalizedIndices[0];
+            let rangeEnd = normalizedIndices[0];
+
+            for (let i = 1; i < normalizedIndices.length; i++) {
+                const index = normalizedIndices[i];
+
+                if (index === rangeEnd + 1) {
+                    rangeEnd = index;
+                    continue;
+                }
+
+                result += text.slice(lastIndex, rangeStart);
+                result += highlightString(text.slice(rangeStart, rangeEnd + 1));
+                lastIndex = rangeEnd + 1;
+
+                rangeStart = index;
+                rangeEnd = index;
+            }
+
+            result += text.slice(lastIndex, rangeStart);
+            result += highlightString(text.slice(rangeStart, rangeEnd + 1));
+            lastIndex = rangeEnd + 1;
+            result += text.slice(lastIndex);
+            return result;
+        };
 
         function applyTheme(theme) {
             const isDark = theme === 'dark';
@@ -495,53 +538,12 @@
             }
         }
 
-        // Highlight matching text (fuzzy)
-        function highlightText(text, query) {
-            if (!query || !text) return text;
-            
-
-
-            const lowerText = text.toLowerCase();
-            const lowerQuery = query.toLowerCase();
-            
-            for (let i = 0; i < lowerQuery.length; i++) {
-                for (let j = 0; j < lowerText.length; j++) {
-                    if (lowerQuery[i] === lowerText[j]) {
-                        text 
-                    }
-                }
-            }
-
-            // Try exact match first
-            if (lowerText.includes(lowerQuery)) {
-                const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`(${escapedQuery})`, 'gi');
-                return text.replace(regex, '<span class="highlight">$1</span>');
-            }
-            
-            // Fuzzy matching: highlight characters that match in sequence
-            let result = '';
-            let queryIndex = 0;
-            
-            for (let i = 0; i < text.length; i++) {
-                if (queryIndex < lowerQuery.length && 
-                    lowerText[i] === lowerQuery[queryIndex]) {
-                    result += `<span class="highlight">${text[i]}</span>`;
-                    queryIndex++;
-                } else {
-                    result += text[i];
-                }
-            }
-            
-            return result;
-        }
-
         // Display results
         function displayResults(records) {
+            console.log(records);
             const container = document.getElementById('resultsContainer');
             const countLabel = document.getElementById('resultsCount');
             const query = document.getElementById('searchInput').value.trim();
-
             countLabel.textContent = `${records.length} record${records.length !== 1 ? 's' : ''}`;
 
             if (records.length === 0) {
@@ -560,14 +562,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${records.map(record => `
-                            <tr>
-                                <td>${record.id}</td>
-                                <td><span class="badge badge-type">${highlightText(record.type, query)}</span></td>
-                                <td>${highlightText(record.service, query)}</td>
-                                <td><strong>${highlightText(record.code, query)}</strong></td>
-                            </tr>
-                        `).join('')}
+                        ${records.map(record => {
+                            const { id, type, service, code, matchesIdx } = record;
+                            const matchesIdxService = matchesIdx && matchesIdx.filter(idx => idx < service.length);
+                            const matchesIdxCode = matchesIdx && matchesIdx.filter(idx => idx >= service.length).map(idx => idx - service.length - 1);
+                            return `
+                                <tr>
+                                    <td>${id}</td>
+                                    <td><span class="badge badge-type">${type}</span></td>
+                                    <td>${matchesIdxService && highlightStringAt(service, matchesIdxService) || service}</td>
+                                    <td><strong>${matchesIdxCode && highlightStringAt(code, matchesIdxCode) || code}</strong></td>
+                                </tr>
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             `;
