@@ -239,21 +239,6 @@ export class PhoneRepository {
         const all = await repo.getAll();
         console.log(`\nFound ${all.length} total records`);
 
-        // Fuzzy search example
-        console.log('\n🔍 Fuzzy Search Example:');
-
-        const fuzzyResults1 = await repo.fuzzySearch(input);
-        if (fuzzyResults1.length > 0) {
-            repo.printRecords(fuzzyResults1);
-        }
-
-        // // Get by type example
-        // const types = await repo.getUniqueTypes();
-        // if (types.length > 0) {
-        //     const byType = await repo.getByType(types[0] || "");
-        //     console.log(`\nRecords of type "${types[0]}":`);
-        //     repo.printRecords(byType);
-        // }
     } catch (error) {
         console.error('Error:', error);
     } finally {

@@ -75,8 +75,6 @@ const server = Bun.serve({
                     threshold: threshold ? parseFloat(threshold) : undefined,
                     limit: limit ? parseInt(limit) : undefined
                 });
-                console.log(`Fuzzy search for "${query}" returned ${results.length} results`);
-                console.log('Results:', results);
                 return new Response(JSON.stringify(results), {
                     headers: { ...headers, 'Content-Type': 'application/json' }
                 });

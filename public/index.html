@@ -14,9 +14,10 @@
         :root {
             --bg-gradient-start: #41509b;
             --bg-gradient-end: #513275;
-            --surface: #f4f7fd;
-            --surface-muted: #e1e7f2;
-            --surface-hover: #d7e0ef;
+            --surface: #d8dadc;
+            --surface-muted: #cacdd0;
+            --surface-muted-th: #c6cad3;
+            --surface-hover: #bdc5d2;
             --text-primary: #222942;
             --text-secondary: #444f70;
             --text-muted: #596480;
@@ -223,6 +224,12 @@
             background: var(--surface-muted);
         }
 
+        tbody tr:nth-child(even) {
+            border-top: 1px solid var(--row-border);
+            border-top: 1px solid var(--row-border);
+            background: var(--surface-muted);
+        }
+
         th {
             padding: 15px;
             text-align: left;
@@ -244,6 +251,7 @@
             display: inline-block;
             padding: 5px 12px;
             border-radius: 20px;
+            border: 1px solid var(--border-color);
             font-size: 0.85em;
             font-weight: 600;
         }
@@ -540,7 +548,6 @@
 
         // Display results
         function displayResults(records) {
-            console.log(records);
             const container = document.getElementById('resultsContainer');
             const countLabel = document.getElementById('resultsCount');
             const query = document.getElementById('searchInput').value.trim();
