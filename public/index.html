@@ -11,11 +11,59 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-gradient-start: #41509b;
+            --bg-gradient-end: #513275;
+            --surface: #f4f7fd;
+            --surface-muted: #e1e7f2;
+            --surface-hover: #d7e0ef;
+            --text-primary: #222942;
+            --text-secondary: #444f70;
+            --text-muted: #596480;
+            --accent: #3e54ad;
+            --accent-hover: #364ea6;
+            --border-color: #bcc8dc;
+            --row-border: #ccd7e7;
+            --badge-bg: #cfe2ff;
+            --badge-text: #0f4f98;
+            --loading-text: #535d7a;
+            --error-bg: #ffd4dc;
+            --error-text: #8f1d2b;
+            --highlight-bg: #ffd96a;
+            --highlight-text: #534200;
+            --shadow-color: rgba(15, 26, 52, 0.2);
+        }
+
+        body.dark-mode {
+            --bg-gradient-start: #151d31;
+            --bg-gradient-end: #232038;
+            --surface: #1f2638;
+            --surface-muted: #2a3146;
+            --surface-hover: #323a52;
+            --text-primary: #edf1ff;
+            --text-secondary: #c8d0ed;
+            --text-muted: #a7b0cf;
+            --accent: #8ea6ff;
+            --accent-hover: #7b95f5;
+            --border-color: #3a435f;
+            --row-border: #313953;
+            --badge-bg: #2a3c67;
+            --badge-text: #bdd5ff;
+            --loading-text: #c2cae5;
+            --error-bg: #4b2230;
+            --error-text: #ffd0db;
+            --highlight-bg: #5a4a17;
+            --highlight-text: #ffecac;
+            --shadow-color: rgba(0, 0, 0, 0.35);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             padding: 20px;
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -24,22 +72,32 @@
         }
 
         header {
-            background: white;
+            background: var(--surface);
             border-radius: 12px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
         }
 
         h1 {
-            color: #667eea;
+            color: var(--accent);
             font-size: 2.5em;
             margin-bottom: 10px;
         }
 
         .subtitle {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 1.1em;
+        }
+
+        .theme-toggle {
+            padding: 10px 16px;
+            font-size: 14px;
+            white-space: nowrap;
         }
 
         .stats {
@@ -50,31 +108,31 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--surface);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px var(--shadow-color);
             text-align: center;
         }
 
         .stat-value {
             font-size: 2.5em;
             font-weight: bold;
-            color: #667eea;
+            color: var(--accent);
         }
 
         .stat-label {
-            color: #666;
+            color: var(--text-muted);
             margin-top: 5px;
             font-size: 0.9em;
         }
 
         .search-section {
-            background: white;
+            background: var(--surface);
             border-radius: 12px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px var(--shadow-color);
         }
 
         .search-box {
@@ -87,20 +145,22 @@
             flex: 1;
             padding: 15px;
             font-size: 16px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             transition: border-color 0.3s;
+            background: var(--surface);
+            color: var(--text-primary);
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent);
         }
 
         button {
             padding: 15px 30px;
             font-size: 16px;
-            background: #667eea;
+            background: var(--accent);
             color: white;
             border: none;
             border-radius: 8px;
@@ -110,7 +170,7 @@
         }
 
         button:hover {
-            background: #5568d3;
+            background: var(--accent-hover);
         }
 
         button:active {
@@ -126,17 +186,18 @@
         select {
             padding: 10px 15px;
             font-size: 14px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
-            background: white;
+            background: var(--surface);
+            color: var(--text-primary);
             cursor: pointer;
         }
 
         .results {
-            background: white;
+            background: var(--surface);
             border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px var(--shadow-color);
         }
 
         .results-header {
@@ -145,12 +206,12 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .results-count {
             font-size: 1.2em;
-            color: #666;
+            color: var(--text-secondary);
         }
 
         table {
@@ -159,24 +220,24 @@
         }
 
         thead {
-            background: #f5f5f5;
+            background: var(--surface-muted);
         }
 
         th {
             padding: 15px;
             text-align: left;
             font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #e0e0e0;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
         }
 
         td {
             padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--row-border);
         }
 
         tr:hover {
-            background: #f9f9f9;
+            background: var(--surface-hover);
         }
 
         .badge {
@@ -188,20 +249,20 @@
         }
 
         .badge-type {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: var(--badge-bg);
+            color: var(--badge-text);
         }
 
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: var(--loading-text);
             font-size: 1.2em;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 4px solid var(--surface-muted);
+            border-top: 4px solid var(--accent);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -217,31 +278,46 @@
         .no-results {
             text-align: center;
             padding: 40px;
-            color: #999;
+            color: var(--text-muted);
             font-size: 1.1em;
         }
 
         .error {
-            background: #ffebee;
-            color: #c62828;
+            background: var(--error-bg);
+            color: var(--error-text);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
         }
 
         .highlight {
-            background-color: #fff59d;
+            background-color: var(--highlight-bg);
+            color: var(--highlight-text);
             padding: 2px 4px;
             border-radius: 3px;
             font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .theme-toggle {
+                align-self: flex-start;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📱 Phone Records Search</h1>
-            <p class="subtitle">Fuzzy search across phone services and codes</p>
+            <div>
+                <h1>📱 Phone Records Search</h1>
+                <p class="subtitle">Fuzzy search across phone services and codes</p>
+            </div>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙 Dark Mode</button>
         </header>
 
         <div class="stats" id="stats">
@@ -268,15 +344,11 @@
                     autocomplete="off"
                 >
                 <button onclick="performSearch()">🔍 Search</button>
-                <button onclick="loadAllRecords()">📋 Show All</button>
             </div>
 
             <div class="filters">
                 <select id="typeFilter" onchange="filterByType()">
                     <option value="">All Types</option>
-                </select>
-                <select id="serviceFilter" onchange="filterByService()">
-                    <option value="">All Services</option>
                 </select>
                 <select id="thresholdSelect" onchange="performSearch()">
                     <option value="0.2">Very Strict</option>
@@ -303,7 +375,34 @@
 
     <script>
         const API_BASE = '';
+        const THEME_STORAGE_KEY = 'callcenter-theme';
         let allRecords = [];
+
+        function applyTheme(theme) {
+            const isDark = theme === 'dark';
+            const themeToggle = document.getElementById('themeToggle');
+
+            document.body.classList.toggle('dark-mode', isDark);
+
+            if (themeToggle) {
+                themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+                themeToggle.setAttribute('aria-pressed', String(isDark));
+            }
+        }
+
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+            applyTheme(initialTheme);
+        }
+
+        function toggleTheme() {
+            const nextTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+            applyTheme(nextTheme);
+            localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+        }
 
         // Load initial data
         async function init() {
@@ -396,37 +495,45 @@
             }
         }
 
-        // Filter by service
-        async function filterByService() {
-            const service = document.getElementById('serviceFilter').value;
-            
-            if (!service) {
-                loadAllRecords();
-                return;
-            }
-
-            try {
-                showLoading();
-                const response = await fetch(`${API_BASE}/api/records/service?service=${encodeURIComponent(service)}`);
-                const results = await response.json();
-                displayResults(results);
-            } catch (error) {
-                showError('Failed to filter by service');
-                console.error('Error filtering:', error);
-            }
-        }
-
-        // Highlight matching text
+        // Highlight matching text (fuzzy)
         function highlightText(text, query) {
             if (!query || !text) return text;
             
-            // Escape special regex characters in query
-            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+
+            const lowerText = text.toLowerCase();
+            const lowerQuery = query.toLowerCase();
             
-            // Create a case-insensitive regex to find all matches
-            const regex = new RegExp(`(${escapedQuery})`, 'gi');
+            for (let i = 0; i < lowerQuery.length; i++) {
+                for (let j = 0; j < lowerText.length; j++) {
+                    if (lowerQuery[i] === lowerText[j]) {
+                        text 
+                    }
+                }
+            }
+
+            // Try exact match first
+            if (lowerText.includes(lowerQuery)) {
+                const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedQuery})`, 'gi');
+                return text.replace(regex, '<span class="highlight">$1</span>');
+            }
             
-            return text.replace(regex, '<span class="highlight">$1</span>');
+            // Fuzzy matching: highlight characters that match in sequence
+            let result = '';
+            let queryIndex = 0;
+            
+            for (let i = 0; i < text.length; i++) {
+                if (queryIndex < lowerQuery.length && 
+                    lowerText[i] === lowerQuery[queryIndex]) {
+                    result += `<span class="highlight">${text[i]}</span>`;
+                    queryIndex++;
+                } else {
+                    result += text[i];
+                }
+            }
+            
+            return result;
         }
 
         // Display results
@@ -488,6 +595,7 @@
         });
 
         // Initialize on page load
+        initializeTheme();
         init();
     </script>
 </body>
