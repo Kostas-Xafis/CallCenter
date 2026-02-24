@@ -10,7 +10,7 @@ class FuzzySearch {
         let lastMatchIndex = -1;
         let matchedChars = 0;
         const matchesIdx: number[] = [];
-        label: queryLoop:
+        queryLoop:
         for (let i = 0; i < q.length; i++) {
             const qChar = q.charAt(i);
             let found = false;

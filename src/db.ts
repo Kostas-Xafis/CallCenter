@@ -1,11 +1,10 @@
 import { createClient } from "@libsql/client";
+import path from "path";
 
 type DBType = "sqlite-prod" | "sqlite-dev" | null;
 
 export function createDbConnection(type?: DBType) {
     const {
-        // Local snaphot env variables for development
-        DEV_DB_ABSOLUTE_LOCATION,
         // Turso env variables for production
         TURSO_DB_URL, TURSO_DB_TOKEN,
         // Connector type
@@ -18,9 +17,10 @@ export function createDbConnection(type?: DBType) {
             intMode: "number",
         });
     } else {
+        const db_url = path.join(process.cwd(), 'sqlite/callcenter.db');
         console.log("Connecting to development database");
         return createClient({
-            url: `file://${DEV_DB_ABSOLUTE_LOCATION}`,
+            url: `file://${db_url}`,
             intMode: "number",
         });
     }

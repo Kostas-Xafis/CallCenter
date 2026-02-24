@@ -1,7 +1,8 @@
-import { PhoneRepository } from './phone_repository.js';
+import { routes } from '@src/routes/index.js';
+import { handleCors, headers } from '@src/routes/utils.js';
 
-const repo = new PhoneRepository();
 const PORT = 3000;
+const Routes = routes;
 
 // Simple HTTP server using Bun
 const server = Bun.serve({
@@ -10,16 +11,10 @@ const server = Bun.serve({
         const url = new URL(req.url);
         const path = url.pathname;
 
-        // CORS headers
-        const headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        };
-
-        // Handle OPTIONS preflight
-        if (req.method === 'OPTIONS') {
-            return new Response(null, { headers });
+        // Handle CORS preflight requests
+        const preflightRes = handleCors(req);
+        if (preflightRes) {
+            return preflightRes;
         }
 
         try {
@@ -31,85 +26,11 @@ const server = Bun.serve({
                 });
             }
 
-            // API: Get all phone records
-            if (path === '/api/records') {
-                const records = await repo.getAll();
-                return new Response(JSON.stringify(records), {
-                    headers: { ...headers, 'Content-Type': 'application/json' }
-                });
-            }
-
-            // API: Get statistics
-            if (path === '/api/stats') {
-                const total = await repo.getCount();
-                const types = await repo.getUniqueTypes();
-                const services = await repo.getUniqueServices();
-                const statsByType = await repo.getStatsByType();
-
-                return new Response(JSON.stringify({
-                    total,
-                    uniqueTypes: types.length,
-                    uniqueServices: services.length,
-                    types,
-                    services,
-                    statsByType
-                }), {
-                    headers: { ...headers, 'Content-Type': 'application/json' }
-                });
-            }
-
-            // API: Fuzzy search
-            if (path === '/api/search') {
-                const query = url.searchParams.get('q');
-                const threshold = url.searchParams.get('threshold');
-                const limit = url.searchParams.get('limit');
-
-                if (!query) {
-                    return new Response(JSON.stringify({ error: 'Query parameter "q" is required' }), {
-                        status: 400,
-                        headers: { ...headers, 'Content-Type': 'application/json' }
-                    });
-                }
-
-                const results = await repo.fuzzySearch(query, {
-                    threshold: threshold ? parseFloat(threshold) : undefined,
-                    limit: limit ? parseInt(limit) : undefined
-                });
-                return new Response(JSON.stringify(results), {
-                    headers: { ...headers, 'Content-Type': 'application/json' }
-                });
-            }
-
-            // API: Get by type
-            if (path === '/api/records/type') {
-                const type = url.searchParams.get('type');
-                if (!type) {
-                    return new Response(JSON.stringify({ error: 'Type parameter is required' }), {
-                        status: 400,
-                        headers: { ...headers, 'Content-Type': 'application/json' }
-                    });
-                }
-
-                const records = await repo.getByType(type);
-                return new Response(JSON.stringify(records), {
-                    headers: { ...headers, 'Content-Type': 'application/json' }
-                });
-            }
-
-            // API: Get by service
-            if (path === '/api/records/service') {
-                const service = url.searchParams.get('service');
-                if (!service) {
-                    return new Response(JSON.stringify({ error: 'Service parameter is required' }), {
-                        status: 400,
-                        headers: { ...headers, 'Content-Type': 'application/json' }
-                    });
-                }
-
-                const records = await repo.getByService(service);
-                return new Response(JSON.stringify(records), {
-                    headers: { ...headers, 'Content-Type': 'application/json' }
-                });
+            // Match API routes
+            const routeKey = `${req.method}:${path}`;
+            const handler = Routes.get(routeKey);
+            if (handler) {
+                return await handler(req);
             }
 
             // 404 Not Found
