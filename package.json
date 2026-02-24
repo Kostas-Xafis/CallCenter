@@ -3,7 +3,7 @@
   "private": true,
   "module": "server.ts",
   "scripts": {
-    "dev": "bun run server.ts",
+    "dev": "bun --watch server.ts",
     "db:reset": "bun run reset_db.ts"
   },
   "devDependencies": {

@@ -33,6 +33,7 @@
             --highlight-bg: #ffd96a;
             --highlight-text: #534200;
             --shadow-color: rgba(15, 26, 52, 0.2);
+            --row-hover-shadow: rgba(15, 26, 52, 0.18);
         }
 
         body.dark-mode {
@@ -56,6 +57,7 @@
             --highlight-bg: #5a4a17;
             --highlight-text: #ffecac;
             --shadow-color: rgba(0, 0, 0, 0.35);
+            --row-hover-shadow: rgba(0, 0, 0, 0.3);
         }
 
         body {
@@ -243,8 +245,13 @@
             border-bottom: 1px solid var(--row-border);
         }
 
+        tr {
+            transition: box-shadow 0.3s;
+        }
+
         tr:hover {
-            background: var(--surface-hover);
+            position: relative;
+            box-shadow: 0 3px 4px var(--row-hover-shadow), 0 -3px 4px var(--row-hover-shadow);
         }
 
         .badge {
