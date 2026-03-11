@@ -38,6 +38,10 @@ export const parseJsonBody = async (request: Request) => {
 
 export const requestUrlToString = (request: Request | ApiRoute) => {
     try {
+        if (request.url.startsWith('/')) {
+            return `${request.method}:${request.url}`;
+        }
+
         const url = new URL(request.url);
         return `${request.method}:${url.pathname}`;
     } catch (error) {

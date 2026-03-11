@@ -223,41 +223,25 @@ export class PhoneRepository {
     }
 }
 
-// Example usage
-// if (import.meta.url === `file://${process.argv[1]}`) {
-(async () => {
-    const repo = new PhoneRepository();
+if (import.meta.main) {
+    (async () => {
+        const repo = new PhoneRepository();
+        const input = process.argv[2]?.normalize("NFD").replace(/\p{Diacritic}/gu, "") || "";
 
-    // Strip any annotations from command line input
-    const input = process.argv[2]?.normalize("NFD").replace(/\p{Diacritic}/gu, "") || "";
+        try {
+            await repo.printStats();
+            const all = await repo.getAll();
+            console.log(`\nFound ${all.length} total records`);
 
-    try {
-        // Show statistics
-        await repo.printStats();
-
-        // Get all records
-        const all = await repo.getAll();
-        console.log(`\nFound ${all.length} total records`);
-
-        // Fuzzy search example
-        console.log('\n🔍 Fuzzy Search Example:');
-
-        const fuzzyResults1 = await repo.fuzzySearch(input);
-        if (fuzzyResults1.length > 0) {
-            repo.printRecords(fuzzyResults1);
+            console.log('\n🔍 Fuzzy Search Example:');
+            const fuzzyResults = await repo.fuzzySearch(input);
+            if (fuzzyResults.length > 0) {
+                repo.printRecords(fuzzyResults);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            repo.close();
         }
-
-        // // Get by type example
-        // const types = await repo.getUniqueTypes();
-        // if (types.length > 0) {
-        //     const byType = await repo.getByType(types[0] || "");
-        //     console.log(`\nRecords of type "${types[0]}":`);
-        //     repo.printRecords(byType);
-        // }
-    } catch (error) {
-        console.error('Error:', error);
-    } finally {
-        repo.close();
-    }
-})();
-// }
+    })();
+}

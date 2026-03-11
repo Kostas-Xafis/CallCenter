@@ -5,7 +5,7 @@ const PORT = 3000;
 const Routes = routes;
 
 // Simple HTTP server using Bun
-const server = Bun.serve({
+Bun.serve({
     port: PORT,
     async fetch(req) {
         const url = new URL(req.url);

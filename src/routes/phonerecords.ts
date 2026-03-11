@@ -63,7 +63,7 @@ const fuzzySearchRoute: ApiRoute = {
 };
 
 const byTypeRoute: ApiRoute = {
-    url: '/type',
+    url: '/records/type',
     method: 'GET',
     handler: (request: Request) => {
         return trycatch(async () => {
@@ -81,7 +81,7 @@ const byTypeRoute: ApiRoute = {
 };
 
 const byServiceRoute: ApiRoute = {
-    url: '/service',
+    url: '/records/service',
     method: 'GET',
     handler: (request: Request) => {
         return trycatch(async () => {
@@ -99,6 +99,6 @@ const byServiceRoute: ApiRoute = {
 };
 
 export const PhoneRecordRoutes: ApiRouteParent = {
-    url: '/records',
+    url: '',
     routes: [phonerecordsRoute, statsRoute, fuzzySearchRoute, byTypeRoute, byServiceRoute]
 };

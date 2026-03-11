@@ -511,6 +511,7 @@
                 console.error('Error loading records:', error);
             }
         }
+        
 
         // Perform fuzzy search
         async function performSearch() {
@@ -557,7 +558,6 @@
         function displayResults(records) {
             const container = document.getElementById('resultsContainer');
             const countLabel = document.getElementById('resultsCount');
-            const query = document.getElementById('searchInput').value.trim();
             countLabel.textContent = `${records.length} record${records.length !== 1 ? 's' : ''}`;
 
             if (records.length === 0) {
@@ -611,8 +611,16 @@
         // Enter key to search
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                clearTimeout(searchDebounceTimer);
                 performSearch();
             }
+        });
+
+        // Debounced search on keystroke
+        let searchDebounceTimer;
+        document.getElementById('searchInput').addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(performSearch, 500);
         });
 
         // Initialize on page load
