@@ -4,7 +4,7 @@
   "module": "server.ts",
   "scripts": {
     "dev": "bun --watch server.ts",
-    "db:reset": "bun run reset_db.ts"
+    "db:reset": "bun run src/reset_db.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

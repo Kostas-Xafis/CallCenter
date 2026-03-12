@@ -1,15 +1,40 @@
-# callcenter
+# Call Center
 
-To install dependencies:
+A phone records management app with fuzzy search. Built with Bun, TypeScript, and SQLite.
+
+## Stack
+
+- **Runtime:** [Bun](https://bun.com)
+- **Database:** SQLite via `@libsql/client`
+- **Search:** Fuzzy search via `fuse.js`
+- **CSV parsing:** `papaparse`
+
+## Setup
 
 ```bash
 bun install
 ```
 
-To run:
+Seed the database from `phones.csv`:
 
 ```bash
-bun run 
+bun run db:reset
 ```
 
-This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+## Running
+
+```bash
+bun run dev     # Development (watch mode)
+bun server.ts   # Production
+```
+
+Server starts on `http://localhost:3000`.
+
+## API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/records` | All phone records |
+| GET | `/api/stats` | Counts, unique types & services |
+| GET | `/api/search?q=<query>` | Fuzzy search records |
+
