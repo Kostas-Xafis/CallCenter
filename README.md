@@ -7,7 +7,6 @@ A phone records management app with fuzzy search. Built with Bun, TypeScript, an
 - **Runtime:** [Bun](https://bun.com)
 - **Database:** SQLite via `@libsql/client`
 - **Search:** Fuzzy search via `fuse.js`
-- **CSV parsing:** `papaparse`
 
 ## Setup
 
