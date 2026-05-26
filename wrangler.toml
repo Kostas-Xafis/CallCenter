@@ -1,0 +1,15 @@
+name = "callcenter"
+main = "worker.ts"
+compatibility_date = "2025-05-26"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "callcenter"
+database_id = "PLACEHOLDER"  # Replace after running: bun run d1:create
+
+[dev]
+port = 3000
