@@ -1,6 +1,6 @@
-import { createDbConnection } from "./db.js";
+import { createDbConnection } from "./src/db";
 import type { Client, ResultSet } from "@libsql/client";
-import FuzzySearch from "./fuzzy_search.js";
+import FuzzySearch from "./src/fuzzy_search";
 
 export type PhoneRecord = {
     id: number;
@@ -71,7 +71,7 @@ export class PhoneRepository {
     }
 
     /**
-     * Fuzzy search phone records by service and code using Fuse.js
+     * Fuzzy search phone records by service and code using custom fuzzy search
      * Returns ranked results based on relevance
      */
     async fuzzySearch(query: string, options?: {
