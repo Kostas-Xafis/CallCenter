@@ -245,6 +245,34 @@
             color: var(--text-secondary);
         }
 
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding-top: 14px;
+            border-top: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .pagination button {
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.35;
+            cursor: default;
+            transform: none;
+        }
+
+        .page-info {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
         .results-scroll {
             flex: 1;
             overflow-y: auto;
@@ -481,6 +509,13 @@
                     Loading phone records…
                 </div>
             </div>
+            <div class="pagination" id="pagination" style="display:none">
+                <button id="btnFirst"  onclick="goToPage(1)"            >«</button>
+                <button id="btnPrev"   onclick="goToPage(currentPage-1)">‹</button>
+                <span class="page-info" id="pageInfo"></span>
+                <button id="btnNext"   onclick="goToPage(currentPage+1)">›</button>
+                <button id="btnLast"   onclick="goToPage(totalPages)"   >»</button>
+            </div>
         </main>
 
     </div>
@@ -488,7 +523,11 @@
     <script>
         const API_BASE = '';
         const THEME_STORAGE_KEY = 'callcenter-theme';
+        const PAGE_SIZE = 100;
         let allRecords = [];
+        let currentRecords = [];
+        let currentPage = 1;
+        let totalPages = 1;
 
         // Standard Greek keyboard layout mapping (Latin key → Greek character)
         const LATIN_TO_GREEK = {
@@ -637,22 +676,40 @@
         }
 
         function displayResults(records) {
+            currentRecords = records;
+            currentPage = 1;
+            totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
+            renderPage();
+        }
+
+        function goToPage(page) {
+            currentPage = Math.min(Math.max(1, page), totalPages);
+            renderPage();
+            document.getElementById('resultsContainer').scrollTop = 0;
+        }
+
+        function renderPage() {
             const container = document.getElementById('resultsContainer');
             const countLabel = document.getElementById('resultsCount');
-            countLabel.textContent = `${records.length} record${records.length !== 1 ? 's' : ''}`;
+            const pagination = document.getElementById('pagination');
 
-            if (records.length === 0) {
+            countLabel.textContent = `${currentRecords.length} record${currentRecords.length !== 1 ? 's' : ''}`;
+
+            if (currentRecords.length === 0) {
                 container.innerHTML = '<div class="no-results">No records found</div>';
+                pagination.style.display = 'none';
                 return;
             }
 
-            const rows = records.map(record => {
-                const { id, type, service, code, matchesIdx } = record;
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageRecords = currentRecords.slice(start, start + PAGE_SIZE);
+
+            const rows = pageRecords.map(record => {
+                const { type, service, code, matchesIdx } = record;
                 const matchesIdxService = matchesIdx && matchesIdx.filter(idx => idx < service.length);
                 const matchesIdxCode = matchesIdx && matchesIdx.filter(idx => idx >= service.length).map(idx => idx - service.length - 1);
                 return `
                     <tr>
-                        <td>${id}</td>
                         <td><span class="badge badge-type">${type}</span></td>
                         <td>${matchesIdxService && highlightStringAt(service, matchesIdxService) || service}</td>
                         <td><strong>${matchesIdxCode && highlightStringAt(code, matchesIdxCode) || code}</strong></td>
@@ -664,7 +721,6 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Type</th>
                             <th>Service</th>
                             <th>Code</th>
@@ -673,6 +729,14 @@
                     <tbody>${rows}</tbody>
                 </table>
             `;
+
+            // Update pagination controls
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('btnFirst').disabled = currentPage === 1;
+            document.getElementById('btnPrev').disabled  = currentPage === 1;
+            document.getElementById('btnNext').disabled  = currentPage === totalPages;
+            document.getElementById('btnLast').disabled  = currentPage === totalPages;
+            pagination.style.display = totalPages > 1 ? 'flex' : 'none';
         }
 
         function showLoading() {
