@@ -9,7 +9,8 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "callcenter"
-database_id = "PLACEHOLDER"  # Replace after running: bun run d1:create
+database_id = "a0f23fef-208e-446f-82a3-f126958b5ce3"
+migrations_dir = "migrations"
 
 [dev]
 port = 3000

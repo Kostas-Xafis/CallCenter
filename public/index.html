@@ -63,96 +63,98 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
-            min-height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
             padding: 20px;
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
+            display: flex;
+            align-items: stretch;
         }
 
-        .container {
-            max-width: 1200px;
+        .layout {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        header {
+        /* ── Left panel ── */
+        .left-panel {
+            width: 320px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .brand {
             background: var(--surface);
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: 24px;
             box-shadow: 0 4px 8px var(--shadow-color);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 20px;
+            gap: 12px;
+        }
+
+        .brand-text {
+            min-width: 0;
         }
 
         h1 {
             color: var(--accent);
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 1.8em;
+            margin-bottom: 6px;
+            line-height: 1.2;
         }
 
         .subtitle {
             color: var(--text-secondary);
-            font-size: 1.1em;
+            font-size: 0.95em;
         }
 
         .theme-toggle {
-            padding: 10px 16px;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px var(--shadow-color);
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            margin-top: 5px;
-            font-size: 0.9em;
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            font-size: 18px;
+            background: var(--surface-muted);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
 
         .search-section {
             background: var(--surface);
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: 24px;
             box-shadow: 0 4px 8px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
         }
 
         .search-box {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
         }
 
         input[type="text"] {
             flex: 1;
-            padding: 15px;
-            font-size: 16px;
+            padding: 12px 14px;
+            font-size: 15px;
             border: 2px solid var(--border-color);
             border-radius: 8px;
             transition: border-color 0.3s;
             background: var(--surface);
             color: var(--text-primary);
+            min-width: 0;
         }
 
         input[type="text"]:focus {
@@ -161,8 +163,8 @@
         }
 
         button {
-            padding: 15px 30px;
-            font-size: 16px;
+            padding: 12px 18px;
+            font-size: 15px;
             background: var(--accent);
             color: white;
             border: none;
@@ -170,6 +172,7 @@
             cursor: pointer;
             transition: background 0.3s;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         button:hover {
@@ -182,12 +185,13 @@
 
         .filters {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 8px;
         }
 
         select {
-            padding: 10px 15px;
+            width: 100%;
+            padding: 10px 14px;
             font-size: 14px;
             border: 2px solid var(--border-color);
             border-radius: 8px;
@@ -196,25 +200,54 @@
             cursor: pointer;
         }
 
-        .results {
+        .search-hint {
+            font-size: 0.82em;
+            color: var(--text-muted);
+            min-height: 1.2em;
+            padding: 0 2px;
+        }
+
+        .search-hint span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ── Right panel ── */
+        .right-panel {
+            flex: 1;
             background: var(--surface);
             border-radius: 12px;
-            padding: 30px;
+            padding: 24px;
             box-shadow: 0 4px 8px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
         }
 
         .results-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
             border-bottom: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .results-header h2 {
+            font-size: 1.2em;
+            color: var(--text-primary);
         }
 
         .results-count {
-            font-size: 1.2em;
+            font-size: 1em;
             color: var(--text-secondary);
+        }
+
+        .results-scroll {
+            flex: 1;
+            overflow-y: auto;
         }
 
         table {
@@ -224,16 +257,17 @@
 
         thead {
             background: var(--surface-muted);
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         tbody tr:nth-child(even) {
-            border-top: 1px solid var(--row-border);
-            border-top: 1px solid var(--row-border);
             background: var(--surface-muted);
         }
 
         th {
-            padding: 15px;
+            padding: 12px 14px;
             text-align: left;
             font-weight: 600;
             color: var(--text-primary);
@@ -241,26 +275,28 @@
         }
 
         td {
-            padding: 15px;
+            padding: 12px 14px;
             border-bottom: 1px solid var(--row-border);
         }
 
         tr {
-            transition: box-shadow 0.3s;
+            transition: box-shadow 0.2s;
         }
 
-        tr:hover {
+        tbody tr:hover {
             position: relative;
             box-shadow: 0 3px 4px var(--row-hover-shadow), 0 -3px 4px var(--row-hover-shadow);
         }
 
         .badge {
             display: inline-block;
-            padding: 5px 12px;
+            padding: 6px 10px;
             border-radius: 20px;
             border: 1px solid var(--border-color);
-            font-size: 0.85em;
+            font-size: 0.82em;
             font-weight: 600;
+            width: min-content;
+            text-align: center;
         }
 
         .badge-type {
@@ -272,17 +308,17 @@
             text-align: center;
             padding: 40px;
             color: var(--loading-text);
-            font-size: 1.2em;
+            font-size: 1.1em;
         }
 
         .spinner {
             border: 4px solid var(--surface-muted);
             border-top: 4px solid var(--accent);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin: 16px auto;
         }
 
         @keyframes spin {
@@ -294,15 +330,14 @@
             text-align: center;
             padding: 40px;
             color: var(--text-muted);
-            font-size: 1.1em;
+            font-size: 1.05em;
         }
 
         .error {
             background: var(--error-bg);
             color: var(--error-text);
-            padding: 15px;
+            padding: 14px;
             border-radius: 8px;
-            margin-bottom: 20px;
         }
 
         .highlight {
@@ -313,79 +348,141 @@
             font-weight: 500;
         }
 
+        /* ── Scrollbar styling ── */
+        .results-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .results-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .results-scroll::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        /* ── Mobile: stack vertically ── */
         @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: stretch;
+            body {
+                padding: 10px;
             }
 
-            .theme-toggle {
-                align-self: flex-start;
+            .layout {
+                flex-direction: column;
+                gap: 10px;
+                height: 100%;
+            }
+
+            .left-panel {
+                width: 100%;
+                flex-shrink: 0;
+                gap: 10px;
+            }
+
+            .brand {
+                padding: 12px 14px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 3px;
+            }
+
+            .subtitle {
+                font-size: 0.82em;
+            }
+
+            .search-section {
+                padding: 12px 14px;
+                gap: 10px;
+            }
+
+            input[type="text"] {
+                padding: 9px 11px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 9px 14px;
+                font-size: 14px;
+            }
+
+            select {
+                padding: 8px 11px;
+                font-size: 13px;
+            }
+
+            .right-panel {
+                flex: 1;
+                min-height: 0;
+                padding: 14px;
+            }
+
+            th, td {
+                padding: 6px 8px;
+                font-size: 0.95em;
+            }
+
+            table {
+                width: fit-content
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div>
-                <h1>📱 Phone Records Search</h1>
-                <p class="subtitle">Fuzzy search across phone services and codes</p>
-            </div>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙 Dark Mode</button>
-        </header>
+    <div class="layout">
 
-        <div class="stats" id="stats">
-            <div class="stat-card">
-                <div class="stat-value" id="totalRecords">-</div>
-                <div class="stat-label">Total Records</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="uniqueTypes">-</div>
-                <div class="stat-label">Unique Types</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="uniqueServices">-</div>
-                <div class="stat-label">Unique Services</div>
-            </div>
-        </div>
-
-        <div class="search-section">
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search for services or codes (e.g., 'mobile', 'emergency', '911')..."
-                    autocomplete="off"
-                >
-                <button onclick="performSearch()">🔍 Search</button>
+        <!-- Left panel: brand + search -->
+        <aside class="left-panel">
+            <div class="brand">
+                <div class="brand-text">
+                    <h1>📱 Phone Records</h1>
+                    <p class="subtitle">Search across services and phone codes</p>
+                </div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙</button>
             </div>
 
-            <div class="filters">
-                <select id="typeFilter" onchange="filterByType()">
-                    <option value="">All Types</option>
-                </select>
-                <select id="thresholdSelect" onchange="performSearch()">
-                    <option value="0.6">Very Strict</option>
-                    <option value="0.4">Normal</option>
-                    <option value="0.3" selected>Fuzzy</option>
-                    <option value="0.2">Very Fuzzy</option>
-                </select>
-            </div>
-        </div>
+            <div class="search-section">
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search…"
+                        autocomplete="off"
+                    >
+                    <button onclick="performSearch()">🔍</button>
+                </div>
+                <p class="search-hint" id="searchHint"></p>
 
-        <div class="results">
+                <div class="filters">
+                    <select id="typeFilter" onchange="filterByType()">
+                        <option value="">All Types</option>
+                    </select>
+                    <select id="thresholdSelect" onchange="performSearch()">
+                        <option value="0.6">Very Strict</option>
+                        <option value="0.4">Normal</option>
+                        <option value="0.3" selected>Fuzzy</option>
+                        <option value="0.2">Very Fuzzy</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right panel: results -->
+        <main class="right-panel">
             <div class="results-header">
                 <h2>Results</h2>
                 <span class="results-count" id="resultsCount">0 records</span>
             </div>
-            <div id="resultsContainer">
+            <div class="results-scroll" id="resultsContainer">
                 <div class="loading">
                     <div class="spinner"></div>
-                    Loading phone records...
+                    Loading phone records…
                 </div>
             </div>
-        </div>
+        </main>
+
     </div>
 
     <script>
@@ -393,92 +490,95 @@
         const THEME_STORAGE_KEY = 'callcenter-theme';
         let allRecords = [];
 
+        // Standard Greek keyboard layout mapping (Latin key → Greek character)
+        const LATIN_TO_GREEK = {
+            'a':'α','b':'β','c':'ψ','d':'δ','e':'ε','f':'φ','g':'γ',
+            'h':'η','i':'ι','j':'ξ','k':'κ','l':'λ','m':'μ','n':'ν',
+            'o':'ο','p':'π','r':'ρ','s':'σ','t':'τ','u':'θ','v':'ω',
+            'w':'ς','x':'χ','y':'υ','z':'ζ',
+            'A':'Α','B':'Β','C':'Ψ','D':'Δ','E':'Ε','F':'Φ','G':'Γ',
+            'H':'Η','I':'Ι','J':'Ξ','K':'Κ','L':'Λ','M':'Μ','N':'Ν',
+            'O':'Ο','P':'Π','R':'Ρ','S':'Σ','T':'Τ','U':'Θ','V':'Ω',
+            'X':'Χ','Y':'Υ','Z':'Ζ'
+        };
+
+        // Returns the converted query and whether conversion actually happened
+        function toGreekQuery(text) {
+            const hasGreek = /[\u0370-\u03FF\u1F00-\u1FFF]/.test(text);
+            if (hasGreek) return { query: text, converted: false };
+            const converted = text.split('').map(ch => LATIN_TO_GREEK[ch] ?? ch).join('');
+            return { query: converted, converted: converted !== text };
+        }
+
+        function updateSearchHint(raw) {
+            const hint = document.getElementById('searchHint');
+            if (!raw) { hint.textContent = ''; return; }
+            const { query, converted } = toGreekQuery(raw);
+            hint.innerHTML = converted ? `Searching as: <span>${query}</span>` : '';
+        }
+
         const highlightString = (text) => `<span class="highlight">${text}</span>`;
         const highlightStringAt = (text, indices) => {
-            if (!indices || indices.length === 0) {
-                return text;
-            }
+            if (!indices || indices.length === 0) return text;
 
             const normalizedIndices = [...new Set(indices)]
-                .filter(index => Number.isInteger(index) && index >= 0 && index < text.length)
+                .filter(i => Number.isInteger(i) && i >= 0 && i < text.length)
                 .sort((a, b) => a - b);
 
-            if (normalizedIndices.length === 0) {
-                return text;
-            }
+            if (normalizedIndices.length === 0) return text;
 
             let result = '';
             let lastIndex = 0;
-
             let rangeStart = normalizedIndices[0];
             let rangeEnd = normalizedIndices[0];
 
             for (let i = 1; i < normalizedIndices.length; i++) {
                 const index = normalizedIndices[i];
-
-                if (index === rangeEnd + 1) {
-                    rangeEnd = index;
-                    continue;
-                }
-
+                if (index === rangeEnd + 1) { rangeEnd = index; continue; }
                 result += text.slice(lastIndex, rangeStart);
                 result += highlightString(text.slice(rangeStart, rangeEnd + 1));
                 lastIndex = rangeEnd + 1;
-
                 rangeStart = index;
                 rangeEnd = index;
             }
 
             result += text.slice(lastIndex, rangeStart);
             result += highlightString(text.slice(rangeStart, rangeEnd + 1));
-            lastIndex = rangeEnd + 1;
-            result += text.slice(lastIndex);
+            result += text.slice(rangeEnd + 1);
             return result;
         };
 
         function applyTheme(theme) {
             const isDark = theme === 'dark';
             const themeToggle = document.getElementById('themeToggle');
-
             document.body.classList.toggle('dark-mode', isDark);
-
             if (themeToggle) {
-                themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+                themeToggle.textContent = isDark ? '☀️' : '🌙';
                 themeToggle.setAttribute('aria-pressed', String(isDark));
             }
         }
 
         function initializeTheme() {
-            const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+            const saved = localStorage.getItem(THEME_STORAGE_KEY);
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-
-            applyTheme(initialTheme);
+            applyTheme(saved || (prefersDark ? 'dark' : 'light'));
         }
 
         function toggleTheme() {
-            const nextTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-            applyTheme(nextTheme);
-            localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+            const next = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+            applyTheme(next);
+            localStorage.setItem(THEME_STORAGE_KEY, next);
         }
 
-        // Load initial data
         async function init() {
-            await loadStats();
+            await loadTypes();
             await loadAllRecords();
         }
 
-        // Load statistics
-        async function loadStats() {
+        async function loadTypes() {
             try {
                 const response = await fetch(`${API_BASE}/api/stats`);
                 const stats = await response.json();
-
-                document.getElementById('totalRecords').textContent = stats.total;
-                document.getElementById('uniqueTypes').textContent = stats.uniqueTypes;
-                document.getElementById('uniqueServices').textContent = stats.uniqueServices;
-
-                // Populate filters
                 const typeFilter = document.getElementById('typeFilter');
                 stats.types.forEach(type => {
                     const option = document.createElement('option');
@@ -486,20 +586,11 @@
                     option.textContent = type;
                     typeFilter.appendChild(option);
                 });
-
-                const serviceFilter = document.getElementById('serviceFilter');
-                stats.services.forEach(service => {
-                    const option = document.createElement('option');
-                    option.value = service;
-                    option.textContent = service;
-                    serviceFilter.appendChild(option);
-                });
             } catch (error) {
-                console.error('Error loading stats:', error);
+                console.error('Error loading types:', error);
             }
         }
 
-        // Load all records
         async function loadAllRecords() {
             try {
                 showLoading();
@@ -511,16 +602,12 @@
                 console.error('Error loading records:', error);
             }
         }
-        
 
-        // Perform fuzzy search
         async function performSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            
-            if (!query) {
-                loadAllRecords();
-                return;
-            }
+            const raw = document.getElementById('searchInput').value.trim();
+            if (!raw) { updateSearchHint(''); loadAllRecords(); return; }
+
+            const { query } = toGreekQuery(raw);
 
             try {
                 showLoading();
@@ -534,14 +621,9 @@
             }
         }
 
-        // Filter by type
         async function filterByType() {
             const type = document.getElementById('typeFilter').value;
-            
-            if (!type) {
-                loadAllRecords();
-                return;
-            }
+            if (!type) { loadAllRecords(); return; }
 
             try {
                 showLoading();
@@ -554,7 +636,6 @@
             }
         }
 
-        // Display results
         function displayResults(records) {
             const container = document.getElementById('resultsContainer');
             const countLabel = document.getElementById('resultsCount');
@@ -565,7 +646,21 @@
                 return;
             }
 
-            const table = `
+            const rows = records.map(record => {
+                const { id, type, service, code, matchesIdx } = record;
+                const matchesIdxService = matchesIdx && matchesIdx.filter(idx => idx < service.length);
+                const matchesIdxCode = matchesIdx && matchesIdx.filter(idx => idx >= service.length).map(idx => idx - service.length - 1);
+                return `
+                    <tr>
+                        <td>${id}</td>
+                        <td><span class="badge badge-type">${type}</span></td>
+                        <td>${matchesIdxService && highlightStringAt(service, matchesIdxService) || service}</td>
+                        <td><strong>${matchesIdxCode && highlightStringAt(code, matchesIdxCode) || code}</strong></td>
+                    </tr>
+                `;
+            }).join('');
+
+            container.innerHTML = `
                 <table>
                     <thead>
                         <tr>
@@ -575,55 +670,32 @@
                             <th>Code</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${records.map(record => {
-                            const { id, type, service, code, matchesIdx } = record;
-                            const matchesIdxService = matchesIdx && matchesIdx.filter(idx => idx < service.length);
-                            const matchesIdxCode = matchesIdx && matchesIdx.filter(idx => idx >= service.length).map(idx => idx - service.length - 1);
-                            return `
-                                <tr>
-                                    <td>${id}</td>
-                                    <td><span class="badge badge-type">${type}</span></td>
-                                    <td>${matchesIdxService && highlightStringAt(service, matchesIdxService) || service}</td>
-                                    <td><strong>${matchesIdxCode && highlightStringAt(code, matchesIdxCode) || code}</strong></td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
+                    <tbody>${rows}</tbody>
                 </table>
             `;
-
-            container.innerHTML = table;
         }
 
-        // Show loading state
         function showLoading() {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+            document.getElementById('resultsContainer').innerHTML =
+                '<div class="loading"><div class="spinner"></div>Loading…</div>';
         }
 
-        // Show error
         function showError(message) {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `<div class="error">⚠️ ${message}</div>`;
+            document.getElementById('resultsContainer').innerHTML =
+                `<div class="error">⚠️ ${message}</div>`;
         }
 
-        // Enter key to search
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                clearTimeout(searchDebounceTimer);
-                performSearch();
-            }
+            if (e.key === 'Enter') { clearTimeout(searchDebounceTimer); performSearch(); }
         });
 
-        // Debounced search on keystroke
         let searchDebounceTimer;
-        document.getElementById('searchInput').addEventListener('input', () => {
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            updateSearchHint(e.target.value.trim());
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(performSearch, 500);
         });
 
-        // Initialize on page load
         initializeTheme();
         init();
     </script>
