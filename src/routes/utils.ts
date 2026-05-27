@@ -14,7 +14,7 @@ export const trycatch = async (fn: () => Promise<Response>, errorMsg: any) => {
 
 export const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, UPDATE, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type'
 };
 
@@ -24,16 +24,6 @@ export const handleCors = (request: Request) => {
     }
 
     return null;
-};
-
-export const parseJsonBody = async (request: Request) => {
-    try {
-        const bodyText = await request.text();
-        return JSON.parse(bodyText);
-    } catch (error) {
-        console.error('Error parsing JSON body:', error);
-        return null;
-    }
 };
 
 export const requestUrlToString = (request: Request | ApiRoute) => {
