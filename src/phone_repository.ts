@@ -1,10 +1,9 @@
-import FuzzySearch from "@src/fuzzy_search";
-
 export type PhoneRecord = {
     id: number;
     type: string;
     service: string;
     code: string;
+    merged: number;
 };
 
 export type LatestRecord = {
@@ -28,41 +27,11 @@ export class PhoneRepository {
         return result.results;
     }
 
-    async getByType(type: string): Promise<PhoneRecord[]> {
+    async getTableHash(): Promise<string> {
         const result = await this.db
-            .prepare('SELECT * FROM phone_records WHERE type = ? ORDER BY id')
-            .bind(type)
-            .all<PhoneRecord>();
-        return result.results;
-    }
-
-    async fuzzySearch(query: string, options?: {
-        threshold?: number;
-        limit?: number;
-    }): Promise<PhoneRecord[]> {
-        const allRecords = await this.getAll();
-        const threshold = options?.threshold ?? 0.4;
-        const searchableItems = allRecords.map(record => `${record.service} ${record.code}`);
-
-        const recordsBySearchItem = new Map<string, PhoneRecord[]>();
-        allRecords.forEach(record => {
-            const key = `${record.service} ${record.code}`;
-            const bucket = recordsBySearchItem.get(key) ?? [];
-            bucket.push(record);
-            recordsBySearchItem.set(key, bucket);
-        });
-
-        const fuzzySearch = new FuzzySearch(searchableItems);
-        const results = fuzzySearch.search(query, threshold);
-
-        return results
-            .flatMap(result => {
-                const bucket = recordsBySearchItem.get(result.item);
-                const matchedRecord = bucket?.shift();
-                if (!matchedRecord) return [];
-                return [{ ...matchedRecord, matchesIdx: result.matchesIdx } as PhoneRecord];
-            })
-            .slice(0, options?.limit);
+            .prepare("SELECT value FROM table_meta WHERE key = 'records_version'")
+            .first<{ value: string }>();
+        return result?.value ?? '0';
     }
 
     async getUniqueTypes(): Promise<string[]> {

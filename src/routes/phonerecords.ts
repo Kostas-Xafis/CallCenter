@@ -38,38 +38,17 @@ const statsRoute: ApiRoute = {
     }
 };
 
-const fuzzySearchRoute: ApiRoute = {
-    url: '/search',
+const tableHashRoute: ApiRoute = {
+    url: '/records/hash',
     method: 'GET',
-    handler: (request: Request, env: Env) => {
+    handler: (_: Request, env: Env) => {
         return trycatch(async () => {
-            const url = new URL(request.url);
-            const query = url.searchParams.get('q') || '';
-            const threshold = parseFloat(url.searchParams.get('threshold') ?? '0.4');
             const repo = new PhoneRepository(env.DB);
-            const results = await repo.fuzzySearch(query, { threshold });
-
-            return new Response(JSON.stringify(results), {
+            const hash = await repo.getTableHash();
+            return new Response(JSON.stringify({ hash }), {
                 headers: { 'Content-Type': 'application/json' }
             });
-        }, 'Error performing fuzzy search');
-    }
-};
-
-const byTypeRoute: ApiRoute = {
-    url: '/records/type',
-    method: 'GET',
-    handler: (request: Request, env: Env) => {
-        return trycatch(async () => {
-            const url = new URL(request.url);
-            const type = url.searchParams.get('type') || '';
-            const repo = new PhoneRepository(env.DB);
-            const results = await repo.getByType(type);
-
-            return new Response(JSON.stringify(results), {
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }, 'Error fetching records by type');
+        }, 'Error fetching table hash');
     }
 };
 
@@ -115,5 +94,5 @@ const deleteLatestRoute: ApiRoute = {
 
 export const PhoneRecordRoutes: ApiRouteParent = {
     url: '',
-    routes: [phonerecordsRoute, statsRoute, fuzzySearchRoute, byTypeRoute, getLatestRoute, trackLatestRoute, deleteLatestRoute]
+    routes: [phonerecordsRoute, statsRoute, tableHashRoute, getLatestRoute, trackLatestRoute, deleteLatestRoute]
 };

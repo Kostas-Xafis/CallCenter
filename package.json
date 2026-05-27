@@ -4,6 +4,7 @@
   "module": "worker.ts",
   "scripts": {
     "dev": "wrangler dev",
+    "predeploy": "node -e \"const fs=require('fs'); const sw=fs.readFileSync('public/sw.js','utf8'); fs.writeFileSync('public/sw.js', sw.replace(/callcenter-v[^']+/, 'callcenter-v'+Date.now()));\"",
     "deploy": "wrangler deploy",
     "d1:create": "wrangler d1 create callcenter",
     "d1:migrate": "wrangler d1 migrations apply callcenter",

@@ -41,6 +41,9 @@
             --error-text: #8f1d2b;
             --highlight-bg: #ffd96a;
             --highlight-text: #534200;
+            --restricted-bg: rgba(220, 50, 50, 0.08);
+            --restricted-badge-bg: #f5c2c7;
+            --restricted-badge-text: #842029;
             --shadow-color: rgba(15, 26, 52, 0.2);
             --row-hover-shadow: rgba(15, 26, 52, 0.18);
         }
@@ -65,6 +68,9 @@
             --error-text: #ffd0db;
             --highlight-bg: #5a4a17;
             --highlight-text: #ffecac;
+            --restricted-bg: rgba(220, 50, 50, 0.12);
+            --restricted-badge-bg: #5c1f26;
+            --restricted-badge-text: #f5c2c7;
             --shadow-color: rgba(0, 0, 0, 0.35);
             --row-hover-shadow: rgba(0, 0, 0, 0.3);
         }
@@ -369,12 +375,46 @@
             border-radius: 8px;
         }
 
+        .restricted {
+            background: var(--restricted-bg) !important;
+        }
+
+        .restricted-badge {
+            display: inline-block;
+            font-size: 0.72em;
+            font-weight: 700;
+            color: var(--restricted-badge-text);
+            background: var(--restricted-badge-bg);
+            border-radius: 4px;
+            padding: 1px 5px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.03em;
+        }
         .highlight {
             background-color: var(--highlight-bg);
             color: var(--highlight-text);
             padding: 2px 4px;
             border-radius: 3px;
             font-weight: 500;
+        }
+
+        .merged-services {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 2px 0;
+        }
+
+        .service-chip {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: var(--surface-muted);
+            color: var(--text-primary);
+            font-size: 0.82em;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            white-space: nowrap;
         }
 
         /* ── Middle row (search + latest) ── */
@@ -706,6 +746,170 @@
         let currentRecords = [];
         let currentPage = 1;
         let totalPages = 1;
+        let activeQuery = '';
+
+        // ── IndexedDB cache helpers ──────────────────────────────────────────
+        const IDB_NAME    = 'callcenter-cache';
+        const IDB_VERSION = 1;
+
+        function openIDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+                req.onupgradeneeded = e => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('records')) {
+                        db.createObjectStore('records', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('meta')) {
+                        db.createObjectStore('meta');
+                    }
+                };
+                req.onsuccess = e => resolve(e.target.result);
+                req.onerror   = () => reject(req.error);
+            });
+        }
+
+        function idbGet(db, storeName, key) {
+            return new Promise((resolve, reject) => {
+                const req = db.transaction(storeName, 'readonly').objectStore(storeName).get(key);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror   = () => reject(req.error);
+            });
+        }
+
+        function idbGetAll(db, storeName) {
+            return new Promise((resolve, reject) => {
+                const req = db.transaction(storeName, 'readonly').objectStore(storeName).getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror   = () => reject(req.error);
+            });
+        }
+
+        function idbPut(db, storeName, key, value) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).put(value, key);
+                tx.oncomplete = () => resolve();
+                tx.onerror    = () => reject(tx.error);
+            });
+        }
+
+        // Clears the store then writes all items in a single transaction
+        function idbPutAll(db, storeName, items) {
+            return new Promise((resolve, reject) => {
+                const tx    = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                store.clear();
+                for (const item of items) store.put(item);
+                tx.oncomplete = () => resolve();
+                tx.onerror    = () => reject(tx.error);
+            });
+        }
+
+        // ── Client-side fuzzy search (ported from src/fuzzy_search.ts) ───────
+        class FuzzySearch {
+            constructor(data) { this.data = data; }
+
+            _customDistance(q, s) {
+                let distance = 0;
+                let lastMatchIndex = -1;
+                let matchedChars = 0;
+                const matchesIdx = [];
+                outer:
+                for (let i = 0; i < q.length; i++) {
+                    const qChar = q.charAt(i);
+                    let found = false;
+                    for (let j = lastMatchIndex + 1; j < s.length; j++) {
+                        if (qChar === s.charAt(j)) {
+                            lastMatchIndex = j;
+                            matchesIdx.push(j);
+                            matchedChars++;
+                            found = true;
+                            continue outer;
+                        } else {
+                            distance += 1;
+                        }
+                    }
+                    if (!found) distance += s.length;
+                }
+                distance += s.length - matchedChars;
+                return [distance, matchesIdx];
+            }
+
+            search(query, threshold = 0.3) {
+                const results = this.data
+                    .map((item, index) => {
+                        const [distance, matchesIdx] = this._customDistance(
+                            query.toLowerCase(), item.toLowerCase()
+                        );
+                        const maxLen = Math.max(query.length, item.length);
+                        const score  = Math.exp(-distance / (maxLen * 2));
+                        return { item, score, matchesIdx, index };
+                    })
+                    .filter(r => r.score >= threshold);
+                results.sort((a, b) => b.score - a.score);
+                return results.map(r => ({ item: r.item, matchesIdx: r.matchesIdx, index: r.index }));
+            }
+        }
+
+        // Replicates phone_repository.ts fuzzySearch() entirely on the client
+        function clientFuzzySearch(records, query, threshold = 0.4) {
+            const searchableItems = [];
+            const itemToRecord    = [];
+
+            for (const record of records) {
+                if (record.merged) {
+                    const services = JSON.parse(record.service);
+                    for (const s of services) {
+                        searchableItems.push(`${s} ${record.code}`);
+                        itemToRecord.push(record);
+                    }
+                } else {
+                    searchableItems.push(`${record.service} ${record.code}`);
+                    itemToRecord.push(record);
+                }
+            }
+
+            const fuzzy   = new FuzzySearch(searchableItems);
+            const results = fuzzy.search(query, threshold);
+
+            const seen = new Set();
+            return results.flatMap(result => {
+                const record = itemToRecord[result.index];
+                if (!record || seen.has(record.id)) return [];
+                seen.add(record.id);
+                const matchesIdx = record.merged ? [] : result.matchesIdx;
+                return [{ ...record, matchesIdx }];
+            });
+        }
+
+        // ── Records cache loader ─────────────────────────────────────────────
+        async function loadRecordsWithCache() {
+            showLoading();
+            try {
+                const [idb, hashRes] = await Promise.all([
+                    openIDB(),
+                    fetch(`${API_BASE}/api/records/hash`)
+                ]);
+                const { hash: serverHash } = await hashRes.json();
+                const cachedHash = await idbGet(idb, 'meta', 'hash');
+
+                if (cachedHash === serverHash) {
+                    allRecords = await idbGetAll(idb, 'records');
+                } else {
+                    const res = await fetch(`${API_BASE}/api/records`);
+                    allRecords = await res.json();
+                    await idbPutAll(idb, 'records', allRecords);
+                    await idbPut(idb, 'meta', 'hash', serverHash);
+                }
+                displayResults(allRecords);
+            } catch (error) {
+                showError('Failed to load records');
+                console.error('Error loading records:', error);
+            }
+        }
+
+        const RESTRICTED_CODES = new Set(['3995','3955','3953','3738','3974','3780','3808','3535','3915','1745','3997','3598']);
 
         // Standard Greek keyboard layout mapping (Latin key → Greek character)
         const LATIN_TO_GREEK = {
@@ -732,6 +936,28 @@
             if (!raw) { hint.textContent = ''; return; }
             const { query, converted } = toGreekQuery(raw);
             hint.innerHTML = converted ? `Searching as: <span>${query}</span>` : '';
+        }
+
+        // Ported from src/fuzzy_search.ts — used for per-chip highlighting in merged rows
+        function fuzzyMatchIndices(query, subject) {
+            const q = query.toLowerCase();
+            const s = subject.toLowerCase();
+            let lastMatchIndex = -1;
+            let matchedChars = 0;
+            const matchesIdx = [];
+            outer:
+            for (let i = 0; i < q.length; i++) {
+                const qChar = q[i];
+                for (let j = lastMatchIndex + 1; j < s.length; j++) {
+                    if (qChar === s[j]) {
+                        lastMatchIndex = j;
+                        matchesIdx.push(j);
+                        matchedChars++;
+                        continue outer;
+                    }
+                }
+            }
+            return matchedChars > 0 ? matchesIdx : [];
         }
 
         const highlightString = (text) => `<span class="highlight">${text}</span>`;
@@ -789,7 +1015,7 @@
 
         async function init() {
             await loadTypes();
-            await Promise.all([loadAllRecords(), loadLatest()]);
+            await Promise.all([loadRecordsWithCache(), loadLatest()]);
         }
 
         async function loadTypes() {
@@ -808,48 +1034,30 @@
             }
         }
 
-        async function loadAllRecords() {
-            try {
-                showLoading();
-                const response = await fetch(`${API_BASE}/api/records`);
-                allRecords = await response.json();
-                displayResults(allRecords);
-            } catch (error) {
-                showError('Failed to load records');
-                console.error('Error loading records:', error);
-            }
+        function loadAllRecords() {
+            activeQuery = '';
+            displayResults(allRecords);
         }
 
-        async function performSearch() {
+        function performSearch() {
             const raw = document.getElementById('searchInput').value.trim();
             if (!raw) { updateSearchHint(''); loadAllRecords(); return; }
 
             const { query } = toGreekQuery(raw);
+            activeQuery = query;
 
-            try {
-                showLoading();
-                const threshold = document.getElementById('thresholdSelect').value;
-                const response = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}&threshold=${threshold}`);
-                const results = await response.json();
-                displayResults(results);
-            } catch (error) {
-                showError('Search failed');
-                console.error('Error searching:', error);
-            }
+            const threshold = parseFloat(document.getElementById('thresholdSelect').value);
+            const results   = clientFuzzySearch(allRecords, query, threshold);
+            displayResults(results);
         }
 
-        async function filterByType() {
+        function filterByType() {
             const type = document.getElementById('typeFilter').value;
-            if (!type) { loadAllRecords(); return; }
-
-            try {
-                showLoading();
-                const response = await fetch(`${API_BASE}/api/records/type?type=${encodeURIComponent(type)}`);
-                const results = await response.json();
-                displayResults(results);
-            } catch (error) {
-                showError('Failed to filter by type');
-                console.error('Error filtering:', error);
+            activeQuery = '';
+            if (!type) {
+                displayResults(allRecords);
+            } else {
+                displayResults(allRecords.filter(r => r.type === type));
             }
         }
 
@@ -883,14 +1091,32 @@
             const pageRecords = currentRecords.slice(start, start + PAGE_SIZE);
 
             const rows = pageRecords.map(record => {
-                const { type, service, code, matchesIdx } = record;
-                const matchesIdxService = matchesIdx && matchesIdx.filter(idx => idx < service.length);
-                const matchesIdxCode = matchesIdx && matchesIdx.filter(idx => idx >= service.length).map(idx => idx - service.length - 1);
+                const { type, service, code, merged, matchesIdx } = record;
+                const restricted = RESTRICTED_CODES.has(code);
+
+                let serviceHtml;
+                if (merged) {
+                    const services = JSON.parse(service);
+                    const chips = services.map(s => {
+                        const indices = activeQuery ? fuzzyMatchIndices(activeQuery, s) : [];
+                        const inner = indices.length ? highlightStringAt(s, indices) : s;
+                        return `<span class="service-chip">${inner}</span>`;
+                    }).join('');
+                    serviceHtml = `<div class="merged-services">${chips}</div>`;
+                } else {
+                    const matchesIdxService = matchesIdx && matchesIdx.filter(idx => idx < service.length);
+                    serviceHtml = (matchesIdxService && highlightStringAt(service, matchesIdxService) || service)
+                        + (restricted ? '<span class="restricted-badge">ΜΗ ΔΙΑΘΕΣΙΜΟ</span>' : '');
+                }
+
+                const matchesIdxCode = !merged && matchesIdx && matchesIdx.filter(idx => idx >= service.length).map(idx => idx - service.length - 1);
+                const codeHtml = matchesIdxCode && highlightStringAt(code, matchesIdxCode) || code;
+
                 return `
-                    <tr data-type="${type}" data-service="${service}" data-code="${code}">
+                    <tr${restricted ? ' class="restricted"' : ''} data-type="${type}" data-service="${service}" data-code="${code}">
                         <td><span class="badge badge-type">${type}</span></td>
-                        <td>${matchesIdxService && highlightStringAt(service, matchesIdxService) || service}</td>
-                        <td><strong>${matchesIdxCode && highlightStringAt(code, matchesIdxCode) || code}</strong></td>
+                        <td>${serviceHtml}</td>
+                        <td><strong>${codeHtml}</strong></td>
                     </tr>
                 `;
             }).join('');
@@ -1014,6 +1240,7 @@
 
         initializeTheme();
         init();
+        setInterval(loadLatest, 30000);
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
