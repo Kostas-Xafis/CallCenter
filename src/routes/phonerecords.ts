@@ -24,15 +24,12 @@ const statsRoute: ApiRoute = {
             const repo = new PhoneRepository(env.DB);
             const total = await repo.getCount();
             const types = await repo.getUniqueTypes();
-            const services = await repo.getUniqueServices();
             const statsByType = await repo.getStatsByType();
 
             return new Response(JSON.stringify({
                 total,
                 uniqueTypes: types.length,
-                uniqueServices: services.length,
                 types,
-                services,
                 statsByType
             }), {
                 headers: { 'Content-Type': 'application/json' }
@@ -48,8 +45,9 @@ const fuzzySearchRoute: ApiRoute = {
         return trycatch(async () => {
             const url = new URL(request.url);
             const query = url.searchParams.get('q') || '';
+            const threshold = parseFloat(url.searchParams.get('threshold') ?? '0.4');
             const repo = new PhoneRepository(env.DB);
-            const results = await repo.fuzzySearch(query);
+            const results = await repo.fuzzySearch(query, { threshold });
 
             return new Response(JSON.stringify(results), {
                 headers: { 'Content-Type': 'application/json' }
@@ -75,24 +73,47 @@ const byTypeRoute: ApiRoute = {
     }
 };
 
-const byServiceRoute: ApiRoute = {
-    url: '/records/service',
+const getLatestRoute: ApiRoute = {
+    url: '/latest',
     method: 'GET',
-    handler: (request: Request, env: Env) => {
+    handler: (_: Request, env: Env) => {
         return trycatch(async () => {
-            const url = new URL(request.url);
-            const service = url.searchParams.get('service') || '';
             const repo = new PhoneRepository(env.DB);
-            const results = await repo.getByService(service);
-
-            return new Response(JSON.stringify(results), {
+            const latest = await repo.getLatest();
+            return new Response(JSON.stringify(latest), {
                 headers: { 'Content-Type': 'application/json' }
             });
-        }, 'Error fetching records by service');
+        }, 'Error fetching latest records');
+    }
+};
+
+const trackLatestRoute: ApiRoute = {
+    url: '/latest',
+    method: 'POST',
+    handler: (request: Request, env: Env) => {
+        return trycatch(async () => {
+            const { type, service, code } = await request.json<{ type: string; service: string; code: string }>();
+            const repo = new PhoneRepository(env.DB);
+            await repo.trackLatest(type, service, code);
+            return new Response(null, { status: 204 });
+        }, 'Error tracking latest record');
+    }
+};
+
+const deleteLatestRoute: ApiRoute = {
+    url: '/latest',
+    method: 'DELETE',
+    handler: (request: Request, env: Env) => {
+        return trycatch(async () => {
+            const { type, service, code } = await request.json<{ type: string; service: string; code: string }>();
+            const repo = new PhoneRepository(env.DB);
+            await repo.deleteLatest(type, service, code);
+            return new Response(null, { status: 204 });
+        }, 'Error deleting latest record');
     }
 };
 
 export const PhoneRecordRoutes: ApiRouteParent = {
     url: '',
-    routes: [phonerecordsRoute, statsRoute, fuzzySearchRoute, byTypeRoute, byServiceRoute]
+    routes: [phonerecordsRoute, statsRoute, fuzzySearchRoute, byTypeRoute, getLatestRoute, trackLatestRoute, deleteLatestRoute]
 };

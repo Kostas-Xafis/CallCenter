@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Records Search</title>
+    <title>251 ΓΝΑ CallCenter</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#41509b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CallCenter">
+    <link rel="apple-touch-icon" href="/icons/icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
     <style>
         * {
             margin: 0;
@@ -92,32 +101,23 @@
         .brand {
             background: var(--surface);
             border-radius: 12px;
-            padding: 24px;
+            padding: 16px 32px;
             box-shadow: 0 4px 8px var(--shadow-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .brand-text {
-            min-width: 0;
+            text-align: center;
+            align-self: center;
         }
 
         h1 {
             color: var(--accent);
             font-size: 1.8em;
-            margin-bottom: 6px;
             line-height: 1.2;
         }
 
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 0.95em;
-        }
-
         .theme-toggle {
-            flex-shrink: 0;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
             width: 38px;
             height: 38px;
             padding: 0;
@@ -128,6 +128,7 @@
             align-items: center;
             justify-content: center;
             line-height: 1;
+            box-shadow: 0 2px 6px var(--shadow-color);
         }
 
         .search-section {
@@ -376,6 +377,130 @@
             font-weight: 500;
         }
 
+        /* ── Middle row (search + latest) ── */
+        .middle-row {
+            display: contents;
+        }
+
+        /* ── Latest island ── */
+        .latest-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px 24px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .latest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .latest-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .latest-subtitle {
+            font-size: 0.78em;
+            color: var(--text-muted);
+        }
+
+        .latest-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .latest-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            background: var(--surface-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .latest-item:hover {
+            background: var(--surface-hover);
+        }
+
+        .latest-rank {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: var(--text-muted);
+            width: 16px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .latest-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .latest-service {
+            font-size: 0.82em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .latest-code {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .latest-count {
+            font-size: 0.75em;
+            font-weight: 700;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 3px 8px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        .latest-delete {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            font-size: 13px;
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s, background 0.15s;
+            cursor: pointer;
+        }
+
+        .latest-delete:hover {
+            color: var(--error-text);
+            background: var(--error-bg);
+        }
+
+        .latest-empty {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 8px 0;
+        }
+
         /* ── Scrollbar styling ── */
         .results-scroll::-webkit-scrollbar {
             width: 6px;
@@ -408,17 +533,13 @@
                 gap: 10px;
             }
 
-            .brand {
-                padding: 12px 14px;
-            }
-
             h1 {
                 font-size: 1.3em;
-                margin-bottom: 3px;
             }
 
-            .subtitle {
-                font-size: 0.82em;
+            .theme-toggle {
+                top: 20px;
+                right: 15px;
             }
 
             .search-section {
@@ -447,6 +568,51 @@
                 padding: 14px;
             }
 
+            .middle-row {
+                max-height: 200px;
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .middle-row .search-section {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .middle-row .latest-section {
+                flex: 1;
+                min-width: 0;
+                min-height: 0;
+                padding: 12px 14px;
+                overflow: hidden;
+            }
+
+            .middle-row .latest-section .latest-list {
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
+            }
+
+            .middle-row .latest-item {
+                padding: 5px 7px;
+                gap: 7px;
+            }
+
+            .middle-row .latest-service {
+                font-size: 0.75em;
+            }
+
+            .middle-row .latest-code {
+                font-size: 0.8em;
+            }
+
+            .middle-row .latest-count {
+                font-size: 0.7em;
+                padding: 2px 5px;
+            }
+
             th, td {
                 padding: 6px 8px;
                 font-size: 0.95em;
@@ -459,45 +625,57 @@
     </style>
 </head>
 <body>
-    <div class="layout">
+        <!-- Dark mode toggle (top-right, fixed) -->
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙</button>
+
+        <div class="layout">
 
         <!-- Left panel: brand + search -->
         <aside class="left-panel">
             <div class="brand">
-                <div class="brand-text">
-                    <h1>📱 Phone Records</h1>
-                    <p class="subtitle">Search across services and phone codes</p>
-                </div>
-                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙</button>
+                <h1>251 ΓΝΑ CallCenter</h1>
             </div>
 
-            <div class="search-section">
-                <div class="search-box">
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Search…"
-                        autocomplete="off"
-                    >
-                    <button onclick="performSearch()">🔍</button>
-                </div>
-                <p class="search-hint" id="searchHint"></p>
+            <div class="middle-row">
+                <div class="search-section">
+                    <div class="search-box">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search…"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                        >
+                        <button onclick="performSearch()">🔍</button>
+                    </div>
+                    <p class="search-hint" id="searchHint"></p>
 
-                <div class="filters">
-                    <select id="typeFilter" onchange="filterByType()">
-                        <option value="">All Types</option>
-                    </select>
-                    <select id="thresholdSelect" onchange="performSearch()">
-                        <option value="0.6">Very Strict</option>
-                        <option value="0.4">Normal</option>
-                        <option value="0.3" selected>Fuzzy</option>
-                        <option value="0.2">Very Fuzzy</option>
-                    </select>
+                    <div class="filters">
+                        <select id="typeFilter" onchange="filterByType()">
+                            <option value="">All Types</option>
+                        </select>
+                        <select id="thresholdSelect" onchange="performSearch()">
+                            <option value="0.6">Very Strict</option>
+                            <option value="0.4">Normal</option>
+                            <option value="0.3" selected>Fuzzy</option>
+                            <option value="0.2">Very Fuzzy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="latest-section" id="latestSection">
+                    <div class="latest-header">
+                        <span class="latest-title">Latest</span>
+                        <span class="latest-subtitle">Today's top requests</span>
+                    </div>
+                    <div class="latest-list" id="latestList">
+                        <div class="latest-empty">No requests yet today</div>
+                    </div>
                 </div>
             </div>
         </aside>
-
-        <!-- Right panel: results -->
         <main class="right-panel">
             <div class="results-header">
                 <h2>Results</h2>
@@ -611,7 +789,7 @@
 
         async function init() {
             await loadTypes();
-            await loadAllRecords();
+            await Promise.all([loadAllRecords(), loadLatest()]);
         }
 
         async function loadTypes() {
@@ -709,7 +887,7 @@
                 const matchesIdxService = matchesIdx && matchesIdx.filter(idx => idx < service.length);
                 const matchesIdxCode = matchesIdx && matchesIdx.filter(idx => idx >= service.length).map(idx => idx - service.length - 1);
                 return `
-                    <tr>
+                    <tr data-type="${type}" data-service="${service}" data-code="${code}">
                         <td><span class="badge badge-type">${type}</span></td>
                         <td>${matchesIdxService && highlightStringAt(service, matchesIdxService) || service}</td>
                         <td><strong>${matchesIdxCode && highlightStringAt(code, matchesIdxCode) || code}</strong></td>
@@ -760,8 +938,88 @@
             searchDebounceTimer = setTimeout(performSearch, 500);
         });
 
+        // ── Latest island ──
+        async function loadLatest() {
+            try {
+                const response = await fetch(`${API_BASE}/api/latest`);
+                const entries = await response.json();
+                renderLatest(entries);
+            } catch (error) {
+                console.error('Error loading latest:', error);
+            }
+        }
+
+        function renderLatest(entries) {
+            const list = document.getElementById('latestList');
+
+            if (!entries || entries.length === 0) {
+                list.innerHTML = '<div class="latest-empty">No requests yet today</div>';
+                return;
+            }
+
+            list.innerHTML = entries.map((e, i) => `
+                <div class="latest-item"
+                     data-service="${e.service}"
+                     onclick="doLatestClick(this)">
+                    <span class="latest-rank">${i + 1}</span>
+                    <div class="latest-item-info">
+                        <div class="latest-service">${e.service}</div>
+                        <div class="latest-code">${e.code}</div>
+                    </div>
+                    <span class="latest-count">${e.count}×</span>
+                    <button class="latest-delete" title="Remove"
+                            onclick="event.stopPropagation(); deleteLatestEntry('${e.type}', '${e.service}', '${e.code}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg></button>
+                </div>
+            `).join('');
+        }
+
+        // Clicking a Latest item fills the search box and searches
+        function doLatestClick(el) {
+            const { service } = el.dataset;
+            const input = document.getElementById('searchInput');
+            input.value = service;
+            updateSearchHint(service);
+            performSearch();
+        }
+
+        async function deleteLatestEntry(type, service, code) {
+            try {
+                await fetch(`${API_BASE}/api/latest`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, service, code })
+                });
+                loadLatest();
+            } catch (error) {
+                console.error('Error deleting latest entry:', error);
+            }
+        }
+
+        // Delegated click on results table rows — POST to API, then refresh Latest
+        document.getElementById('resultsContainer').addEventListener('click', async (e) => {
+            const row = e.target.closest('tr[data-service]');
+            if (!row) return;
+            const { type, service, code } = row.dataset;
+            try {
+                await fetch(`${API_BASE}/api/latest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, service, code })
+                });
+                loadLatest();
+            } catch (error) {
+                console.error('Error tracking latest:', error);
+            }
+        });
+
         initializeTheme();
         init();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
     </script>
 </body>
 </html>

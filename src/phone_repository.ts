@@ -7,6 +7,13 @@ export type PhoneRecord = {
     code: string;
 };
 
+export type LatestRecord = {
+    type: string;
+    service: string;
+    code: string;
+    count: number;
+};
+
 export class PhoneRepository {
     private db: D1Database;
 
@@ -14,9 +21,6 @@ export class PhoneRepository {
         this.db = db;
     }
 
-    /**
-     * Get all phone records
-     */
     async getAll(): Promise<PhoneRecord[]> {
         const result = await this.db
             .prepare('SELECT * FROM phone_records ORDER BY id')
@@ -24,9 +28,6 @@ export class PhoneRepository {
         return result.results;
     }
 
-    /**
-     * Get phone records by type
-     */
     async getByType(type: string): Promise<PhoneRecord[]> {
         const result = await this.db
             .prepare('SELECT * FROM phone_records WHERE type = ? ORDER BY id')
@@ -35,47 +36,9 @@ export class PhoneRepository {
         return result.results;
     }
 
-    /**
-     * Get phone records by service
-     */
-    async getByService(service: string): Promise<PhoneRecord[]> {
-        const result = await this.db
-            .prepare('SELECT * FROM phone_records WHERE service = ? ORDER BY id')
-            .bind(service)
-            .all<PhoneRecord>();
-        return result.results;
-    }
-
-    /**
-     * Get phone record by code
-     */
-    async getByCode(code: string): Promise<PhoneRecord | null> {
-        return await this.db
-            .prepare('SELECT * FROM phone_records WHERE code = ? LIMIT 1')
-            .bind(code)
-            .first<PhoneRecord>();
-    }
-
-    /**
-     * Search phone records with flexible matching
-     */
-    async search(query: string): Promise<PhoneRecord[]> {
-        const result = await this.db
-            .prepare(
-                'SELECT * FROM phone_records WHERE type LIKE ? OR service LIKE ? OR code LIKE ? ORDER BY id'
-            )
-            .bind(`%${query}%`, `%${query}%`, `%${query}%`)
-            .all<PhoneRecord>();
-        return result.results;
-    }
-
-    /**
-     * Fuzzy search phone records by service and code using custom fuzzy search
-     * Returns ranked results based on relevance
-     */
     async fuzzySearch(query: string, options?: {
-        threshold?: number;  // 0.0 = perfect match, 1.0 = match anything (default: 0.4)
-        limit?: number;      // Max results to return
+        threshold?: number;
+        limit?: number;
     }): Promise<PhoneRecord[]> {
         const allRecords = await this.getAll();
         const threshold = options?.threshold ?? 0.4;
@@ -102,9 +65,6 @@ export class PhoneRepository {
             .slice(0, options?.limit);
     }
 
-    /**
-     * Get unique types
-     */
     async getUniqueTypes(): Promise<string[]> {
         const result = await this.db
             .prepare('SELECT DISTINCT type FROM phone_records ORDER BY type')
@@ -112,19 +72,6 @@ export class PhoneRepository {
         return result.results.map(row => row.type);
     }
 
-    /**
-     * Get unique services
-     */
-    async getUniqueServices(): Promise<string[]> {
-        const result = await this.db
-            .prepare('SELECT DISTINCT service FROM phone_records ORDER BY service')
-            .all<{ service: string }>();
-        return result.results.map(row => row.service);
-    }
-
-    /**
-     * Get total count of records
-     */
     async getCount(): Promise<number> {
         const result = await this.db
             .prepare('SELECT COUNT(*) as count FROM phone_records')
@@ -132,9 +79,6 @@ export class PhoneRepository {
         return result?.count ?? 0;
     }
 
-    /**
-     * Get statistics by type
-     */
     async getStatsByType(): Promise<{ type: string; count: number }[]> {
         const result = await this.db
             .prepare(
@@ -142,5 +86,39 @@ export class PhoneRepository {
             )
             .all<{ type: string; count: number }>();
         return result.results;
+    }
+
+    async getLatest(): Promise<LatestRecord[]> {
+        const result = await this.db
+            .prepare(
+                `SELECT type, service, code, count
+                 FROM latest_requests
+                 WHERE date = date('now')
+                 ORDER BY count DESC
+                 LIMIT 5`
+            )
+            .all<LatestRecord>();
+        return result.results;
+    }
+
+    async trackLatest(type: string, service: string, code: string): Promise<void> {
+        await this.db
+            .prepare(
+                `INSERT INTO latest_requests (date, type, service, code, count)
+                 VALUES (date('now'), ?, ?, ?, 1)
+                 ON CONFLICT(date, type, service, code) DO UPDATE SET count = count + 1`
+            )
+            .bind(type, service, code)
+            .run();
+    }
+
+    async deleteLatest(type: string, service: string, code: string): Promise<void> {
+        await this.db
+            .prepare(
+                `DELETE FROM latest_requests
+                 WHERE date = date('now') AND type = ? AND service = ? AND code = ?`
+            )
+            .bind(type, service, code)
+            .run();
     }
 }
