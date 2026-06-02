@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>251 ΓΝΑ CallCenter — Σύνδεση</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#41509b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CallCenter">
+    <link rel="apple-touch-icon" href="/icons/icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-start: #41509b;
+            --bg-end:   #513275;
+            --surface:  #d8dadc;
+            --text:     #222942;
+            --text-sub: #596480;
+            --accent:   #3e54ad;
+            --accent-h: #364ea6;
+            --border:   #bcc8dc;
+            --error-bg: #ffd4dc;
+            --error-tx: #8f1d2b;
+            --shadow:   rgba(15, 26, 52, 0.22);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-start: #151d31;
+                --bg-end:   #232038;
+                --surface:  #1f2638;
+                --text:     #edf1ff;
+                --text-sub: #a7b0cf;
+                --accent:   #8ea6ff;
+                --accent-h: #7b95f5;
+                --border:   #3a435f;
+                --error-bg: #4b2230;
+                --error-tx: #ffd0db;
+                --shadow:   rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        body {
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 1rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+
+        .logo-sub {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        input {
+            padding: 0.65rem 0.85rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        input:focus { border-color: var(--accent); }
+        input::placeholder { color: var(--text-sub); opacity: 0.6; }
+
+        .btn {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s, opacity 0.15s;
+        }
+
+        .btn:hover:not(:disabled) { background: var(--accent-h); }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .error {
+            display: none;
+            margin-top: 1rem;
+            padding: 0.65rem 0.85rem;
+            background: var(--error-bg);
+            color: var(--error-tx);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .error.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <span class="logo-title">251 ΓΝΑ</span>
+            <span class="logo-sub">CallCenter</span>
+        </div>
+
+        <form id="loginForm">
+            <div class="field">
+                <label for="username">Όνομα χρήστη</label>
+                <input id="username" name="username" type="text" autocomplete="username"
+                       placeholder="username" required>
+            </div>
+            <div class="field">
+                <label for="password">Κωδικός</label>
+                <input id="password" name="password" type="password" autocomplete="current-password"
+                       placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn" id="submitBtn">Σύνδεση</button>
+            <div class="error" id="errorMsg"></div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const btn  = document.getElementById('submitBtn');
+        const err  = document.getElementById('errorMsg');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            err.classList.remove('visible');
+            btn.disabled = true;
+            btn.textContent = '…';
+
+            try {
+                const res = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value,
+                    }),
+                });
+
+                if (res.ok) {
+                    window.location.replace('/');
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    err.textContent = data.error || 'Σφάλμα σύνδεσης.';
+                    err.classList.add('visible');
+                    btn.disabled = false;
+                    btn.textContent = 'Σύνδεση';
+                }
+            } catch {
+                err.textContent = 'Αδυναμία σύνδεσης με τον διακομιστή.';
+                err.classList.add('visible');
+                btn.disabled = false;
+                btn.textContent = 'Σύνδεση';
+            }
+        });
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+</body>
+</html>

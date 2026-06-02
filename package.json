@@ -11,7 +11,9 @@
     "d1:migrate:local": "wrangler d1 migrations apply callcenter --local",
     "d1:seed": "wrangler d1 execute callcenter --file=migrations/0002_seed.sql",
     "d1:seed:local": "wrangler d1 execute callcenter --local --file=migrations/0002_seed.sql",
-    "db:gen-seed": "bun run src/generate_seed_sql.ts"
+    "db:gen-seed": "bun run src/generate_seed_sql.ts",
+    "user:create": "bun run scripts/create-user.ts",
+    "user:create:local": "bun run scripts/create-user.ts --local"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260526.1",
