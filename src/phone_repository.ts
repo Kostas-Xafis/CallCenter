@@ -1,3 +1,5 @@
+import type { Database } from 'bun:sqlite';
+
 export type PhoneRecord = {
     id: number;
     type: string;
@@ -14,80 +16,65 @@ export type LatestRecord = {
 };
 
 export class PhoneRepository {
-    private db: D1Database;
+    private db: Database;
 
-    constructor(db: D1Database) {
+    constructor(db: Database) {
         this.db = db;
     }
 
     async getAll(): Promise<PhoneRecord[]> {
-        const result = await this.db
-            .prepare('SELECT * FROM phone_records ORDER BY id')
-            .all<PhoneRecord>();
-        return result.results;
+        return this.db.query('SELECT * FROM phone_records ORDER BY id').all() as PhoneRecord[];
     }
 
     async getTableHash(): Promise<string> {
-        const result = await this.db
-            .prepare("SELECT value FROM table_meta WHERE key = 'records_version'")
-            .first<{ value: string }>();
-        return result?.value ?? '0';
+        const row = this.db.query(
+            "SELECT value FROM table_meta WHERE key = 'records_version'"
+        ).get() as { value: string; } | null;
+        return row?.value ?? '0';
     }
 
     async getUniqueTypes(): Promise<string[]> {
-        const result = await this.db
-            .prepare('SELECT DISTINCT type FROM phone_records ORDER BY type')
-            .all<{ type: string }>();
-        return result.results.map(row => row.type);
+        const rows = this.db.query(
+            'SELECT DISTINCT type FROM phone_records ORDER BY type'
+        ).all() as { type: string; }[];
+        return rows.map(row => row.type);
     }
 
     async getCount(): Promise<number> {
-        const result = await this.db
-            .prepare('SELECT COUNT(*) as count FROM phone_records')
-            .first<{ count: number }>();
-        return result?.count ?? 0;
+        const row = this.db.query(
+            'SELECT COUNT(*) as count FROM phone_records'
+        ).get() as { count: number; } | null;
+        return row?.count ?? 0;
     }
 
-    async getStatsByType(): Promise<{ type: string; count: number }[]> {
-        const result = await this.db
-            .prepare(
-                'SELECT type, COUNT(*) as count FROM phone_records GROUP BY type ORDER BY count DESC'
-            )
-            .all<{ type: string; count: number }>();
-        return result.results;
+    async getStatsByType(): Promise<{ type: string; count: number; }[]> {
+        return this.db.query(
+            'SELECT type, COUNT(*) as count FROM phone_records GROUP BY type ORDER BY count DESC'
+        ).all() as { type: string; count: number; }[];
     }
 
     async getLatest(): Promise<LatestRecord[]> {
-        const result = await this.db
-            .prepare(
-                `SELECT type, service, code, count
-                 FROM latest_requests
-                 WHERE date = date('now')
-                 ORDER BY count DESC
-                 LIMIT 5`
-            )
-            .all<LatestRecord>();
-        return result.results;
+        return this.db.query(
+            `SELECT type, service, code, count
+             FROM latest_requests
+             WHERE date = date('now')
+             ORDER BY count DESC
+             LIMIT 5`
+        ).all() as LatestRecord[];
     }
 
     async trackLatest(type: string, service: string, code: string): Promise<void> {
-        await this.db
-            .prepare(
-                `INSERT INTO latest_requests (date, type, service, code, count)
-                 VALUES (date('now'), ?, ?, ?, 1)
-                 ON CONFLICT(date, type, service, code) DO UPDATE SET count = count + 1`
-            )
-            .bind(type, service, code)
-            .run();
+        this.db.query(
+            `INSERT INTO latest_requests (date, type, service, code, count)
+             VALUES (date('now'), ?, ?, ?, 1)
+             ON CONFLICT(date, type, service, code) DO UPDATE SET count = count + 1`
+        ).run(type, service, code);
     }
 
     async deleteLatest(type: string, service: string, code: string): Promise<void> {
-        await this.db
-            .prepare(
-                `DELETE FROM latest_requests
-                 WHERE date = date('now') AND type = ? AND service = ? AND code = ?`
-            )
-            .bind(type, service, code)
-            .run();
+        this.db.query(
+            `DELETE FROM latest_requests
+             WHERE date = date('now') AND type = ? AND service = ? AND code = ?`
+        ).run(type, service, code);
     }
 }

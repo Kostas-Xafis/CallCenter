@@ -1,0 +1,193 @@
+import { closeDb, getDb } from './db';
+import { getSessionUser, handleLogin, handleLogout } from './src/auth';
+import { routes } from './src/routes/index';
+import { handleCors, headers } from './src/routes/utils';
+import type { Env, SessionUser } from './types/types';
+
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const PUBLIC_DIR = './public';
+
+// Paths that are accessible without a valid session
+const PUBLIC_PATHS = new Set(['/login', '/login.html', '/auth/login']);
+
+// MIME types for common static file extensions
+const MIME_TYPES: Record<string, string> = {
+    '.html': 'text/html; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.webp': 'image/webp',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.txt': 'text/plain; charset=utf-8',
+};
+
+function getMimeType(path: string): string {
+    const ext = path.slice(path.lastIndexOf('.'));
+    return MIME_TYPES[ext] || 'application/octet-stream';
+}
+
+/** Serve a static file from the public directory. Returns null if not found. */
+async function serveStatic(path: string): Promise<Response | null> {
+    // Prevent directory traversal
+    const safePath = path.replace(/\.\./g, '').replace(/\/\//g, '/');
+    const filePath = safePath === '/' || safePath === ''
+        ? `${PUBLIC_DIR}/index.html`
+        : `${PUBLIC_DIR}${safePath}`;
+
+    const file = Bun.file(filePath);
+    const exists = await file.exists();
+    if (!exists) return null;
+
+    return new Response(file, {
+        headers: {
+            'Content-Type': getMimeType(filePath),
+            'Cache-Control': 'public, max-age=3600',
+        },
+    });
+}
+
+/** Create the Env object. Accepts optional DB path for testing. */
+export function createEnv(dbPath?: string): Env {
+    return { DB: getDb(dbPath) };
+}
+
+/** The application fetch handler — exported so tests can call it directly. */
+export async function appFetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // Handle CORS preflight
+    const preflightRes = handleCors(request);
+    if (preflightRes) return preflightRes;
+
+    // Auth endpoints (no session required)
+    if (path === '/auth/login' && request.method === 'POST') {
+        return handleLogin(request, env);
+    }
+    if (path === '/auth/logout' && request.method === 'POST') {
+        return handleLogout(request, env);
+    }
+
+    // Session guard — skip only for the login page itself
+    if (!PUBLIC_PATHS.has(path)) {
+        // Static non-HTML assets (icons, manifest, JS, CSS, etc.) are
+        // always served — the login page needs them to render properly.
+        const isStaticAsset = await Bun.file(`${PUBLIC_DIR}${path}`).exists();
+        if (isStaticAsset && !path.endsWith('.html')) {
+            const staticResponse = await serveStatic(path);
+            if (staticResponse) return staticResponse;
+        }
+
+        let sessionUser: SessionUser | null = null;
+        try {
+            sessionUser = await getSessionUser(env.DB, request);
+        } catch (e) {
+            console.error('Session validation error:', e);
+        }
+
+        if (!sessionUser) {
+            // API callers get a clean 401; everything else gets redirected to /login
+            if (path.startsWith('/api/')) {
+                return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                    status: 401,
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                });
+            }
+            return new Response(null, {
+                status: 302,
+                headers: { Location: '/login' },
+            });
+        }
+
+        // Role-based access control for write operations
+        if (path.startsWith('/api/') && sessionUser.role !== 'admin') {
+            const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+            if (WRITE_METHODS.has(request.method)) {
+                return new Response(
+                    JSON.stringify({ error: 'Forbidden: admin access required' }),
+                    {
+                        status: 403,
+                        headers: { ...headers, 'Content-Type': 'application/json' },
+                    }
+                );
+            }
+        }
+    }
+
+    try {
+        // API routes
+        if (path.startsWith('/api/')) {
+            const routeKey = `${request.method}:${path}`;
+            const handler = routes.get(routeKey);
+            if (handler) {
+                return await handler(request, env);
+            }
+            return new Response(JSON.stringify({ error: 'API route not found' }), {
+                status: 404,
+                headers: { ...headers, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Serve static assets
+        const staticResponse = await serveStatic(path);
+        if (staticResponse) return staticResponse;
+
+        // Map clean URLs to .html files
+        if (path === '/login') {
+            const loginFile = Bun.file(`${PUBLIC_DIR}/login.html`);
+            if (await loginFile.exists()) {
+                return new Response(loginFile, {
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                });
+            }
+        }
+
+        // Fallback to index.html for SPA-style routing
+        const indexFile = Bun.file(`${PUBLIC_DIR}/index.html`);
+        if (await indexFile.exists()) {
+            return new Response(indexFile, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+        }
+
+        return new Response('Not Found', { status: 404 });
+
+    } catch (error) {
+        console.error('Server error:', error);
+        return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+            status: 500,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+// Build the env object once at startup
+const env = createEnv();
+
+const server = Bun.serve({
+    port: PORT,
+    fetch: (request: Request) => appFetch(request, env),
+});
+
+console.log(`🚀 CallCenter server running at http://localhost:${server.port}`);
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    console.log('\nShutting down...');
+    closeDb();
+    server.stop();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    closeDb();
+    server.stop();
+    process.exit(0);
+});

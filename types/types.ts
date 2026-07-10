@@ -1,6 +1,15 @@
+import type { Database } from 'bun:sqlite';
+
+export type UserRole = 'admin' | 'user';
+
 export type Env = {
-    DB: D1Database;
-    ASSETS: Fetcher;
+    DB: Database;
+};
+
+export type SessionUser = {
+    sessionId: string;
+    username: string;
+    role: UserRole;
 };
 
 export type ApiRoute = {

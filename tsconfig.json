@@ -3,7 +3,7 @@
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",
-    "types": ["@cloudflare/workers-types"],
+    "types": ["bun-types"],
     "module": "Preserve",
     "moduleDetection": "force",
     "jsx": "react-jsx",
@@ -30,7 +30,7 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
+    "noPropertyAccessFromIndexSignature": false
   },
   "exclude": ["scripts"]
 }
