@@ -23,6 +23,8 @@
 <body>
         <!-- Dark mode toggle (top-right, fixed) -->
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙</button>
+        <!-- Logout button (top-right, fixed, next to theme toggle) -->
+        <button class="logout-btn" id="logoutBtn" onclick="logout()" aria-label="Logout" title="Αποσύνδεση">🚪</button>
 
         <div class="layout">
 
@@ -34,24 +36,26 @@
         </aside>
         <div class="right-wrapper">
         <div class="search-section">
-                    <div class="filters">
-                        <select id="typeFilter" onchange="filterByType()">
-                            <option value="">Όλοι οι Τύποι</option>
-                        </select>
+                    <div class="search-row">
+                        <div class="type-pill-wrapper">
+                            <div class="type-pill" id="typePillDisplay">Όλα</div>
+                            <select id="typeFilter" class="type-pill-select">
+                                <option value="">Όλα</option>
+                            </select>
+                        </div>
+                        <div class="search-box">
+                            <input
+                                type="text"
+                                id="searchInput"
+                                placeholder="Αναζήτηση…"
+                                autocomplete="off"
+                                autocorrect="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                            >
+                            <div class="search-hint" id="searchHint"></div>
+                        </div>
                     </div>
-                    <div class="search-box">
-                        <input
-                            type="text"
-                            id="searchInput"
-                            placeholder="Αναζήτηση…"
-                            autocomplete="off"
-                            autocorrect="off"
-                            autocapitalize="off"
-                            spellcheck="false"
-                        >
-                        <button onclick="performSearch()">🔍</button>
-                    </div>
-                    <p class="search-hint" id="searchHint"></p>
 
                 </div>
         <main class="right-panel">

@@ -1,4 +1,4 @@
-const CACHE_NAME = "callcenter-v1752249600000";
+const CACHE_NAME = "callcenter-v1783726481934";
 const STATIC_ASSETS = ["/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 // Install: pre-cache static shell

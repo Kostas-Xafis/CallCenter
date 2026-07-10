@@ -53,11 +53,17 @@ async function loadTypes() {
 		const response = await fetch(`${API_BASE}/api/stats`);
 		const stats = await response.json();
 		const typeFilter = document.getElementById("typeFilter");
+		const display = document.getElementById("typePillDisplay");
 		stats.types.forEach(type => {
 			const option = document.createElement("option");
 			option.value = type;
 			option.textContent = type;
 			typeFilter.appendChild(option);
+		});
+		typeFilter.addEventListener("change", () => {
+			const sel = typeFilter.options[typeFilter.selectedIndex];
+			display.textContent = sel.value || "Όλα";
+			filterByType();
 		});
 	} catch (error) {
 		console.error("Σφάλμα φόρτωσης τύπων:", error);
@@ -219,8 +225,16 @@ document.getElementById("searchInput").addEventListener("input", e => {
 	searchDebounceTimer = setTimeout(performSearch, 500);
 });
 
+// ── Logout ────────────────────────────────────────────────────────────
+
+async function logout() {
+	await fetch("/auth/logout", { method: "POST" });
+	window.location.href = "/login";
+}
+
 // Expose functions needed by inline onclick handlers
 window.toggleTheme = toggleTheme;
+window.logout = logout;
 window.performSearch = performSearch;
 window.filterByType = filterByType;
 window.goToPage = goToPage;

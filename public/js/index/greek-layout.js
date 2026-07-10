@@ -72,10 +72,11 @@ export function toGreekQuery(text) {
 export function updateSearchHint(raw) {
 	const hint = document.getElementById("searchHint");
 	if (!hint) return;
-	if (!raw) {
-		hint.textContent = "";
-		return;
-	}
 	const { query, converted } = toGreekQuery(raw);
-	hint.innerHTML = converted ? `Αναζήτηση ως: <span>${query}</span>` : "";
+	if (converted) {
+		hint.textContent = `Αναζήτηση ως: ${query}`;
+		hint.classList.add("search-hint--visible");
+	} else {
+		hint.classList.remove("search-hint--visible");
+	}
 }
