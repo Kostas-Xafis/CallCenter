@@ -28,7 +28,8 @@ callcenter/
 ├── migrations/
 │   ├── 0001_schema.sql         # Table + index DDL
 │   ├── 0002_seed.sql           # 1 054 INSERT statements
-│   └── 0006_auth.sql           # Users + sessions tables
+│   ├── 0006_auth.sql           # Users + sessions tables
+│   └── 0007_roles.sql          # Role-based access control (admin / user)
 │
 ├── public/
 │   ├── index.html              # SPA — search, filters, pagination, dark mode
@@ -54,9 +55,9 @@ callcenter/
 Incoming Request
   └─ server.ts  (Bun.serve fetch handler)
        ├─ OPTIONS ──────────────────────────────► handleCors() → 200 preflight
-       ├─ /auth/login  ─────────────────────────► handleLogin()  → session cookie
+       ├─ /auth/login  ─────────────────────────► handleLogin()  → session cookie (+ role)
        ├─ /auth/logout ─────────────────────────► handleLogout() → clears session
-       ├─ /api/*  ──► routes Map lookup
+       ├─ /api/*  ──► session guard → role check (write ops = admin only)
        │                └─ src/routes/phonerecords.ts  (handler)
        │                       └─ PhoneRepository       (bun:sqlite queries)
        └─ anything else ────────────────────────► serveStatic() → Bun.file()
@@ -77,6 +78,9 @@ Bun HTTP server using `Bun.serve()`.
 - Session guard protects all other paths (except `/login`, `/login.html`, `/auth/login`).
   - Unauthenticated API calls → `401` JSON.
   - Unauthenticated page requests → `302` redirect to `/login`.
+- **Role-based access control**: after authentication, write operations (`POST`/`PUT`/`PATCH`/`DELETE`) on `/api/*` are restricted to users with the `admin` role. Non-admin users receive `403 Forbidden`.
+- Static non-HTML assets (icons, manifest, JS, CSS) bypass the session guard so the login page can load without redirects.
+- Explicitly maps `/login` → `/public/login.html` (clean URL).
 - Looks up `"METHOD:/pathname"` in the `routes` Map for API calls.
 - Serves static files from `./public` directory via `Bun.file()`.
 - Falls back to `index.html` for SPA-style client-side routing.
@@ -95,6 +99,14 @@ Initializes a **singleton** SQLite database at `sqlite/callcenter.db`.
 
 ```typescript
 import type { Database } from 'bun:sqlite';
+
+type UserRole = 'admin' | 'user';
+
+type SessionUser = {
+    sessionId: string;
+    username: string;
+    role: UserRole;
+};
 
 type Env = {
     DB: Database;  // bun:sqlite Database instance
@@ -142,8 +154,9 @@ Password hashing via **PBKDF2 / SHA-256** (Web Crypto API, 100 000 iterations). 
 | `hashPassword(pw)` | Returns `{ hash, salt }` hex strings |
 | `verifyPassword(pw, salt, hash)` | Returns `boolean` |
 | `getSessionCookie(request)` | Extracts session ID from Cookie header |
-| `validateSession(db, sessionId)` | Checks session exists and hasn't expired |
-| `handleLogin(request, env)` | Validates credentials → sets session cookie |
+| `validateSession(db, sessionId)` | Returns `SessionUser \| null` (includes `username` and `role`) |
+| `getSessionUser(db, request)` | Convenience: extracts cookie + validates in one call |
+| `handleLogin(request, env)` | Validates credentials → sets session cookie; returns `{ ok, role }` |
 | `handleLogout(request, env)` | Deletes session → clears cookie |
 
 Uses `as BufferSource` casts at `crypto.subtle` API boundaries to resolve Bun's `Uint8Array<ArrayBufferLike>` vs standard `BufferSource` type mismatch.
@@ -193,13 +206,14 @@ Each handler instantiates `PhoneRepository(env.DB)` and returns JSON. All wrappe
 Creates or updates a user directly in the local SQLite database.
 
 ```bash
-bun run scripts/create-user.ts <username> <password>
+bun run scripts/create-user.ts <username> <password> [--admin]
 # or via npm script:
 bun run user:create <username> <password>
 ```
 
 - Uses the same PBKDF2/SHA-256 algorithm as `src/auth.ts` for password hashing.
-- Auto-creates the `users` table if migrations haven't been run yet.
+- `--admin` flag grants administrator privileges (full API access); default role is `user` (read-only API access).
+- Auto-creates the `users` table (and the `role` column if migration hasn't run yet).
 - Upserts: overwrites existing user with the same username.
 
 ---
@@ -223,6 +237,8 @@ CREATE TABLE IF NOT EXISTS phone_records (
 
 **`0006_auth.sql`** — Users and sessions tables for authentication.
 
+**`0007_roles.sql`** — Adds `role` column (`'admin'` or `'user'`) to both `users` and `sessions` tables for role-based access control.
+
 All migrations are applied automatically on first startup by `db.ts`, tracked via the `_migrations` table for idempotency.
 
 ---
@@ -245,40 +261,8 @@ Single self-contained HTML file; no build step.
 |---------|-------------|
 | `bun run dev` | Start server with hot reload (`--watch`) |
 | `bun run start` | Start server (production) |
-| `bun run user:create <user> <pass>` | Create or update a user account |
-
-**Features:**
-| Feature | Implementation |
-|---------|---------------|
-| Fuzzy search | Debounced `input` → `GET /api/search?q=&threshold=` |
-| Type filter | `<select>` → `GET /api/records/type?type=` |
-| Threshold selector | 4 levels (Very Strict → Very Fuzzy) passed to `/api/search` |
-| EN→GR keyboard mapping | Standard Greek layout map applied client-side; "Searching as: …" hint shown |
-| Match highlighting | `matchesIdx` from API used to wrap characters in `<span class="highlight">` |
-| Pagination | 100 rows/page, purely client-side; `«‹ Page X of Y ›»` controls |
-| Dark mode | CSS custom-property swap; preference saved in `localStorage` |
-| Latest island | Top 5 most-clicked records today; stored in `localStorage` (daily reset); clicking a Latest item re-runs the search |
-
-**localStorage keys:**
-
-| Key | Contents |
-|-----|----------|
-| `callcenter-theme` | `"light"` \| `"dark"` |
-| `callcenter-latest` | `{ date: "YYYY-MM-DD", counts: { "type\|service\|code": { type, service, code, count } } }` |
-
----
-
-## npm Scripts
-
-| Script | Command |
-|--------|---------|
-| `dev` | `wrangler dev` (local dev on port 3000) |
-| `deploy` | `wrangler deploy` |
-| `d1:create` | Create the remote D1 database |
-| `d1:migrate` | Apply migrations to remote D1 |
-| `d1:migrate:local` | Apply migrations to local D1 |
-| `d1:seed` | Seed remote D1 from `0002_seed.sql` |
-| `d1:seed:local` | Seed local D1 |
+| `bun run user:create <user> <pass>` | Create a regular user (read-only) |
+| `bun run scripts/create-user.ts <user> <pass> --admin` | Create an admin user (full access) |
 
 ---
 
@@ -288,7 +272,7 @@ No runtime npm dependencies. Dev only:
 
 | Package | Purpose |
 |---------|---------|
-| `wrangler` | CLI for deploying / local dev |
-| `@cloudflare/workers-types` | TypeScript types for `D1Database`, `Fetcher`, etc. |
-| `@types/bun` | Bun runtime types (for scripts) |
+| `@types/bun` | Bun runtime types |
 | `typescript` | Peer dependency |
+
+---
