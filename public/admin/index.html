@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <script>
+      (function(){var t=localStorage.getItem('callcenter-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark-mode');}})();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>251 ΓΝΑ CallCenter — Διαχείριση</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#41509b">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
+    <link rel="stylesheet" href="/css/shared/reset.css">
+    <link rel="stylesheet" href="/css/shared/theme.css">
+    <link rel="stylesheet" href="/admin/css/main.css">
+</head>
+<body>
+    <!-- Theme toggle -->
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙</button>
+    <!-- Logout button -->
+    <button class="logout-btn" id="logoutBtn" onclick="logout()" aria-label="Logout" title="Αποσύνδεση">🚪</button>
+
+    <!-- Back to main app -->
+    <a href="/" class="back-link" title="Επιστροφή στην εφαρμογή">← Επιστροφή</a>
+
+    <div class="admin-layout">
+        <header class="admin-header">
+            <h1>Πίνακας Διαχείρισης</h1>
+            <p class="admin-subtitle">251 ΓΝΑ CallCenter</p>
+        </header>
+
+        <!-- Tab navigation -->
+        <nav class="tab-nav" role="tablist">
+            <button class="tab-btn active" role="tab" aria-selected="true" data-tab="create-user" id="tab-create-user">
+                <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                </svg>
+                Δημιουργία Χρήστη
+            </button>
+            <button class="tab-btn" role="tab" aria-selected="false" data-tab="upload-data" id="tab-upload-data">
+                <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Ενημέρωση Βάσης
+            </button>
+        </nav>
+
+        <!-- ── Tab Panel 1: User Creation ── -->
+        <section class="tab-panel active" id="panel-create-user" role="tabpanel">
+            <div class="card">
+                <h2 class="card-title">Δημιουργία Νέου Χρήστη</h2>
+                <p class="card-desc">Συμπληρώστε τα στοιχεία του νέου χρήστη. Με την επιτυχή δημιουργία θα παραχθεί ένας σύνδεσμος εγγραφής.</p>
+
+                <form id="createUserForm" class="admin-form">
+                    <div class="field">
+                        <label for="newUsername">Όνομα χρήστη</label>
+                        <input
+                            id="newUsername"
+                            name="username"
+                            type="text"
+                            placeholder="π.χ. papadopoulos"
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="newUserRole">Ρόλος</label>
+                        <select id="newUserRole" name="role" required>
+                            <option value="" disabled selected>— Επιλέξτε ρόλο —</option>
+                            <option value="user">Χρήστης (user)</option>
+                            <option value="admin">Διαχειριστής (admin)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="createUserBtn">
+                        Δημιουργία Χρήστη
+                    </button>
+                </form>
+
+                <!-- Result: generated signup URL -->
+                <div class="result-area hidden" id="signupResult">
+                    <div class="result-label">Σύνδεσμος Εγγραφής</div>
+                    <div class="result-url-box">
+                        <code id="signupUrl"></code>
+                        <button class="btn btn-small btn-copy" id="copyUrlBtn" title="Αντιγραφή συνδέσμου">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            Αντιγραφή
+                        </button>
+                    </div>
+                    <p class="result-expiry" id="signupExpiry"></p>
+                    <p class="result-hint">Ο σύνδεσμος λήγει αυτόματα <strong>2 εβδομάδες</strong> μετά τη δημιουργία του και μπορεί να χρησιμοποιηθεί μόνο μία φορά.</p>
+                </div>
+
+                <!-- Error / status messages -->
+                <div class="status-msg hidden" id="createUserStatus"></div>
+            </div>
+        </section>
+
+        <!-- ── Tab Panel 2: File Upload ── -->
+        <section class="tab-panel" id="panel-upload-data" role="tabpanel">
+            <div class="card">
+                <h2 class="card-title">Ενημέρωση Βάσης Δεδομένων</h2>
+                <p class="card-desc">Ανεβάστε ένα αρχείο Excel (.xlsx) με τα νέα δεδομένα. <strong>Προσοχή:</strong> Η ενέργεια αυτή θα αντικαταστήσει πλήρως τα υπάρχοντα δεδομένα.</p>
+
+                <form id="uploadForm" class="admin-form">
+                    <!-- Drag & drop zone -->
+                    <div class="drop-zone" id="dropZone">
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept=".xlsx"
+                            hidden
+                        >
+                        <div class="drop-zone-content" id="dropZoneContent">
+                            <svg class="drop-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12"/>
+                                <polyline points="9 15 12 12 15 15"/>
+                            </svg>
+                            <p class="drop-text">Σύρετε ένα αρχείο <strong>.xlsx</strong> εδώ<br>ή κάντε κλικ για επιλογή</p>
+                            <p class="drop-hint">Μέγιστο μέγεθος: 10 MB</p>
+                        </div>
+
+                        <!-- Selected file info -->
+                        <div class="file-info hidden" id="fileInfo">
+                            <svg class="file-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            <div class="file-details">
+                                <span class="file-name" id="fileName"></span>
+                                <span class="file-size" id="fileSize"></span>
+                            </div>
+                            <button type="button" class="btn btn-small btn-remove" id="removeFileBtn" title="Αφαίρεση αρχείου">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Αποστολή και Ενημέρωση Βάσης
+                    </button>
+                </form>
+
+                <!-- Upload progress -->
+                <div class="upload-progress hidden" id="uploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">Μεταφόρτωση...</p>
+                </div>
+
+                <!-- Status messages -->
+                <div class="status-msg hidden" id="uploadStatus"></div>
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="/admin/js/admin.js"></script>
+</body>
+</html>
