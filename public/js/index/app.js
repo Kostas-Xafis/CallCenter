@@ -41,8 +41,8 @@ async function loadRecordsWithCache() {
 		}
 		displayResults(allRecords);
 	} catch (error) {
-		showError("Failed to load records");
-		console.error("Error loading records:", error);
+		showError("Αποτυχία φόρτωσης εγγραφών");
+		console.error("Σφάλμα φόρτωσης εγγραφών:", error);
 	}
 }
 
@@ -60,7 +60,7 @@ async function loadTypes() {
 			typeFilter.appendChild(option);
 		});
 	} catch (error) {
-		console.error("Error loading types:", error);
+		console.error("Σφάλμα φόρτωσης τύπων:", error);
 	}
 }
 
@@ -82,8 +82,7 @@ function performSearch() {
 	const { query } = toGreekQuery(raw);
 	activeQuery = query;
 
-	const threshold = parseFloat(document.getElementById("thresholdSelect").value);
-	const results = clientFuzzySearch(allRecords, query, threshold);
+	const results = clientFuzzySearch(allRecords, query);
 	displayResults(results);
 }
 
@@ -117,10 +116,10 @@ function renderPage() {
 	const countLabel = document.getElementById("resultsCount");
 	const pagination = document.getElementById("pagination");
 
-	countLabel.textContent = `${currentRecords.length} record${currentRecords.length !== 1 ? "s" : ""}`;
+	countLabel.textContent = `${currentRecords.length} εγγραφ${currentRecords.length !== 1 ? "ές" : "ή"}`;
 
 	if (currentRecords.length === 0) {
-		container.innerHTML = '<div class="no-results">No records found</div>';
+		container.innerHTML = '<div class="no-results">Δεν βρέθηκαν εγγραφές</div>';
 		pagination.style.display = "none";
 		return;
 	}
@@ -169,9 +168,9 @@ function renderPage() {
         <table>
             <thead>
                 <tr>
-                    <th>Code</th>
-                    <th>Service</th>
-                    <th>Type</th>
+                    <th>Κωδικός</th>
+                    <th>Υπηρεσία</th>
+                    <th>Τύπος</th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -179,7 +178,7 @@ function renderPage() {
     `;
 
 	// Update pagination controls
-	document.getElementById("pageInfo").textContent = `Page ${currentPage} of ${totalPages}`;
+	document.getElementById("pageInfo").textContent = `Σελίδα ${currentPage} από ${totalPages}`;
 	document.getElementById("btnFirst").disabled = currentPage === 1;
 	document.getElementById("btnPrev").disabled = currentPage === 1;
 	document.getElementById("btnNext").disabled = currentPage === totalPages;
@@ -190,7 +189,7 @@ function renderPage() {
 // ── UI helpers ───────────────────────────────────────────────────────
 
 function showLoading() {
-	document.getElementById("resultsContainer").innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+	document.getElementById("resultsContainer").innerHTML = '<div class="loading"><div class="spinner"></div>Φόρτωση…</div>';
 }
 
 function showError(message) {

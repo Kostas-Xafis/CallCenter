@@ -77,5 +77,5 @@ export function updateSearchHint(raw) {
 		return;
 	}
 	const { query, converted } = toGreekQuery(raw);
-	hint.innerHTML = converted ? `Searching as: <span>${query}</span>` : "";
+	hint.innerHTML = converted ? `Αναζήτηση ως: <span>${query}</span>` : "";
 }

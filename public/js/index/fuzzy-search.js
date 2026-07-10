@@ -51,7 +51,7 @@ export class FuzzySearch {
  * Handles merged records (multiple services per record) by searching
  * each service+code combination independently.
  */
-export function clientFuzzySearch(records, query, threshold = 0.4) {
+export function clientFuzzySearch(records, query, threshold = 0.3) {
 	// ── Exact code search for purely numeric queries ───────────────────
 	// When the user searches for a specific phone code (e.g. "4021"),
 	// use exact substring matching on the code field so that "4021"
