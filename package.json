@@ -3,7 +3,7 @@
   "private": true,
   "module": "server.ts",
   "scripts": {
-    "dev": "bun run --watch server.ts",
+    "dev": "LOG_REQUESTS=true bun run --watch server.ts",
     "start": "bun run server.ts",
     "user:create": "bun run scripts/create-user.ts"
   },

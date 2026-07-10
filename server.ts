@@ -6,6 +6,7 @@ import type { Env, SessionUser } from './types/types';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const PUBLIC_DIR = './public';
+const DEV_LOG = process.env.LOG_REQUESTS === 'true';
 
 // Paths that are accessible without a valid session
 const PUBLIC_PATHS = new Set(['/login', '/login.html', '/auth/login']);
@@ -51,6 +52,15 @@ async function serveStatic(path: string): Promise<Response | null> {
             'Cache-Control': 'public, max-age=3600',
         },
     });
+}
+
+/** Log a request and its outcome when dev logging is enabled. */
+function logRequest(method: string, path: string, status: number, durationMs: number): void {
+    if (!DEV_LOG) return;
+    const ts = new Date().toISOString();
+    const ms = durationMs.toFixed(1).padStart(7);
+    const emoji = status < 400 ? '✅' : status < 500 ? '⚠️' : '❌';
+    console.log(`[${ts}] ${emoji} ${method.padEnd(6)} ${status} ${ms}ms  ${path}`);
 }
 
 /** Create the Env object. Accepts optional DB path for testing. */
@@ -173,7 +183,19 @@ const env = createEnv();
 
 const server = Bun.serve({
     port: PORT,
-    fetch: (request: Request) => appFetch(request, env),
+    fetch: (request: Request) => {
+        const start = performance.now();
+        const url = new URL(request.url);
+        return appFetch(request, env)
+            .then(response => {
+                logRequest(request.method, url.pathname, response.status, performance.now() - start);
+                return response;
+            })
+            .catch(error => {
+                logRequest(request.method, url.pathname, 500, performance.now() - start);
+                throw error;
+            });
+    },
 });
 
 console.log(`🚀 CallCenter server running at http://localhost:${server.port}`);

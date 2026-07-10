@@ -17,7 +17,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { unlinkSync } from "fs";
 import { appFetch, createEnv } from "../server";
 import { hashPassword } from "../src/auth";
-import type { LatestRecord, PhoneRecord } from "../src/phone_repository";
+import type { PhoneRecord } from "../src/phone_repository";
 import type { Env, UserRole } from "../types/types";
 
 // ---------------------------------------------------------------------------
@@ -114,12 +114,9 @@ describe("Unauthenticated access", () => {
         ["GET", "/api/records"],
         ["GET", "/api/stats"],
         ["GET", "/api/records/hash"],
-        ["GET", "/api/latest"],
     ] as const;
 
     const writeEndpoints = [
-        ["POST", "/api/latest"],
-        ["DELETE", "/api/latest"],
     ] as const;
 
     for (const [method, path] of readEndpoints) {
@@ -131,15 +128,6 @@ describe("Unauthenticated access", () => {
         });
     }
 
-    for (const [method, path] of writeEndpoints) {
-        it(`${method} ${path} returns 401 without session`, async () => {
-            const res = await appFetch(
-                req(method, path, { body: { type: "test", service: "test", code: "123" } }),
-                env
-            );
-            expect(res.status).toBe(401);
-        });
-    }
 });
 
 // ---------------------------------------------------------------------------
@@ -257,34 +245,6 @@ describe("Regular user session", () => {
         expect(typeof body.hash).toBe("string");
     });
 
-    it("can GET /api/latest", async () => {
-        const res = await appFetch(req("GET", "/api/latest", { cookie }), env);
-        expect(res.status).toBe(200);
-    });
-
-    it("is blocked from POST /api/latest (403 Forbidden)", async () => {
-        const res = await appFetch(
-            req("POST", "/api/latest", {
-                cookie,
-                body: { type: "test", service: "svc", code: "001" },
-            }),
-            env
-        );
-        expect(res.status).toBe(403);
-        const body = await res.json() as ErrorBody;
-        expect(body.error).toContain("admin access required");
-    });
-
-    it("is blocked from DELETE /api/latest (403 Forbidden)", async () => {
-        const res = await appFetch(
-            req("DELETE", "/api/latest", {
-                cookie,
-                body: { type: "test", service: "svc", code: "001" },
-            }),
-            env
-        );
-        expect(res.status).toBe(403);
-    });
 });
 
 // ---------------------------------------------------------------------------
@@ -320,52 +280,6 @@ describe("Admin user session", () => {
         expect(res.status).toBe(200);
     });
 
-    it("can GET /api/latest", async () => {
-        const res = await appFetch(req("GET", "/api/latest", { cookie }), env);
-        expect(res.status).toBe(200);
-    });
-
-    // --- Write endpoints ---
-    it("can POST /api/latest (track)", async () => {
-        const res = await appFetch(
-            req("POST", "/api/latest", {
-                cookie,
-                body: { type: "Ραντεβού Άμεσα", service: "ΑΞΟΝΙΚΗ", code: "4932" },
-            }),
-            env
-        );
-        expect(res.status).toBe(204);
-    });
-
-    it("can DELETE /api/latest", async () => {
-        const res = await appFetch(
-            req("DELETE", "/api/latest", {
-                cookie,
-                body: { type: "Ραντεβού Άμεσα", service: "ΑΞΟΝΙΚΗ", code: "4932" },
-            }),
-            env
-        );
-        expect(res.status).toBe(204);
-    });
-
-    it("can read back tracked data via GET /api/latest", async () => {
-        // Track something first
-        await appFetch(
-            req("POST", "/api/latest", {
-                cookie,
-                body: { type: "TestType", service: "TestSvc", code: "999" },
-            }),
-            env
-        );
-
-        const res = await appFetch(req("GET", "/api/latest", { cookie }), env);
-        expect(res.status).toBe(200);
-        const body = await res.json() as LatestRecord[];
-        const tracked = body.find(
-            (r) => r.type === "TestType" && r.service === "TestSvc" && r.code === "999"
-        );
-        expect(tracked).toBeDefined();
-    });
 });
 
 // ---------------------------------------------------------------------------
@@ -430,7 +344,7 @@ describe("Logout", () => {
 // ---------------------------------------------------------------------------
 
 describe("Full session lifecycle", () => {
-    it("admin: login → read → write → logout → blocked", async () => {
+    it("admin: login → read → logout → blocked", async () => {
         // 1. Login as admin
         const loginRes = await appFetch(
             req("POST", "/auth/login", {
@@ -445,26 +359,16 @@ describe("Full session lifecycle", () => {
         const readRes = await appFetch(req("GET", "/api/records", { cookie }), env);
         expect(readRes.status).toBe(200);
 
-        // 3. Write (POST latest)
-        const writeRes = await appFetch(
-            req("POST", "/api/latest", {
-                cookie,
-                body: { type: "Lifecycle", service: "Test", code: "000" },
-            }),
-            env
-        );
-        expect(writeRes.status).toBe(204);
-
-        // 4. Logout
+        // 3. Logout
         const logoutRes = await appFetch(req("POST", "/auth/logout", { cookie }), env);
         expect(logoutRes.status).toBe(200);
 
-        // 5. Blocked after logout
+        // 4. Blocked after logout
         const blockedRes = await appFetch(req("GET", "/api/records", { cookie }), env);
         expect(blockedRes.status).toBe(401);
     });
 
-    it("regular user: login → read → write blocked → logout → blocked", async () => {
+    it("regular user: login → read → logout → blocked", async () => {
         // 1. Login as regular user
         const loginRes = await appFetch(
             req("POST", "/auth/login", {
@@ -479,21 +383,11 @@ describe("Full session lifecycle", () => {
         const readRes = await appFetch(req("GET", "/api/records", { cookie }), env);
         expect(readRes.status).toBe(200);
 
-        // 3. Write attempt (blocked)
-        const writeRes = await appFetch(
-            req("POST", "/api/latest", {
-                cookie,
-                body: { type: "Lifecycle", service: "Test", code: "000" },
-            }),
-            env
-        );
-        expect(writeRes.status).toBe(403);
-
-        // 4. Logout
+        // 3. Logout
         const logoutRes = await appFetch(req("POST", "/auth/logout", { cookie }), env);
         expect(logoutRes.status).toBe(200);
 
-        // 5. Blocked after logout
+        // 4. Blocked after logout
         const blockedRes = await appFetch(req("GET", "/api/records", { cookie }), env);
         expect(blockedRes.status).toBe(401);
     });
