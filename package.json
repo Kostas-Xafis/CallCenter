@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "LOG_REQUESTS=true bun run --watch server.ts",
     "start": "bun run server.ts",
-    "user:create": "bun run scripts/create-user.ts"
+    "user:create": "bun run scripts/create-user.ts",
+    "cache:invalidate": "bun run scripts/invalidate-cache.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -1,8 +1,10 @@
-import { PhoneRecordRoutes } from "./phonerecords";
-import { requestUrlToString } from "./utils";
 import type { Env } from "@_types/types";
+import { AdminRoutes } from "./admin";
+import { PhoneRecordRoutes } from "./phonerecords";
+import { SignupRoutes } from "./signup";
+import { requestUrlToString } from "./utils";
 
-const allRoutes = [PhoneRecordRoutes].map(pRoute => {
+const allRoutes = [PhoneRecordRoutes, AdminRoutes, SignupRoutes].map(pRoute => {
     const baseUrl = '/api' + pRoute.url;
     return pRoute.routes.map(route => ({
         url: baseUrl + route.url,

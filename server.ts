@@ -1,5 +1,5 @@
 import { closeDb, getDb } from './db';
-import { getSessionUser, handleLogin, handleLogout } from './src/auth';
+import { getSessionUser, handleLogin, handleLogout, handleSignup } from './src/auth';
 import { routes } from './src/routes/index';
 import { handleCors, headers } from './src/routes/utils';
 import type { Env, SessionUser } from './types/types';
@@ -9,7 +9,7 @@ const PUBLIC_DIR = './public';
 const DEV_LOG = process.env.LOG_REQUESTS === 'true';
 
 // Paths that are accessible without a valid session
-const PUBLIC_PATHS = new Set(['/login', '/login.html', '/auth/login']);
+const PUBLIC_PATHS = new Set(['/login', '/login.html', '/auth/login', '/signup', '/signup.html', '/auth/signup', '/api/signup/validate']);
 
 // MIME types for common static file extensions
 const MIME_TYPES: Record<string, string> = {
@@ -84,6 +84,9 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
     if (path === '/auth/logout' && request.method === 'POST') {
         return handleLogout(request, env);
     }
+    if (path === '/auth/signup' && request.method === 'POST') {
+        return handleSignup(request, env);
+    }
 
     // Session guard — skip only for the login page itself
     if (!PUBLIC_PATHS.has(path)) {
@@ -129,6 +132,14 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
                 );
             }
         }
+
+        // Admin-only pages — non-admin users are redirected to /
+        if ((path === '/admin' || path.startsWith('/admin/')) && sessionUser.role !== 'admin') {
+            return new Response(null, {
+                status: 302,
+                headers: { Location: '/' },
+            });
+        }
     }
 
     try {
@@ -154,6 +165,24 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
             const loginFile = Bun.file(`${PUBLIC_DIR}/login.html`);
             if (await loginFile.exists()) {
                 return new Response(loginFile, {
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                });
+            }
+        }
+
+        if (path === '/signup') {
+            const signupFile = Bun.file(`${PUBLIC_DIR}/signup.html`);
+            if (await signupFile.exists()) {
+                return new Response(signupFile, {
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                });
+            }
+        }
+
+        if (path === '/admin') {
+            const adminFile = Bun.file(`${PUBLIC_DIR}/admin/index.html`);
+            if (await adminFile.exists()) {
+                return new Response(adminFile, {
                     headers: { 'Content-Type': 'text/html; charset=utf-8' },
                 });
             }

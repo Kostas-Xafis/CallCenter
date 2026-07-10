@@ -155,6 +155,67 @@ export async function handleLogout(request: Request, env: Env): Promise<Response
     });
 }
 
+// ---------------------------------------------------------------------------
+// Signup — complete registration from an invitation
+// ---------------------------------------------------------------------------
+
+export async function handleSignup(request: Request, env: Env): Promise<Response> {
+    let body: unknown;
+    try {
+        body = await request.json();
+    } catch {
+        return jsonResponse({ error: 'Invalid request body' }, 400);
+    }
+
+    const { inviteId, password } = body as { inviteId?: string; password?: string; };
+
+    if (!inviteId || !password) {
+        return jsonResponse({ error: 'Κωδικός πρόσκλησης και κωδικός χρήστη είναι υποχρεωτικά.' }, 400);
+    }
+
+    if (password.length < 6) {
+        return jsonResponse({ error: 'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.' }, 400);
+    }
+
+    // Look up the invitation
+    const now = Math.floor(Date.now() / 1000);
+    const invite = env.DB.query(
+        'SELECT id, username, role, expires_at FROM signup_invitations WHERE id = ?'
+    ).get(inviteId) as { id: string; username: string; role: UserRole; expires_at: number; } | null;
+
+    if (!invite) {
+        return jsonResponse({ error: 'Η πρόσκληση δεν βρέθηκε.' }, 404);
+    }
+
+    if (invite.expires_at < now) {
+        // Clean up expired invitation
+        env.DB.query('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
+        return jsonResponse({ error: 'Η πρόσκληση έχει λήξει.' }, 410);
+    }
+
+    // Check if the username is already taken (shouldn't happen, but safety first)
+    const existingUser = env.DB.query(
+        'SELECT username FROM users WHERE username = ?'
+    ).get(invite.username) as { username: string; } | null;
+
+    if (existingUser) {
+        env.DB.query('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
+        return jsonResponse({ error: 'Υπάρχει ήδη καταχωρημένος χρήστης με αυτό το όνομα.' }, 409);
+    }
+
+    // Hash the password and create the user
+    const { hash, salt } = await hashPassword(password);
+
+    env.DB.query(
+        'INSERT INTO users (username, password_hash, salt, role) VALUES (?, ?, ?, ?)'
+    ).run(invite.username, hash, salt, invite.role);
+
+    // Delete the used invitation
+    env.DB.query('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
+
+    return jsonResponse({ ok: true, username: invite.username }, 201);
+}
+
 function jsonResponse(body: object, status: number): Response {
     return new Response(JSON.stringify(body), {
         status,

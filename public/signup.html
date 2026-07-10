@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <script>
+      (function(){var t=localStorage.getItem('callcenter-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark-mode');}})();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>251 ΓΝΑ CallCenter — Εγγραφή</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#41509b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CallCenter">
+    <link rel="apple-touch-icon" href="/icons/icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
+    <link rel="stylesheet" href="/css/shared/reset.css">
+    <link rel="stylesheet" href="/css/shared/theme.css">
+    <link rel="stylesheet" href="/css/signup/main.css">
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <span class="logo-title">251 ΓΝΑ</span>
+            <span class="logo-sub">CallCenter — Εγγραφή</span>
+        </div>
+
+        <!-- Valid invitation: show signup form -->
+        <form id="signupForm" class="hidden">
+            <div class="field">
+                <label for="username">Όνομα χρήστη</label>
+                <input id="username" name="username" type="text" readonly
+                       autocomplete="username">
+            </div>
+            <div class="field">
+                <label for="password">Κωδικός</label>
+                <input id="password" name="password" type="password"
+                       autocomplete="new-password"
+                       placeholder="••••••••" required minlength="6">
+            </div>
+            <div class="field">
+                <label for="confirmPassword">Επιβεβαίωση κωδικού</label>
+                <input id="confirmPassword" name="confirmPassword" type="password"
+                       autocomplete="new-password"
+                       placeholder="••••••••" required minlength="6">
+            </div>
+            <button type="submit" class="btn" id="submitBtn">Ολοκλήρωση εγγραφής</button>
+            <div class="error" id="errorMsg"></div>
+        </form>
+
+        <!-- Loading state -->
+        <div id="loadingState" class="status-msg">
+            Έλεγχος πρόσκλησης…
+        </div>
+
+        <!-- Invalid / expired invitation -->
+        <div id="invalidState" class="hidden">
+            <div class="error visible" id="invalidMsg"></div>
+            <a href="/login" class="btn btn-secondary">Επιστροφή στη σύνδεση</a>
+        </div>
+
+        <!-- Success state -->
+        <div id="successState" class="hidden">
+            <div class="success" id="successMsg"></div>
+            <a href="/login" class="btn">Μετάβαση στη σύνδεση</a>
+        </div>
+    </div>
+
+    <script type="module" src="/js/signup/signup.js"></script>
+</body>
+</html>
