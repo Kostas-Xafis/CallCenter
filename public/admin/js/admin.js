@@ -188,7 +188,7 @@ const progressFill = document.getElementById("progressFill");
 const progressText = document.getElementById("progressText");
 const uploadStatus = document.getElementById("uploadStatus");
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 let selectedFile = null;
 
 function formatFileSize(bytes) {
@@ -282,61 +282,40 @@ removeFileBtn.addEventListener("click", e => {
 });
 
 /**
- * STUB: API call to upload the xlsx file and refresh the database.
- * In production, this will POST to /api/admin/upload-data
- * with the file as FormData and track upload progress.
- *
- * For now it simulates a delayed upload with a progress bar.
+ * API call: POST /api/admin/upload-data
+ * Uploads an xlsx file and refreshes the entire database.
+ * Uses XMLHttpRequest for upload progress tracking.
  */
 async function uploadFileApi(file, onProgress) {
-	// TODO: Replace with real API call
-	// const formData = new FormData();
-	// formData.append("file", file);
-	//
-	// const xhr = new XMLHttpRequest();
-	// return new Promise((resolve, reject) => {
-	//     xhr.upload.addEventListener("progress", (e) => {
-	//         if (e.lengthComputable) {
-	//             onProgress(Math.round((e.loaded / e.total) * 100));
-	//         }
-	//     });
-	//     xhr.addEventListener("load", () => {
-	//         if (xhr.status >= 200 && xhr.status < 300) {
-	//             resolve(JSON.parse(xhr.responseText));
-	//         } else {
-	//             try {
-	//                 const err = JSON.parse(xhr.responseText);
-	//                 reject(new Error(err.error || "Σφάλμα μεταφόρτωσης"));
-	//             } catch {
-	//                 reject(new Error(`HTTP ${xhr.status}: Σφάλμα μεταφόρτωσης`));
-	//             }
-	//         }
-	//     });
-	//     xhr.addEventListener("error", () => reject(new Error("Σφάλμα δικτύου κατά τη μεταφόρτωση.")));
-	//     xhr.open("POST", "/api/admin/upload-data");
-	//     xhr.send(formData);
-	// });
+	const formData = new FormData();
+	formData.append("file", file);
 
-	// ---- Stub implementation ----
 	return new Promise((resolve, reject) => {
-		let progress = 0;
-		const interval = setInterval(() => {
-			progress += Math.random() * 25 + 5;
-			if (progress >= 100) {
-				progress = 100;
-				clearInterval(interval);
-				onProgress(100);
-				setTimeout(() => {
-					resolve({
-						success: true,
-						message: "Η βάση δεδομένων ενημερώθηκε επιτυχώς.",
-						recordsProcessed: Math.floor(Math.random() * 5000) + 500
-					});
-				}, 300);
-			} else {
-				onProgress(Math.min(Math.round(progress), 99));
+		const xhr = new XMLHttpRequest();
+
+		xhr.upload.addEventListener("progress", e => {
+			if (e.lengthComputable) {
+				onProgress(Math.round((e.loaded / e.total) * 100));
 			}
-		}, 400);
+		});
+
+		xhr.addEventListener("load", () => {
+			if (xhr.status >= 200 && xhr.status < 300) {
+				resolve(JSON.parse(xhr.responseText));
+			} else {
+				try {
+					const err = JSON.parse(xhr.responseText);
+					reject(new Error(err.error || "Σφάλμα μεταφόρτωσης"));
+				} catch {
+					reject(new Error(`HTTP ${xhr.status}: Σφάλμα μεταφόρτωσης`));
+				}
+			}
+		});
+
+		xhr.addEventListener("error", () => reject(new Error("Σφάλμα δικτύου κατά τη μεταφόρτωση.")));
+
+		xhr.open("POST", "/api/admin/upload-data");
+		xhr.send(formData);
 	});
 }
 
