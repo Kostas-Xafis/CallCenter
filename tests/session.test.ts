@@ -1,11 +1,12 @@
 /**
- * Session & Role-Based Access Control Tests
+ * Session, Signup & Role-Based Access Control Tests
  *
  * Covers the full user lifecycle:
- *   login → read (GET endpoints) → write (POST/DELETE endpoints) → logout
+ *   signup (validate → register) → login → read (GET) → write (POST/DELETE) → logout
  *
  * Validates that:
  *   - Unauthenticated users are blocked (401)
+ *   - Signup invitations can be validated and used to create accounts
  *   - Authenticated regular users can read but NOT write (403 on write ops)
  *   - Authenticated admin users can read AND write
  *   - Logout invalidates the session
@@ -27,6 +28,8 @@ import type { Env, UserRole } from "../types/types";
 type ErrorBody = { error: string; };
 type LoginBody = { ok: true; role: UserRole; };
 type LogoutBody = { ok: true; };
+type SignupBody = { ok: true; username: string; };
+type ValidateInviteBody = { username: string; };
 type StatsBody = { total: number; uniqueTypes: number; types: string[]; statsByType: { type: string; count: number; }[]; };
 type HashBody = { hash: string; };
 
@@ -208,7 +211,186 @@ describe("Login", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 3. Regular user (role="user") — read allowed, write forbidden
+// 3. Signup — complete registration from an invitation
+// ---------------------------------------------------------------------------
+
+describe("Signup", () => {
+    const VALID_INVITE_ID = "a1b2c3d4e5f6a1b2c3d4e5f6";
+    const EXPIRED_INVITE_ID = "deadbeef1111deadbeef2222";
+    const EXPIRED_INVITE_ID2 = "deadbeef3333deadbeef4444"; // separate for POST test
+
+    beforeAll(() => {
+        const now = Math.floor(Date.now() / 1000);
+
+        // Create a valid signup invitation (expires in 14 days)
+        db.query(
+            `INSERT INTO signup_invitations (id, username, role, expires_at, created_at)
+             VALUES (?, ?, ?, ?, datetime('now'))`
+        ).run(VALID_INVITE_ID, "newuser", "user", now + 60 * 60 * 24 * 14);
+
+        // Create an expired invitation (for validate test)
+        db.query(
+            `INSERT INTO signup_invitations (id, username, role, expires_at, created_at)
+             VALUES (?, ?, ?, ?, datetime('now'))`
+        ).run(EXPIRED_INVITE_ID, "expireduser", "user", now - 60); // 1 min ago
+
+        // Create another expired invitation (for POST signup test — validate will delete the first)
+        db.query(
+            `INSERT INTO signup_invitations (id, username, role, expires_at, created_at)
+             VALUES (?, ?, ?, ?, datetime('now'))`
+        ).run(EXPIRED_INVITE_ID2, "expireduser2", "user", now - 60);
+    });
+
+    // -------------------------------------------------------
+    // Validate invitation endpoint
+    // -------------------------------------------------------
+
+    describe("GET /api/signup/validate", () => {
+        it("returns username for a valid invitation", async () => {
+            const res = await appFetch(
+                req("GET", `/api/signup/validate?id=${VALID_INVITE_ID}`),
+                env
+            );
+            expect(res.status).toBe(200);
+            const body = await res.json() as ValidateInviteBody;
+            expect(body.username).toBe("newuser");
+        });
+
+        it("returns 410 for an expired invitation", async () => {
+            const res = await appFetch(
+                req("GET", `/api/signup/validate?id=${EXPIRED_INVITE_ID}`),
+                env
+            );
+            expect(res.status).toBe(410);
+            const body = await res.json() as ErrorBody;
+            expect(body.error).toContain("έχει λήξει");
+        });
+
+        it("returns 404 for a non-existent invitation", async () => {
+            const res = await appFetch(
+                req("GET", "/api/signup/validate?id=nonexistent000000000000"),
+                env
+            );
+            expect(res.status).toBe(404);
+        });
+
+        it("returns 400 when id is missing", async () => {
+            const res = await appFetch(
+                req("GET", "/api/signup/validate"),
+                env
+            );
+            expect(res.status).toBe(400);
+        });
+    });
+
+    // -------------------------------------------------------
+    // Signup endpoint
+    // -------------------------------------------------------
+
+    describe("POST /auth/signup", () => {
+        it("completes signup with valid invitation and password", async () => {
+            const res = await appFetch(
+                req("POST", "/auth/signup", {
+                    body: { inviteId: VALID_INVITE_ID, password: "newuserpass" },
+                }),
+                env
+            );
+            expect(res.status).toBe(201);
+            const body = await res.json() as SignupBody;
+            expect(body.ok).toBe(true);
+            expect(body.username).toBe("newuser");
+        });
+
+        it("allows the new user to log in after signup", async () => {
+            const res = await appFetch(
+                req("POST", "/auth/login", {
+                    body: { username: "newuser", password: "newuserpass" },
+                }),
+                env
+            );
+            expect(res.status).toBe(200);
+            const body = await res.json() as LoginBody;
+            expect(body.ok).toBe(true);
+            expect(body.role).toBe("user");
+            expect(getSessionCookie(res)).toBeTruthy();
+        });
+
+        it("fails when invitation is already used", async () => {
+            // The invitation was consumed by the successful signup above
+            const res = await appFetch(
+                req("POST", "/auth/signup", {
+                    body: { inviteId: VALID_INVITE_ID, password: "anotherpass" },
+                }),
+                env
+            );
+            expect(res.status).toBe(404);
+            const body = await res.json() as ErrorBody;
+            expect(body.error).toContain("δεν βρέθηκε");
+        });
+
+        it("fails with expired invitation", async () => {
+            const res = await appFetch(
+                req("POST", "/auth/signup", {
+                    body: { inviteId: EXPIRED_INVITE_ID2, password: "expiredpass" },
+                }),
+                env
+            );
+            expect(res.status).toBe(410);
+            const body = await res.json() as ErrorBody;
+            expect(body.error).toContain("έχει λήξει");
+        });
+
+        it("fails with non-existent invitation", async () => {
+            const res = await appFetch(
+                req("POST", "/auth/signup", {
+                    body: { inviteId: "nonexistent000000000000", password: "whatever" },
+                }),
+                env
+            );
+            expect(res.status).toBe(404);
+        });
+
+        it("fails with short password", async () => {
+            const res = await appFetch(
+                req("POST", "/auth/signup", {
+                    body: { inviteId: VALID_INVITE_ID, password: "12345" },
+                }),
+                env
+            );
+            expect(res.status).toBe(400);
+            const body = await res.json() as ErrorBody;
+            expect(body.error).toContain("6 χαρακτήρες");
+        });
+
+        it("fails with missing inviteId", async () => {
+            const res = await appFetch(
+                req("POST", "/auth/signup", {
+                    body: { password: "whatever" },
+                }),
+                env
+            );
+            expect(res.status).toBe(400);
+        });
+
+        it("fails with missing password", async () => {
+            const res = await appFetch(
+                req("POST", "/auth/signup", {
+                    body: { inviteId: VALID_INVITE_ID },
+                }),
+                env
+            );
+            expect(res.status).toBe(400);
+        });
+
+        it("fails with empty body", async () => {
+            const res = await appFetch(req("POST", "/auth/signup"), env);
+            expect(res.status).toBe(400);
+        });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 5. Regular user (role="user") — read allowed, write forbidden
 // ---------------------------------------------------------------------------
 
 describe("Regular user session", () => {
@@ -248,7 +430,7 @@ describe("Regular user session", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4. Admin user (role="admin") — read AND write allowed
+// 6. Admin user (role="admin") — read AND write allowed
 // ---------------------------------------------------------------------------
 
 describe("Admin user session", () => {
@@ -283,7 +465,7 @@ describe("Admin user session", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 5. Logout
+// 7. Logout
 // ---------------------------------------------------------------------------
 
 describe("Logout", () => {
@@ -340,7 +522,7 @@ describe("Logout", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 6. Full lifecycle: login → read → write → logout → blocked
+// 8. Full lifecycle: login → read → write → logout → blocked
 // ---------------------------------------------------------------------------
 
 describe("Full session lifecycle", () => {
