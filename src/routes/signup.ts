@@ -1,5 +1,5 @@
 import type { ApiRoute, ApiRouteParent, Env } from "@_types/types";
-import { headers, trycatch } from "./utils";
+import { headers, jsonError, trycatch } from "./utils";
 
 // ---------------------------------------------------------------------------
 // GET /api/signup/validate?id=<hexCode>
@@ -14,10 +14,7 @@ const validateInvitationRoute: ApiRoute = {
             const inviteId = url.searchParams.get("id");
 
             if (!inviteId) {
-                return new Response(
-                    JSON.stringify({ error: "Λείπει ο κωδικός πρόσκλησης." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Λείπει ο κωδικός πρόσκλησης.");
             }
 
             const now = Math.floor(Date.now() / 1000);
@@ -31,19 +28,13 @@ const validateInvitationRoute: ApiRoute = {
             } | null;
 
             if (!invite) {
-                return new Response(
-                    JSON.stringify({ error: "Η πρόσκληση δεν βρέθηκε." }),
-                    { status: 404, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Η πρόσκληση δεν βρέθηκε.", 404);
             }
 
             if (invite.expires_at < now) {
                 // Clean up expired invitation
                 env.DB.query("DELETE FROM signup_invitations WHERE id = ?").run(inviteId);
-                return new Response(
-                    JSON.stringify({ error: "Η πρόσκληση έχει λήξει." }),
-                    { status: 410, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Η πρόσκληση έχει λήξει.", 410);
             }
 
             return new Response(

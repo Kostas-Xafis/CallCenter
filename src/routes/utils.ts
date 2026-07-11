@@ -1,14 +1,22 @@
 import type { ApiRoute } from "@_types/types";
 
+/**
+ * Return a JSON error response with the given message and HTTP status.
+ * Defaults to 400 (Bad Request). CORS headers are included automatically.
+ */
+export function jsonError(message: string, status: number = 400): Response {
+    return new Response(JSON.stringify({ error: message }), {
+        status,
+        headers: { ...headers, "Content-Type": "application/json" },
+    });
+}
+
 export const trycatch = async (fn: () => Promise<Response>, errorMsg: any) => {
     try {
         return await fn();
     } catch (error) {
         console.error(errorMsg, error);
-        return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return jsonError("Internal Server Error", 500);
     }
 };
 

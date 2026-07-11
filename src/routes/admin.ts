@@ -1,5 +1,5 @@
 import type { ApiRoute, ApiRouteParent, Env, UserRole } from "@_types/types";
-import { headers, trycatch } from "./utils";
+import { headers, jsonError, trycatch } from "./utils";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -40,32 +40,20 @@ const createUserRoute: ApiRoute = {
             // --- Validation ---
 
             if (!username || username.length < 2) {
-                return new Response(
-                    JSON.stringify({ error: "Το όνομα χρήστη πρέπει να έχει τουλάχιστον 2 χαρακτήρες." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Το όνομα χρήστη πρέπει να έχει τουλάχιστον 2 χαρακτήρες.");
             }
 
             if (username.length > 64) {
-                return new Response(
-                    JSON.stringify({ error: "Το όνομα χρήστη δεν μπορεί να υπερβαίνει τους 64 χαρακτήρες." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Το όνομα χρήστη δεν μπορεί να υπερβαίνει τους 64 χαρακτήρες.");
             }
 
             // Allow only alphanumeric, underscore, dash, and Greek letters
             if (!/^[\w\u0370-\u03ff\u1f00-\u1fff-]+$/.test(username)) {
-                return new Response(
-                    JSON.stringify({ error: "Το όνομα χρήστη περιέχει μη επιτρεπτούς χαρακτήρες." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Το όνομα χρήστη περιέχει μη επιτρεπτούς χαρακτήρες.");
             }
 
             if (!VALID_ROLES.has(role as UserRole)) {
-                return new Response(
-                    JSON.stringify({ error: "Μη έγκυρος ρόλος. Επιτρέπονται: admin, user." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Μη έγκυρος ρόλος. Επιτρέπονται: admin, user.");
             }
 
             // --- Business rules ---
@@ -76,10 +64,7 @@ const createUserRoute: ApiRoute = {
             ).get(username) as { username: string; } | null;
 
             if (existingUser) {
-                return new Response(
-                    JSON.stringify({ error: "Υπάρχει ήδη καταχωρημένος χρήστης με αυτό το όνομα." }),
-                    { status: 409, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Υπάρχει ήδη καταχωρημένος χρήστης με αυτό το όνομα.", 409);
             }
 
             // Clean up expired invitations for this username (so they don't block re-creation)
@@ -94,12 +79,10 @@ const createUserRoute: ApiRoute = {
             ).get(username, now) as { id: string; } | null;
 
             if (existingInvite) {
-                return new Response(
-                    JSON.stringify({
-                        error: "Υπάρχει ήδη ενεργή πρόσκληση για αυτό το όνομα χρήστη. " +
-                            "Περιμένετε να λήξει ή ακυρώστε την πρώτα.",
-                    }),
-                    { status: 409, headers: { ...headers, "Content-Type": "application/json" } }
+                return jsonError(
+                    "Υπάρχει ήδη ενεργή πρόσκληση για αυτό το όνομα χρήστη. " +
+                    "Περιμένετε να λήξει ή ακυρώστε την πρώτα.",
+                    409
                 );
             }
 
@@ -137,38 +120,26 @@ const uploadDataRoute: ApiRoute = {
         return trycatch(async () => {
             const contentType = request.headers.get("Content-Type") ?? "";
             if (!contentType.includes("multipart/form-data")) {
-                return new Response(
-                    JSON.stringify({ error: "Απαιτείται multipart/form-data." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Απαιτείται multipart/form-data.");
             }
 
             // Read the raw body and check size
             const contentLength = parseInt(request.headers.get("Content-Length") ?? "0", 10);
             if (contentLength > MAX_FILE_SIZE) {
-                return new Response(
-                    JSON.stringify({ error: `Το αρχείο υπερβαίνει το μέγιστο επιτρεπόμενο μέγεθος (50 MB).` }),
-                    { status: 413, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Το αρχείο υπερβαίνει το μέγιστο επιτρεπόμενο μέγεθος (50 MB).", 413);
             }
 
             const formData = await request.formData();
             const file = formData.get("file");
 
             if (!file || !(file instanceof File)) {
-                return new Response(
-                    JSON.stringify({ error: "Δεν βρέθηκε αρχείο στο αίτημα." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Δεν βρέθηκε αρχείο στο αίτημα.");
             }
 
             // Validate file extension
             const fileName = file.name.toLowerCase();
             if (!fileName.endsWith(".xlsx")) {
-                return new Response(
-                    JSON.stringify({ error: "Επιτρέπονται μόνο αρχεία .xlsx." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Επιτρέπονται μόνο αρχεία .xlsx.");
             }
 
             // Parse the xlsx file with SheetJS
@@ -178,37 +149,37 @@ const uploadDataRoute: ApiRoute = {
 
             const sheetNames = workbook.SheetNames;
             if (sheetNames.length === 0) {
-                return new Response(
-                    JSON.stringify({ error: "Το αρχείο Excel δεν περιέχει φύλλα εργασίας." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Το αρχείο Excel δεν περιέχει φύλλα εργασίας.");
             }
 
             const firstSheetName = sheetNames[0];
+            if (!firstSheetName) {
+                return jsonError("Δεν βρέθηκε το πρώτο φύλλο εργασίας.");
+            }
             const sheet = workbook.Sheets[firstSheetName];
+            if (!sheet) {
+                return jsonError("Δεν βρέθηκε το πρώτο φύλλο εργασίας.");
+            }
             const rawRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
             if (rawRows.length === 0) {
-                return new Response(
-                    JSON.stringify({ error: "Το φύλλο εργασίας είναι κενό." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Το φύλλο εργασίας είναι κενό.");
             }
 
             // Validate that the expected columns exist (case-insensitive header matching)
             const headerRow = rawRows[0];
+            if (typeof headerRow !== "object" || headerRow === null) {
+                return jsonError("Η πρώτη γραμμή του φύλλου εργασίας πρέπει να περιέχει τις επικεφαλίδες στηλών.");
+            }
             const headerKeys = Object.keys(headerRow).map(k => k.trim().toLowerCase());
 
             const missingColumns = EXPECTED_COLUMNS.filter(
                 col => !headerKeys.includes(col)
             );
             if (missingColumns.length > 0) {
-                return new Response(
-                    JSON.stringify({
-                        error: `Λείπουν οι απαιτούμενες στήλες: ${missingColumns.join(", ")}. ` +
-                            `Βρέθηκαν: ${headerKeys.join(", ") || "(καμία)"}.`,
-                    }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
+                return jsonError(
+                    `Λείπουν οι απαιτούμενες στήλες: ${missingColumns.join(", ")}. ` +
+                    `Βρέθηκαν: ${headerKeys.join(", ") || "(καμία)"}.`
                 );
             }
 
@@ -225,6 +196,10 @@ const uploadDataRoute: ApiRoute = {
             const records: { type: string; service: string; code: string; }[] = [];
             for (let i = 1; i < rawRows.length; i++) {
                 const row = rawRows[i];
+                if (typeof row !== "object" || row === null) {
+                    continue; // Skip invalid rows
+                }
+
                 const type = String(row[columnMap.get("type")!] ?? "").trim();
                 const service = String(row[columnMap.get("service")!] ?? "").trim();
                 const code = String(row[columnMap.get("code")!] ?? "").trim();
@@ -234,12 +209,9 @@ const uploadDataRoute: ApiRoute = {
 
                 // Every row must have all three fields
                 if (!type || !service || !code) {
-                    return new Response(
-                        JSON.stringify({
-                            error: `Η γραμμή ${i + 1} έχει κενά πεδία. ` +
-                                `Απαιτούνται: type, service, code.`,
-                        }),
-                        { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
+                    return jsonError(
+                        `Η γραμμή ${i + 1} έχει κενά πεδία. ` +
+                        "Απαιτούνται: type, service, code."
                     );
                 }
 
@@ -247,10 +219,7 @@ const uploadDataRoute: ApiRoute = {
             }
 
             if (records.length === 0) {
-                return new Response(
-                    JSON.stringify({ error: "Δεν βρέθηκαν έγκυρες εγγραφές δεδομένων." }),
-                    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
-                );
+                return jsonError("Δεν βρέθηκαν έγκυρες εγγραφές δεδομένων.");
             }
 
             // --- Replace all phone_records in a transaction ---
