@@ -1,5 +1,6 @@
 import type { Env, SessionUser, UserRole } from '@_types/types';
 import type { Database } from 'bun:sqlite';
+import { jsonError, jsonSuccess, toHex } from './routes/utils';
 
 const SESSION_COOKIE = 'session';
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days in seconds
@@ -7,12 +8,6 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days in seconds
 // ---------------------------------------------------------------------------
 // Password hashing — PBKDF2 / SHA-256 via the Web Crypto API
 // ---------------------------------------------------------------------------
-
-function toHex(bytes: Uint8Array): string {
-    return Array.from(bytes)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-}
 
 function fromHex(hex: string): Uint8Array {
     const bytes = new Uint8Array(hex.length / 2);
@@ -117,12 +112,12 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
     try {
         body = await request.json();
     } catch {
-        return jsonResponse({ error: 'Invalid request body' }, 400);
+        return jsonError('Invalid request body');
     }
 
     const { username, password } = body as { username?: string; password?: string; };
     if (!username || !password) {
-        return jsonResponse({ error: 'Username and password are required' }, 400);
+        return jsonError('Username and password are required');
     }
 
     const user = env.DB.query(
@@ -130,7 +125,7 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
     ).get(username) as { password_hash: string; salt: string; role: UserRole; } | null;
 
     if (!user || !(await verifyPassword(password, user.salt, user.password_hash))) {
-        return jsonResponse({ error: 'Invalid credentials' }, 401);
+        return jsonError('Invalid credentials', 401);
     }
 
     const sessionId = await createSession(env.DB, username);
@@ -164,17 +159,17 @@ export async function handleSignup(request: Request, env: Env): Promise<Response
     try {
         body = await request.json();
     } catch {
-        return jsonResponse({ error: 'Invalid request body' }, 400);
+        return jsonError('Invalid request body');
     }
 
     const { inviteId, password } = body as { inviteId?: string; password?: string; };
 
     if (!inviteId || !password) {
-        return jsonResponse({ error: 'Κωδικός πρόσκλησης και κωδικός χρήστη είναι υποχρεωτικά.' }, 400);
+        return jsonError('Κωδικός πρόσκλησης και κωδικός χρήστη είναι υποχρεωτικά.');
     }
 
     if (password.length < 6) {
-        return jsonResponse({ error: 'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.' }, 400);
+        return jsonError('Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.');
     }
 
     // Look up the invitation
@@ -184,13 +179,13 @@ export async function handleSignup(request: Request, env: Env): Promise<Response
     ).get(inviteId) as { id: string; username: string; role: UserRole; expires_at: number; } | null;
 
     if (!invite) {
-        return jsonResponse({ error: 'Η πρόσκληση δεν βρέθηκε.' }, 404);
+        return jsonError('Η πρόσκληση δεν βρέθηκε.', 404);
     }
 
     if (invite.expires_at < now) {
         // Clean up expired invitation
         env.DB.query('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
-        return jsonResponse({ error: 'Η πρόσκληση έχει λήξει.' }, 410);
+        return jsonError('Η πρόσκληση έχει λήξει.', 410);
     }
 
     // Check if the username is already taken (shouldn't happen, but safety first)
@@ -200,7 +195,7 @@ export async function handleSignup(request: Request, env: Env): Promise<Response
 
     if (existingUser) {
         env.DB.query('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
-        return jsonResponse({ error: 'Υπάρχει ήδη καταχωρημένος χρήστης με αυτό το όνομα.' }, 409);
+        return jsonError('Υπάρχει ήδη καταχωρημένος χρήστης με αυτό το όνομα.', 409);
     }
 
     // Hash the password and create the user
@@ -213,12 +208,5 @@ export async function handleSignup(request: Request, env: Env): Promise<Response
     // Delete the used invitation
     env.DB.query('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
 
-    return jsonResponse({ ok: true, username: invite.username }, 201);
-}
-
-function jsonResponse(body: object, status: number): Response {
-    return new Response(JSON.stringify(body), {
-        status,
-        headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonSuccess({ ok: true, username: invite.username }, 201);
 }

@@ -1,5 +1,5 @@
 import type { ApiRoute, ApiRouteParent, Env, UserRole } from "@_types/types";
-import { headers, jsonError, trycatch } from "./utils";
+import { jsonError, jsonSuccess, toHex, trycatch } from "./utils";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -9,9 +9,7 @@ import { headers, jsonError, trycatch } from "./utils";
 function generateHexCode(): string {
     const bytes = new Uint8Array(12);
     crypto.getRandomValues(bytes);
-    return Array.from(bytes)
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
+    return toHex(bytes);
 }
 
 /** Calculate a Unix timestamp 14 days from now. */
@@ -97,10 +95,7 @@ const createUserRoute: ApiRoute = {
 
             const signupUrl = `/signup?id=${hexCode}`;
 
-            return new Response(
-                JSON.stringify({ signupUrl, hexCode, expiresAt }),
-                { status: 201, headers: { ...headers, "Content-Type": "application/json" } }
-            );
+            return jsonSuccess({ signupUrl, hexCode, expiresAt }, 201);
         }, "Error creating user invitation");
     },
 };
@@ -241,14 +236,11 @@ const uploadDataRoute: ApiRoute = {
 
             replaceAll(records);
 
-            return new Response(
-                JSON.stringify({
-                    success: true,
-                    message: "Η βάση δεδομένων ενημερώθηκε επιτυχώς.",
-                    recordsProcessed: records.length,
-                }),
-                { status: 200, headers: { ...headers, "Content-Type": "application/json" } }
-            );
+            return jsonSuccess({
+                success: true,
+                message: "Η βάση δεδομένων ενημερώθηκε επιτυχώς.",
+                recordsProcessed: records.length,
+            });
         }, "Error handling file upload");
     },
 };

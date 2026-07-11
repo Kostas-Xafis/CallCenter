@@ -1,7 +1,7 @@
 import { closeDb, getDb } from './db';
 import { getSessionUser, handleLogin, handleLogout, handleSignup } from './src/auth';
 import { routes } from './src/routes/index';
-import { handleCors, headers } from './src/routes/utils';
+import { handleCors, jsonError } from './src/routes/utils';
 import type { Env, SessionUser } from './types/types';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -10,6 +10,9 @@ const DEV_LOG = process.env.LOG_REQUESTS === 'true';
 
 // Paths that are accessible without a valid session
 const PUBLIC_PATHS = new Set(['/login', '/login.html', '/auth/login', '/signup', '/signup.html', '/auth/signup', '/api/signup/validate']);
+
+// HTTP methods that require admin role for /api/* paths
+const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 // MIME types for common static file extensions
 const MIME_TYPES: Record<string, string> = {
@@ -34,6 +37,17 @@ function getMimeType(path: string): string {
     return MIME_TYPES[ext] || 'application/octet-stream';
 }
 
+/** Try to serve an HTML file at the given path. Returns null if not found. */
+async function serveHtml(filePath: string): Promise<Response | null> {
+    const file = Bun.file(filePath);
+    if (await file.exists()) {
+        return new Response(file, {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
+    }
+    return null;
+}
+
 /** Serve a static file from the public directory. Returns null if not found. */
 async function serveStatic(path: string): Promise<Response | null> {
     // Prevent directory traversal
@@ -52,6 +66,11 @@ async function serveStatic(path: string): Promise<Response | null> {
             'Cache-Control': 'public, max-age=3600',
         },
     });
+}
+
+/** Return a 302 redirect Response to the given location. */
+function redirect(location: string): Response {
+    return new Response(null, { status: 302, headers: { Location: location } });
 }
 
 /** Log a request and its outcome when dev logging is enabled. */
@@ -78,14 +97,14 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
     if (preflightRes) return preflightRes;
 
     // Auth endpoints (no session required)
-    if (path === '/auth/login' && request.method === 'POST') {
-        return handleLogin(request, env);
-    }
-    if (path === '/auth/logout' && request.method === 'POST') {
-        return handleLogout(request, env);
-    }
-    if (path === '/auth/signup' && request.method === 'POST') {
-        return handleSignup(request, env);
+    const AUTH_HANDLERS: Record<string, (req: Request, env: Env) => Promise<Response>> = {
+        '/auth/login': handleLogin,
+        '/auth/logout': handleLogout,
+        '/auth/signup': handleSignup,
+    };
+    const authHandler = AUTH_HANDLERS[path];
+    if (authHandler && request.method === 'POST') {
+        return authHandler(request, env);
     }
 
     // Session guard — skip only for the login page itself
@@ -108,37 +127,21 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
         if (!sessionUser) {
             // API callers get a clean 401; everything else gets redirected to /login
             if (path.startsWith('/api/')) {
-                return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-                    status: 401,
-                    headers: { ...headers, 'Content-Type': 'application/json' },
-                });
+                return jsonError('Unauthorized', 401);
             }
-            return new Response(null, {
-                status: 302,
-                headers: { Location: '/login' },
-            });
+            return redirect('/login');
         }
 
         // Role-based access control for write operations
         if (path.startsWith('/api/') && sessionUser.role !== 'admin') {
-            const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
             if (WRITE_METHODS.has(request.method)) {
-                return new Response(
-                    JSON.stringify({ error: 'Forbidden: admin access required' }),
-                    {
-                        status: 403,
-                        headers: { ...headers, 'Content-Type': 'application/json' },
-                    }
-                );
+                return jsonError('Forbidden: admin access required', 403);
             }
         }
 
         // Admin-only pages — non-admin users are redirected to /
         if ((path === '/admin' || path.startsWith('/admin/')) && sessionUser.role !== 'admin') {
-            return new Response(null, {
-                status: 302,
-                headers: { Location: '/' },
-            });
+            return redirect('/');
         }
     }
 
@@ -150,10 +153,7 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
             if (handler) {
                 return await handler(request, env);
             }
-            return new Response(JSON.stringify({ error: 'API route not found' }), {
-                status: 404,
-                headers: { ...headers, 'Content-Type': 'application/json' }
-            });
+            return jsonError('API route not found', 404);
         }
 
         // Serve static assets
@@ -161,49 +161,26 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
         if (staticResponse) return staticResponse;
 
         // Map clean URLs to .html files
-        if (path === '/login') {
-            const loginFile = Bun.file(`${PUBLIC_DIR}/login.html`);
-            if (await loginFile.exists()) {
-                return new Response(loginFile, {
-                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-                });
-            }
-        }
-
-        if (path === '/signup') {
-            const signupFile = Bun.file(`${PUBLIC_DIR}/signup.html`);
-            if (await signupFile.exists()) {
-                return new Response(signupFile, {
-                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-                });
-            }
-        }
-
-        if (path === '/admin') {
-            const adminFile = Bun.file(`${PUBLIC_DIR}/admin/index.html`);
-            if (await adminFile.exists()) {
-                return new Response(adminFile, {
-                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-                });
-            }
+        const cleanUrlMap: Record<string, string> = {
+            '/login': `${PUBLIC_DIR}/login.html`,
+            '/signup': `${PUBLIC_DIR}/signup.html`,
+            '/admin': `${PUBLIC_DIR}/admin/index.html`,
+        };
+        const htmlFile = cleanUrlMap[path];
+        if (htmlFile) {
+            const response = await serveHtml(htmlFile);
+            if (response) return response;
         }
 
         // Fallback to index.html for SPA-style routing
-        const indexFile = Bun.file(`${PUBLIC_DIR}/index.html`);
-        if (await indexFile.exists()) {
-            return new Response(indexFile, {
-                headers: { 'Content-Type': 'text/html; charset=utf-8' },
-            });
-        }
+        const indexResponse = await serveHtml(`${PUBLIC_DIR}/index.html`);
+        if (indexResponse) return indexResponse;
 
         return new Response('Not Found', { status: 404 });
 
     } catch (error) {
         console.error('Server error:', error);
-        return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-            status: 500,
-            headers: { ...headers, 'Content-Type': 'application/json' }
-        });
+        return jsonError('Internal Server Error', 500);
     }
 }
 

@@ -1,5 +1,5 @@
 import type { ApiRoute, ApiRouteParent, Env } from "@_types/types";
-import { headers, jsonError, trycatch } from "./utils";
+import { jsonError, jsonSuccess, trycatch } from "./utils";
 
 // ---------------------------------------------------------------------------
 // GET /api/signup/validate?id=<hexCode>
@@ -37,10 +37,7 @@ const validateInvitationRoute: ApiRoute = {
                 return jsonError("Η πρόσκληση έχει λήξει.", 410);
             }
 
-            return new Response(
-                JSON.stringify({ username: invite.username }),
-                { status: 200, headers: { ...headers, "Content-Type": "application/json" } }
-            );
+            return jsonSuccess({ username: invite.username });
         }, "Error validating signup invitation");
     },
 };
