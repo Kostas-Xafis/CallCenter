@@ -19,7 +19,7 @@ body {
 	border: 1px solid var(--border-color);
 	border-radius: 50%;
 	background: var(--surface);
-	font-size: 1.1rem;
+	color: var(--text-primary);
 	cursor: pointer;
 	display: flex;
 	align-items: center;
@@ -38,7 +38,7 @@ body {
 	border: 1px solid var(--border-color);
 	border-radius: 50%;
 	background: var(--surface);
-	font-size: 1.1rem;
+	color: var(--text-primary);
 	cursor: pointer;
 	display: flex;
 	align-items: center;
@@ -48,6 +48,12 @@ body {
 }
 .logout-btn:hover {
 	background: var(--error-bg);
+}
+
+.btn-icon {
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
 }
 
 /* ── Back link ────────────────────────────────────────────────────── */
