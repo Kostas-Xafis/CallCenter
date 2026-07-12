@@ -21,17 +21,18 @@
     <link rel="stylesheet" href="/css/index/main.css">
 </head>
 <body>
-        <!-- Dark mode toggle (top-right, fixed) -->
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙</button>
-        <!-- Logout button (top-right, fixed, next to theme toggle) -->
-        <button class="logout-btn" id="logoutBtn" onclick="logout()" aria-label="Logout" title="Αποσύνδεση">🚪</button>
-
         <div class="layout">
 
-        <!-- Left panel: brand + search -->
+        <!-- Left panel: brand + actions + search -->
         <aside class="left-panel">
-            <div class="brand">
-                <h1>251 ΓΝΑ CallCenter</h1>
+            <div class="brand-group">
+                <div class="brand">
+                    <h1>251 ΓΝΑ CallCenter</h1>
+                </div>
+                <div class="panel-actions">
+                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">🌙 Σκούρα εμφάνιση</button>
+                    <button class="logout-btn" id="logoutBtn" onclick="logout()" aria-label="Logout" title="Αποσύνδεση">🚪 Αποσύνδεση</button>
+                </div>
             </div>
         </aside>
         <div class="right-wrapper">

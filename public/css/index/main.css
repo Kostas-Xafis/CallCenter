@@ -32,13 +32,19 @@ body {
 	gap: 16px;
 }
 
-.brand {
+.brand-group {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 10px;
 	background: var(--surface);
 	border-radius: 12px;
 	padding: 16px 32px;
 	box-shadow: 0 4px 8px var(--shadow-color);
-	text-align: center;
 	align-self: center;
+}
+
+.brand {
+	text-align: center;
 }
 
 h1 {
@@ -47,47 +53,42 @@ h1 {
 	line-height: 1.2;
 }
 
-.theme-toggle {
-	position: fixed;
-	top: 20px;
-	right: 20px;
-	z-index: 10;
-	width: 38px;
-	height: 38px;
-	padding: 0;
-	font-size: 18px;
-	background: var(--surface-muted);
-	border-radius: 50%;
+/* ── Panel actions (theme + logout) ── */
+
+.panel-actions {
 	display: flex;
-	align-items: center;
-	justify-content: center;
-	line-height: 1;
-	box-shadow: 0 2px 6px var(--shadow-color);
+	flex-direction: column;
+	gap: 8px;
+	padding-top: 8px;
+	border-top: 1px solid var(--border-color);
 }
 
+.theme-toggle,
 .logout-btn {
-	position: fixed;
-	top: 20px;
-	right: 68px;
-	z-index: 10;
-	width: 38px;
-	height: 38px;
-	padding: 0;
-	font-size: 18px;
+	width: 100%;
+	padding: 10px 14px;
+	font-size: 14px;
+	font-weight: 600;
 	background: var(--surface-muted);
-	border-radius: 50%;
+	color: var(--text-primary);
+	border-radius: 8px;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	line-height: 1;
-	box-shadow: 0 2px 6px var(--shadow-color);
+	gap: 10px;
+	box-shadow: 0 2px 4px var(--shadow-color);
 	border: none;
 	cursor: pointer;
 	transition: background 0.3s;
+	white-space: normal;
+}
+
+.theme-toggle:hover {
+	background: var(--surface-hover);
 }
 
 .logout-btn:hover {
 	background: var(--error-bg);
+	color: var(--error-text);
 }
 
 .search-section {
@@ -148,9 +149,18 @@ button:active {
 }
 
 .search-row {
-	display: flex;
+	display: grid;
+	grid-template-columns: clamp(100px, 20%, 300px) 1fr;
+	grid-template-rows: 1fr;
 	gap: 8px;
 	align-items: stretch;
+}
+
+#typePillDisplay {
+	height: 100%;
+	width: 100%;
+	text-align: center;
+	align-content: center;
 }
 
 .type-pill-wrapper {
@@ -498,9 +508,21 @@ tbody tr:hover {
 		font-size: 1.3em;
 	}
 
-	.theme-toggle {
-		top: 20px;
-		right: 15px;
+	.brand-group {
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		padding: 14px 18px;
+		gap: 14px;
+	}
+
+	.brand {
+		text-align: left;
+	}
+
+	.panel-actions {
+		border-top: none;
+		padding-top: 0;
+		gap: 6px;
 	}
 
 	.search-section {

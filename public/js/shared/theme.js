@@ -7,7 +7,7 @@ export function applyTheme(theme) {
 	const themeToggle = document.getElementById("themeToggle");
 	document.documentElement.classList.toggle("dark-mode", isDark);
 	if (themeToggle) {
-		themeToggle.textContent = isDark ? "☀️" : "🌙";
+		themeToggle.textContent = isDark ? "☀️ Σκούρα εμφάνιση" : "🌙 Σκούρα εμφάνιση";
 		themeToggle.setAttribute("aria-pressed", String(isDark));
 	}
 }

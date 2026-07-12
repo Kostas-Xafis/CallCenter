@@ -30,16 +30,46 @@ export class FuzzySearch {
 		return [distance, matchesIdx];
 	}
 
-	search(query, threshold = 0.3) {
+	search(query, threshold = 0.35) {
+		const q = query.toLowerCase();
 		const results = this.data
 			.map((item, index) => {
-				const [distance, matchesIdx] = this._customDistance(query.toLowerCase(), item.toLowerCase());
-				const maxLen = Math.max(query.length, item.length);
-				const score = Math.exp(-distance / (maxLen * 2));
+				const [distance, matchesIdx] = this._customDistance(q, item.toLowerCase());
+				const maxLen = Math.max(q.length, item.length);
+
+				// ── Old scoring (keep for A/B comparison) ────────────
+				// const score = Math.exp(-distance / (maxLen * 2));
+
+				// ── New multi-factor scoring (multiplicative) ────────
+				const matched = matchesIdx.length;
+				if (matched === 0) {
+					return { item, score: 0, matchesIdx, index };
+				}
+
+				// Completeness — fraction of query chars that matched.
+				// This is the **ceiling** for the final score — if only
+				// 30 % of query chars matched, score can never exceed 0.3.
+				const completeness = matched / q.length;
+
+				// Contiguity — how tightly packed the matches are
+				// 1 = perfectly consecutive, near 0 = widely scattered
+				const totalSpan = matchesIdx[matched - 1] - matchesIdx[0] + 1;
+				const contiguity = matched / totalSpan;
+
+				// Normalized distance penalty (lower is better)
+				const normDistance = distance / maxLen;
+
+				// Multiplicative blend: completeness acts as a hard cap
+				// so partial matches are naturally demoted.
+				// Inside the parentheses the contiguity & gap factors only
+				// differentiate between items that have similar completeness.
+				const score = completeness * (0.5 + contiguity * 0.35 + (1 / (1 + normDistance)) * 0.15);
+
 				return { item, score, matchesIdx, index };
 			})
 			.filter(r => r.score >= threshold);
 		results.sort((a, b) => b.score - a.score);
+
 		return results.map(r => ({ item: r.item, matchesIdx: r.matchesIdx, index: r.index }));
 	}
 }
@@ -51,7 +81,7 @@ export class FuzzySearch {
  * Handles merged records (multiple services per record) by searching
  * each service+code combination independently.
  */
-export function clientFuzzySearch(records, query, threshold = 0.3) {
+export function clientFuzzySearch(records, query, threshold = 0.35) {
 	// ── Exact code search for purely numeric queries ───────────────────
 	// When the user searches for a specific phone code (e.g. "4021"),
 	// use exact substring matching on the code field so that "4021"
