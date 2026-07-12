@@ -21,8 +21,8 @@ for (const suffix of ["", "-wal", "-shm"]) {
     }
 }
 
-// Initialize the database (runs all migrations)
+// Initialize the database (runs all migrations and seeds)
 const db = getDb(DB_PATH);
-console.log("All migrations applied successfully.");
+console.log("All migrations and seeds applied successfully.");
 
 closeDb();

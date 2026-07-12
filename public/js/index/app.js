@@ -218,11 +218,28 @@ document.getElementById("searchInput").addEventListener("keypress", e => {
 	}
 });
 
-let searchDebounceTimer;
+let searchDebounceTimer = null;
+let lastSearchValue = "";
+
 document.getElementById("searchInput").addEventListener("input", e => {
-	updateSearchHint(e.target.value.trim());
+	const raw = e.target.value.trim();
+	updateSearchHint(raw);
 	clearTimeout(searchDebounceTimer);
-	searchDebounceTimer = setTimeout(performSearch, 500);
+
+	// If the user clears the field, reset immediately — no need to debounce
+	if (!raw) {
+		lastSearchValue = "";
+		performSearch();
+		return;
+	}
+
+	// Debounce fuzzy searches by 150 ms to avoid thrashing on fast typing
+	searchDebounceTimer = setTimeout(() => {
+		if (raw !== lastSearchValue) {
+			lastSearchValue = raw;
+			performSearch();
+		}
+	}, 150);
 });
 
 // ── Logout ────────────────────────────────────────────────────────────

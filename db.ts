@@ -6,6 +6,7 @@ type Database = InstanceType<typeof DatabaseConstructor>;
 
 const DEFAULT_DB_PATH = 'sqlite/callcenter.db';
 const MIGRATIONS_DIR = 'migrations';
+const SEEDS_DIR = 'seeds';
 
 let _db: Database | null = null;
 let _dbPath: string | null = null;
@@ -29,6 +30,7 @@ export function getDb(dbPath?: string): Database {
     _db.pragma('foreign_keys = ON');
 
     runMigrations(_db);
+    runSeeds(_db);
     return _db;
 }
 
@@ -68,6 +70,44 @@ function runMigrations(db: Database): void {
             db.prepare('INSERT OR IGNORE INTO _migrations (name) VALUES (?)').run(file);
         });
         runAll();
+    }
+}
+
+/** Apply all SQL seed files in order. Skips already-applied seeds. */
+function runSeeds(db: Database): void {
+    // Ensure the seeds tracking table exists
+    db.exec(
+        `CREATE TABLE IF NOT EXISTS _seeds (
+            name TEXT PRIMARY KEY,
+            applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )`
+    );
+
+    // Collect seed files sorted by name
+    let files: string[];
+    try {
+        files = readdirSync(SEEDS_DIR)
+            .filter(f => f.endsWith('.sql'))
+            .sort();
+    } catch {
+        console.warn(`Seeds directory "${SEEDS_DIR}" not found — skipping seeds.`);
+        return;
+    }
+
+    const applied = new Set(
+        (db.query('SELECT name FROM _seeds').all() as { name: string; }[]).map(r => r.name)
+    );
+
+    for (const file of files) {
+        if (applied.has(file)) continue;
+
+        const sql = readFileSync(join(SEEDS_DIR, file), 'utf-8');
+        console.log(`Applying seed: ${file}`);
+
+        db.transaction(() => {
+            db.exec(sql);
+            db.query('INSERT OR IGNORE INTO _seeds (name) VALUES (?)').run(file);
+        })();
     }
 }
 
