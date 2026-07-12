@@ -6,11 +6,14 @@ const THEME_KEY = "callcenter-theme";
 function applyTheme(theme) {
 	const isDark = theme === "dark";
 	const toggle = document.getElementById("themeToggle");
+	const moonIcon = document.querySelector(".theme-icon-moon");
+	const sunIcon = document.querySelector(".theme-icon-sun");
 	document.documentElement.classList.toggle("dark-mode", isDark);
 	if (toggle) {
-		toggle.textContent = isDark ? "☀️" : "🌙";
 		toggle.setAttribute("aria-pressed", String(isDark));
 	}
+	if (moonIcon) moonIcon.style.display = isDark ? "none" : "";
+	if (sunIcon) sunIcon.style.display = isDark ? "" : "none";
 }
 
 function initTheme() {
