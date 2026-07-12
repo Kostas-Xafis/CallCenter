@@ -36,5 +36,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 *.csv
 **/*.db*
 **/*.sql
+!migrations/*.sql
 .wrangler
 **/*.bak
+seeds/

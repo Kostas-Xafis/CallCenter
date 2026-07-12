@@ -7,6 +7,7 @@
     "start": "tsx server.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "db:create": "tsx scripts/create-db.ts",
     "user:create": "tsx scripts/create-user.ts",
     "cache:invalidate": "tsx scripts/invalidate-cache.ts"
   },

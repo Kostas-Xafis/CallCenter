@@ -29,7 +29,6 @@ callcenter/
 │
 ├── migrations/
 │   ├── 0001_schema.sql         # Table + index DDL
-│   ├── 0002_seed.sql           # 1 054 INSERT statements
 │   ├── 0006_auth.sql           # Users + sessions tables
 │   ├── 0007_roles.sql          # Role-based access control (admin / user)
 │   └── 0008_signup_invitations.sql  # Invitation codes for signup flow
@@ -69,6 +68,9 @@ callcenter/
 ├── scripts/
 │   ├── create-user.ts          # CLI tool to create/update user credentials
 │   └── invalidate-cache.ts     # Bump service worker cache version
+│
+├── seeds/
+│   └── 0002_seed.sql           # 1 054 INSERT statements (not tracked in git)
 │
 ├── tests/
 │   └── session.test.ts         # Session validation tests
@@ -294,7 +296,7 @@ CREATE TABLE IF NOT EXISTS phone_records (
 -- plus indexes, table_meta, and latest_requests tables
 ```
 
-**`0002_seed.sql`** — 1 054 `INSERT` statements across multiple record types.
+**`seeds/0002_seed.sql`** — 1 054 `INSERT` statements across multiple record types. Kept outside `migrations/` (not tracked in git).
 
 **`0006_auth.sql`** — Users and sessions tables for authentication.
 
