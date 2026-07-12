@@ -465,7 +465,109 @@ describe("Admin user session", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 7. Logout
+// 7. Admin write operations (POST /api/admin/create-user)
+// ---------------------------------------------------------------------------
+
+type CreateUserBody = { signupUrl: string; hexCode: string; expiresAt: number; };
+
+describe("Admin write operations", () => {
+    let adminCookie: string;
+
+    beforeAll(async () => {
+        const res = await appFetch(
+            req("POST", "/auth/login", {
+                body: { username: "admin", password: "adminpass" },
+            }),
+            env
+        );
+        adminCookie = getSessionCookie(res)!;
+    });
+
+    // --- POST /api/admin/create-user ---
+
+    it("creates invitation for a new username (no FK constraint)", async () => {
+        const res = await appFetch(
+            req("POST", "/api/admin/create-user", {
+                cookie: adminCookie,
+                body: { username: "invited_user", role: "user" },
+            }),
+            env
+        );
+        expect(res.status).toBe(201);
+        const body = await res.json() as CreateUserBody;
+        expect(typeof body.signupUrl).toBe("string");
+        expect(body.signupUrl).toContain("/signup?id=");
+        expect(typeof body.hexCode).toBe("string");
+        expect(body.hexCode.length).toBe(24);
+        expect(typeof body.expiresAt).toBe("number");
+
+        // Verify the invitation exists in the database
+        const row = db.query(
+            "SELECT username, role FROM signup_invitations WHERE id = ?"
+        ).get(body.hexCode) as { username: string; role: string; } | null;
+        expect(row).not.toBeNull();
+        expect(row!.username).toBe("invited_user");
+        expect(row!.role).toBe("user");
+    });
+
+    it("rejects creating invitation for an already registered username", async () => {
+        const res = await appFetch(
+            req("POST", "/api/admin/create-user", {
+                cookie: adminCookie,
+                body: { username: "admin", role: "user" },
+            }),
+            env
+        );
+        expect(res.status).toBe(409);
+        const body = await res.json() as ErrorBody;
+        expect(body.error).toContain("ήδη");
+    });
+
+    it("rejects creating invitation with missing username", async () => {
+        const res = await appFetch(
+            req("POST", "/api/admin/create-user", {
+                cookie: adminCookie,
+                body: { role: "user" },
+            }),
+            env
+        );
+        expect(res.status).toBe(400);
+    });
+
+    it("rejects invitation with invalid role", async () => {
+        const res = await appFetch(
+            req("POST", "/api/admin/create-user", {
+                cookie: adminCookie,
+                body: { username: "someone", role: "superadmin" },
+            }),
+            env
+        );
+        expect(res.status).toBe(400);
+    });
+
+    it("rejects invitation creation from a regular user (403)", async () => {
+        // Login as regular user
+        const userLogin = await appFetch(
+            req("POST", "/auth/login", {
+                body: { username: "user", password: "userpass" },
+            }),
+            env
+        );
+        const userCookie = getSessionCookie(userLogin)!;
+
+        const res = await appFetch(
+            req("POST", "/api/admin/create-user", {
+                cookie: userCookie,
+                body: { username: "hacker", role: "admin" },
+            }),
+            env
+        );
+        expect(res.status).toBe(403);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 8. Logout
 // ---------------------------------------------------------------------------
 
 describe("Logout", () => {
@@ -522,7 +624,7 @@ describe("Logout", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 8. Full lifecycle: login → read → write → logout → blocked
+// 9. Full lifecycle: login → read → write → logout → blocked
 // ---------------------------------------------------------------------------
 
 describe("Full session lifecycle", () => {

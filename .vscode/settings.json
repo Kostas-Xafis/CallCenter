@@ -1,0 +1,6 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "chat.utilitySmallModel": "deepseek/deepseek-v4-pro"
+}
