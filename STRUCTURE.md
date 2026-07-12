@@ -283,7 +283,7 @@ bun run user:create <username> <password>
 
 ### `migrations/` — Database Schema
 
-**`0001_schema.sql`** — Phone records table + indexes + metadata table + latest requests tracking:
+**`0001_schema.sql`** — Phone records table + indexes + metadata table:
 
 ```sql
 CREATE TABLE IF NOT EXISTS phone_records (
@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS phone_records (
     code    TEXT    NOT NULL,
     merged  INTEGER NOT NULL DEFAULT 0
 );
--- plus indexes, table_meta, and latest_requests tables
+-- plus indexes, table_meta
 ```
 
 **`seeds/0002_seed.sql`** — 1 054 `INSERT` statements across multiple record types. Kept outside `migrations/` (not tracked in git).
@@ -311,7 +311,7 @@ All migrations are applied automatically on first startup by `db.ts`, tracked vi
 Single self-contained HTML file; no build step.
 
 **Layout** — two-column (desktop) / stacked (mobile):
-- **Left panel** — brand card + search section + Latest island
+- **Left panel** — brand card + search section
 - **Right panel** — results table with sticky thead, pagination
 - Dark mode support via CSS custom properties
 - PWA-ready with manifest and service worker
