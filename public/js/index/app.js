@@ -134,7 +134,7 @@ function renderPage() {
 	const pageRecords = currentRecords.slice(start, start + PAGE_SIZE);
 
 	const rows = pageRecords
-		.map(record => {
+		.map((record, i) => {
 			const { type, service, code, merged, matchesIdx } = record;
 			const restricted = RESTRICTED_CODES.has(code);
 
@@ -161,27 +161,32 @@ function renderPage() {
 			const codeHtml = (matchesIdxCode && highlightStringAt(code, matchesIdxCode)) || code;
 
 			return `
-            <tr${restricted ? ' class="restricted"' : ""}>
-                <td><strong>${codeHtml}</strong></td>
-                <td>${serviceHtml}</td>
-                <td><span class="badge badge-type">${type}</span></td>
-            </tr>
+            <div class="grid-row fade-in${restricted ? " restricted" : ""}">
+                <div class="grid-cell grid-cell-code"><strong>${codeHtml}</strong></div>
+                <div class="grid-cell grid-cell-service">${serviceHtml}</div>
+                <div class="grid-cell grid-cell-type"><span class="badge badge-type">${type}</span></div>
+            </div>
         `;
 		})
 		.join("");
 
 	container.innerHTML = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Κωδικός</th>
-                    <th>Υπηρεσία</th>
-                    <th>Τύπος</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-        </table>
+        <div class="results-grid">
+            <div class="grid-header">
+                <div class="grid-cell grid-cell-code">Κωδικός</div>
+                <div class="grid-cell grid-cell-service">Υπηρεσία</div>
+                <div class="grid-cell grid-cell-type">Τύπος</div>
+            </div>
+            <div class="grid-body">${rows}</div>
+        </div>
     `;
+
+	// Force re-trigger fade-in animations on every render (search, filter, pagination)
+	container.querySelectorAll(".fade-in").forEach(el => {
+		el.style.animationName = "none";
+		void el.offsetHeight; // force reflow
+		el.style.animationName = "";
+	});
 
 	// Update pagination controls
 	document.getElementById("pageInfo").textContent = `Σελίδα ${currentPage} από ${totalPages}`;

@@ -63,7 +63,9 @@ async function serveStatic(path: string): Promise<Response | null> {
     return new Response(file, {
         headers: {
             'Content-Type': getMimeType(filePath),
-            'Cache-Control': 'public, max-age=3600',
+            // In dev mode, disable caching so changes appear immediately on reload.
+            // In production, cache static assets for 1 hour.
+            'Cache-Control': DEV_LOG ? 'no-cache' : 'public, max-age=3600',
         },
     });
 }
