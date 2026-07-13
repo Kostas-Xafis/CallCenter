@@ -1,10 +1,11 @@
+import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { createReadStream, statSync } from 'node:fs';
-import { createServer } from 'node:http';
 import { extname } from 'node:path';
 import { closeDb, getDb } from './db';
 import { getSessionUser, handleLogin, handleLogout, handleSignup } from './src/auth';
 import { routes } from './src/routes/index';
-import { handleCors, jsonError } from './src/routes/utils';
 import type { Env, SessionUser } from './types/types';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -35,70 +36,34 @@ const MIME_TYPES: Record<string, string> = {
     '.txt': 'text/plain; charset=utf-8',
 };
 
+// ---------------------------------------------------------------------------
+// Static file helpers
+// ---------------------------------------------------------------------------
+
 function getMimeType(path: string): string {
     return MIME_TYPES[extname(path)] || 'application/octet-stream';
 }
 
-/** Check if a file exists at the given path. */
 function fileExists(filePath: string): boolean {
-    try {
-        statSync(filePath);
-        return true;
-    } catch {
-        return false;
-    }
+    try { return statSync(filePath).isFile(); } catch { return false; }
 }
 
-/** Try to serve an HTML file at the given path. Returns null if not found. */
-function serveHtml(filePath: string): Promise<Response | null> {
-    if (!fileExists(filePath)) return Promise.resolve(null);
+function streamFile(filePath: string, mime: string, cacheControl = 'public, max-age=3600'): Promise<Response> {
     return new Promise((resolve) => {
         const stream = createReadStream(filePath);
         const chunks: Buffer[] = [];
         stream.on('data', (chunk) => { if (Buffer.isBuffer(chunk)) chunks.push(chunk); });
-        stream.on('end', () => {
-            resolve(new Response(Buffer.concat(chunks), {
-                headers: { 'Content-Type': 'text/html; charset=utf-8' },
-            }));
-        });
-        stream.on('error', () => resolve(null));
+        stream.on('end', () => resolve(new Response(Buffer.concat(chunks), {
+            headers: { 'Content-Type': mime, 'Cache-Control': cacheControl },
+        })));
+        stream.on('error', () => resolve(new Response('Not Found', { status: 404 })));
     });
 }
 
-/** Serve a static file from the public directory. Returns null if not found. */
-function serveStatic(path: string): Promise<Response | null> {
-    // Prevent directory traversal
-    const safePath = path.replace(/\.\./g, '').replace(/\/\//g, '/');
-    const filePath = safePath === '/' || safePath === ''
-        ? `${PUBLIC_DIR}/index.html`
-        : `${PUBLIC_DIR}${safePath}`;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-    if (!fileExists(filePath)) return Promise.resolve(null);
-
-    return new Promise((resolve) => {
-        const stream = createReadStream(filePath);
-        const chunks: Buffer[] = [];
-        stream.on('data', (chunk) => { if (Buffer.isBuffer(chunk)) chunks.push(chunk); });
-        stream.on('end', () => {
-            resolve(new Response(Buffer.concat(chunks), {
-                headers: {
-                    'Content-Type': getMimeType(filePath),
-                    // In dev mode, disable caching so changes appear immediately on reload.
-                    // In production, cache static assets for 1 hour.
-                    'Cache-Control': DEV_LOG ? 'no-cache' : 'public, max-age=3600',
-                },
-            }));
-        });
-        stream.on('error', () => resolve(null));
-    });
-}
-
-/** Return a 302 redirect Response to the given location. */
-function redirect(location: string): Response {
-    return new Response(null, { status: 302, headers: { Location: location } });
-}
-
-/** Log a request and its outcome when dev logging is enabled. */
 function logRequest(method: string, path: string, status: number, durationMs: number): void {
     if (!DEV_LOG) return;
     const ts = new Date().toISOString();
@@ -107,183 +72,165 @@ function logRequest(method: string, path: string, status: number, durationMs: nu
     console.log(`[${ts}] ${emoji} ${method.padEnd(6)} ${status} ${ms}ms  ${path}`);
 }
 
-/** Create the Env object. Accepts optional DB path for testing. */
 export function createEnv(dbPath?: string): Env {
     return { DB: getDb(dbPath) };
 }
 
-/** The application fetch handler — exported so tests can call it directly. */
-export async function appFetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    const path = url.pathname;
+// ---------------------------------------------------------------------------
+// Hono app
+// ---------------------------------------------------------------------------
 
-    // Handle CORS preflight
-    const preflightRes = handleCors(request);
-    if (preflightRes) return preflightRes;
+const app = new Hono<{ Variables: { start: number; }; }>();
 
-    // Auth endpoints (no session required)
-    const AUTH_HANDLERS: Record<string, (req: Request, env: Env) => Promise<Response>> = {
-        '/auth/login': handleLogin,
-        '/auth/logout': handleLogout,
-        '/auth/signup': handleSignup,
-    };
-    const authHandler = AUTH_HANDLERS[path];
-    if (authHandler && request.method === 'POST') {
-        return authHandler(request, env);
-    }
+// CORS
+app.use('*', cors());
 
-    // Session guard — skip only for the login page itself
-    if (!PUBLIC_PATHS.has(path)) {
-        // Static non-HTML assets (icons, manifest, JS, CSS, etc.) are
-        // always served — the login page needs them to render properly.
-        const isStaticAsset = fileExists(`${PUBLIC_DIR}${path}`);
-        if (isStaticAsset && !path.endsWith('.html')) {
-            const staticResponse = await serveStatic(path);
-            if (staticResponse) return staticResponse;
-        }
+// Per-request timing
+app.use('*', async (c, next) => {
+    c.set('start', performance.now());
+    await next();
+});
 
-        let sessionUser: SessionUser | null = null;
-        try {
-            sessionUser = await getSessionUser(env.DB, request);
-        } catch (e) {
-            console.error('Session validation error:', e);
-        }
+// Auth endpoints
+app.post('/auth/login', async (c) => {
+    const env = c.env as Env;
+    return handleLogin(c.req.raw, env);
+});
 
-        if (!sessionUser) {
-            // API callers get a clean 401; everything else gets redirected to /login
-            if (path.startsWith('/api/')) {
-                return jsonError('Unauthorized', 401);
-            }
-            return redirect('/login');
-        }
+app.post('/auth/logout', async (c) => {
+    const env = c.env as Env;
+    return handleLogout(c.req.raw, env);
+});
 
-        // Role-based access control for write operations
-        if (path.startsWith('/api/') && sessionUser.role !== 'admin') {
-            if (WRITE_METHODS.has(request.method)) {
-                return jsonError('Forbidden: admin access required', 403);
-            }
-        }
+app.post('/auth/signup', async (c) => {
+    const env = c.env as Env;
+    return handleSignup(c.req.raw, env);
+});
 
-        // Admin-only pages — non-admin users are redirected to /
-        if ((path === '/admin' || path.startsWith('/admin/')) && sessionUser.role !== 'admin') {
-            return redirect('/');
-        }
-    }
+// Session guard for /api/* (skipping public paths)
+app.use('/api/*', async (c, next) => {
+    const path = c.req.path;
+    if (PUBLIC_PATHS.has(path)) return next();
 
+    const env = c.env as Env;
+    let sessionUser: SessionUser | null = null;
     try {
-        // API routes
-        if (path.startsWith('/api/')) {
-            const routeKey = `${request.method}:${path}`;
-            const handler = routes.get(routeKey);
-            if (handler) {
-                return await handler(request, env);
-            }
-            return jsonError('API route not found', 404);
-        }
-
-        // Serve static assets
-        const staticResponse = await serveStatic(path);
-        if (staticResponse) return staticResponse;
-
-        // Map clean URLs to .html files
-        const cleanUrlMap: Record<string, string> = {
-            '/login': `${PUBLIC_DIR}/login.html`,
-            '/signup': `${PUBLIC_DIR}/signup.html`,
-            '/admin': `${PUBLIC_DIR}/admin/index.html`,
-        };
-        const htmlFile = cleanUrlMap[path];
-        if (htmlFile) {
-            const response = await serveHtml(htmlFile);
-            if (response) return response;
-        }
-
-        // Fallback to index.html for SPA-style routing
-        const indexResponse = await serveHtml(`${PUBLIC_DIR}/index.html`);
-        if (indexResponse) return indexResponse;
-
-        return new Response('Not Found', { status: 404 });
-
-    } catch (error) {
-        console.error('Server error:', error);
-        return jsonError('Internal Server Error', 500);
+        sessionUser = await getSessionUser(env.DB, c.req.raw);
+    } catch (e) {
+        console.error('Session validation error:', e);
     }
+
+    if (!sessionUser) {
+        return c.json({ error: 'Unauthorized' }, 401 as any);
+    }
+
+    // Role-based access control for write operations
+    if (sessionUser.role !== 'admin' && WRITE_METHODS.has(c.req.method)) {
+        return c.json({ error: 'Forbidden: admin access required' }, 403 as any);
+    }
+
+    return next();
+});
+
+// Register API routes from src/routes/index
+for (const [key, handler] of routes) {
+    const [method, path] = key.split(':') as [string, string];
+    app.on(method as any, path!, async (c) => {
+        const env = c.env as Env;
+        return handler(c.req.raw, env);
+    });
 }
 
-// Build the env object once at startup
+// Session guard for admin pages and non-public HTML
+app.use('*', async (c, next) => {
+    const path = c.req.path;
+    if (PUBLIC_PATHS.has(path)) return next();
+    if (path.startsWith('/api/')) return next();
+
+    // Static non-HTML assets always served
+    if (path.includes('.') && !path.endsWith('.html')) return next();
+
+    const env = c.env as Env;
+    let sessionUser: SessionUser | null = null;
+    try {
+        sessionUser = await getSessionUser(env.DB, c.req.raw);
+    } catch (e) {
+        console.error('Session validation error:', e);
+    }
+
+    if (!sessionUser) return c.redirect('/login');
+
+    // Admin-only pages
+    if ((path === '/admin' || path.startsWith('/admin/')) && sessionUser.role !== 'admin') {
+        return c.redirect('/');
+    }
+
+    return next();
+});
+
+// Static file serving — catch-all
+app.get('*', async (c) => {
+    const path = c.req.path;
+    const cacheControl = DEV_LOG ? 'no-cache' : 'public, max-age=3600';
+    const safePath = path.replace(/\.\./g, '').replace(/\/\//g, '/');
+
+    const filePath = safePath === '/' || safePath === ''
+        ? `${PUBLIC_DIR}/index.html`
+        : `${PUBLIC_DIR}${safePath}`;
+
+    if (fileExists(filePath)) {
+        return streamFile(filePath, getMimeType(filePath), cacheControl);
+    }
+
+    // Clean URL → .html mapping
+    const cleanUrlMap: Record<string, string> = {
+        '/login': `${PUBLIC_DIR}/login.html`,
+        '/signup': `${PUBLIC_DIR}/signup.html`,
+        '/admin': `${PUBLIC_DIR}/admin/index.html`,
+    };
+    const htmlFile = cleanUrlMap[path];
+    if (htmlFile && fileExists(htmlFile)) {
+        return streamFile(htmlFile, 'text/html; charset=utf-8');
+    }
+
+    // SPA fallback
+    const indexPath = `${PUBLIC_DIR}/index.html`;
+    if (fileExists(indexPath)) {
+        return streamFile(indexPath, 'text/html; charset=utf-8');
+    }
+
+    return c.notFound();
+});
+
+// Export the fetch handler for tests
+export const appFetch = app.fetch;
+
+// ---------------------------------------------------------------------------
+// Start server
+// ---------------------------------------------------------------------------
+
 const env = createEnv();
 
-const server = createServer(async (req, res) => {
-    const start = performance.now();
-    const url = req.url || '/';
-
-    // Build a Web Request from the Node.js IncomingMessage
-    const headers = new Headers();
-    for (let i = 0; i < req.rawHeaders.length; i += 2) {
-        headers.set(req.rawHeaders[i]!, req.rawHeaders[i + 1]!);
-    }
-
-    let body: Buffer | null = null;
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-        body = await new Promise<Buffer>((resolve) => {
-            const chunks: Buffer[] = [];
-            req.on('data', (chunk) => { if (Buffer.isBuffer(chunk)) chunks.push(chunk); });
-            req.on('end', () => resolve(Buffer.concat(chunks)));
-        });
-    }
-
-    const request = new Request(`http://localhost${url}`, {
-        method: req.method,
-        headers,
-        body,
-    });
-
-    try {
-        const response = await appFetch(request, env);
-        logRequest(req.method || 'GET', new URL(url, 'http://localhost').pathname, response.status, performance.now() - start);
-
-        // Write response headers
-        const respHeaders: Record<string, string> = {};
-        response.headers.forEach((value, key) => {
-            respHeaders[key] = value;
-        });
-        res.writeHead(response.status, respHeaders);
-
-        // Write response body
-        if (response.body) {
-            const reader = response.body.getReader();
-            const pump = async () => {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    res.write(value);
-                }
-                res.end();
-            };
-            await pump();
-        } else {
-            res.end();
-        }
-    } catch (error) {
-        logRequest(req.method || 'GET', new URL(url, 'http://localhost').pathname, 500, performance.now() - start);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Internal Server Error' }));
-    }
+serve({
+    fetch: async (request) => {
+        const start = performance.now();
+        const response = await app.fetch(request, env);
+        const url = new URL(request.url);
+        logRequest(request.method, url.pathname, response.status, performance.now() - start);
+        return response;
+    },
+    port: PORT,
 });
 
-server.listen(PORT, () => {
-    console.log(`🚀 CallCenter server running at http://localhost:${PORT}`);
-});
+console.log(`🚀 CallCenter server running at http://localhost:${PORT}`);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
     console.log('\nShutting down...');
     closeDb();
-    server.close();
     process.exit(0);
 });
-
 process.on('SIGTERM', () => {
     closeDb();
-    server.close();
     process.exit(0);
 });
