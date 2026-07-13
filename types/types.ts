@@ -1,4 +1,7 @@
-import type { Database } from 'bun:sqlite';
+
+import DatabaseConstructor from "better-sqlite3";
+
+export type Database = InstanceType<typeof DatabaseConstructor>;
 
 export type UserRole = 'admin' | 'user';
 

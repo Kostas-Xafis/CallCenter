@@ -1,3 +1,6 @@
+import { createReadStream, statSync } from 'node:fs';
+import { createServer } from 'node:http';
+import { extname } from 'node:path';
 import { closeDb, getDb } from './db';
 import { getSessionUser, handleLogin, handleLogout, handleSignup } from './src/auth';
 import { routes } from './src/routes/index';
@@ -14,7 +17,7 @@ const PUBLIC_PATHS = new Set(['/login', '/login.html', '/auth/login', '/signup',
 // HTTP methods that require admin role for /api/* paths
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-// MIME types for common static file extensions
+/** MIME types for common static file extensions */
 const MIME_TYPES: Record<string, string> = {
     '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
@@ -33,38 +36,58 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 function getMimeType(path: string): string {
-    const ext = path.slice(path.lastIndexOf('.'));
-    return MIME_TYPES[ext] || 'application/octet-stream';
+    return MIME_TYPES[extname(path)] || 'application/octet-stream';
+}
+
+/** Check if a file exists at the given path. */
+function fileExists(filePath: string): boolean {
+    try {
+        statSync(filePath);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 /** Try to serve an HTML file at the given path. Returns null if not found. */
-async function serveHtml(filePath: string): Promise<Response | null> {
-    const file = Bun.file(filePath);
-    if (await file.exists()) {
-        return new Response(file, {
-            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+function serveHtml(filePath: string): Promise<Response | null> {
+    if (!fileExists(filePath)) return Promise.resolve(null);
+    return new Promise((resolve) => {
+        const stream = createReadStream(filePath);
+        const chunks: Buffer[] = [];
+        stream.on('data', (chunk) => { if (Buffer.isBuffer(chunk)) chunks.push(chunk); });
+        stream.on('end', () => {
+            resolve(new Response(Buffer.concat(chunks), {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            }));
         });
-    }
-    return null;
+        stream.on('error', () => resolve(null));
+    });
 }
 
 /** Serve a static file from the public directory. Returns null if not found. */
-async function serveStatic(path: string): Promise<Response | null> {
+function serveStatic(path: string): Promise<Response | null> {
     // Prevent directory traversal
     const safePath = path.replace(/\.\./g, '').replace(/\/\//g, '/');
     const filePath = safePath === '/' || safePath === ''
         ? `${PUBLIC_DIR}/index.html`
         : `${PUBLIC_DIR}${safePath}`;
 
-    const file = Bun.file(filePath);
-    const exists = await file.exists();
-    if (!exists) return null;
+    if (!fileExists(filePath)) return Promise.resolve(null);
 
-    return new Response(file, {
-        headers: {
-            'Content-Type': getMimeType(filePath),
-            'Cache-Control': 'public, max-age=3600',
-        },
+    return new Promise((resolve) => {
+        const stream = createReadStream(filePath);
+        const chunks: Buffer[] = [];
+        stream.on('data', (chunk) => { if (Buffer.isBuffer(chunk)) chunks.push(chunk); });
+        stream.on('end', () => {
+            resolve(new Response(Buffer.concat(chunks), {
+                headers: {
+                    'Content-Type': getMimeType(filePath),
+                    'Cache-Control': 'public, max-age=3600',
+                },
+            }));
+        });
+        stream.on('error', () => resolve(null));
     });
 }
 
@@ -111,7 +134,7 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
     if (!PUBLIC_PATHS.has(path)) {
         // Static non-HTML assets (icons, manifest, JS, CSS, etc.) are
         // always served — the login page needs them to render properly.
-        const isStaticAsset = await Bun.file(`${PUBLIC_DIR}${path}`).exists();
+        const isStaticAsset = fileExists(`${PUBLIC_DIR}${path}`);
         if (isStaticAsset && !path.endsWith('.html')) {
             const staticResponse = await serveStatic(path);
             if (staticResponse) return staticResponse;
@@ -187,35 +210,78 @@ export async function appFetch(request: Request, env: Env): Promise<Response> {
 // Build the env object once at startup
 const env = createEnv();
 
-const server = Bun.serve({
-    port: PORT,
-    fetch: (request: Request) => {
-        const start = performance.now();
-        const url = new URL(request.url);
-        return appFetch(request, env)
-            .then(response => {
-                logRequest(request.method, url.pathname, response.status, performance.now() - start);
-                return response;
-            })
-            .catch(error => {
-                logRequest(request.method, url.pathname, 500, performance.now() - start);
-                throw error;
-            });
-    },
+const server = createServer(async (req, res) => {
+    const start = performance.now();
+    const url = req.url || '/';
+
+    // Build a Web Request from the Node.js IncomingMessage
+    const headers = new Headers();
+    for (let i = 0; i < req.rawHeaders.length; i += 2) {
+        headers.set(req.rawHeaders[i]!, req.rawHeaders[i + 1]!);
+    }
+
+    let body: Buffer | null = null;
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        body = await new Promise<Buffer>((resolve) => {
+            const chunks: Buffer[] = [];
+            req.on('data', (chunk) => { if (Buffer.isBuffer(chunk)) chunks.push(chunk); });
+            req.on('end', () => resolve(Buffer.concat(chunks)));
+        });
+    }
+
+    const request = new Request(`http://localhost${url}`, {
+        method: req.method,
+        headers,
+        body,
+    });
+
+    try {
+        const response = await appFetch(request, env);
+        logRequest(req.method || 'GET', new URL(url, 'http://localhost').pathname, response.status, performance.now() - start);
+
+        // Write response headers
+        const respHeaders: Record<string, string> = {};
+        response.headers.forEach((value, key) => {
+            respHeaders[key] = value;
+        });
+        res.writeHead(response.status, respHeaders);
+
+        // Write response body
+        if (response.body) {
+            const reader = response.body.getReader();
+            const pump = async () => {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    res.write(value);
+                }
+                res.end();
+            };
+            await pump();
+        } else {
+            res.end();
+        }
+    } catch (error) {
+        logRequest(req.method || 'GET', new URL(url, 'http://localhost').pathname, 500, performance.now() - start);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Internal Server Error' }));
+    }
 });
 
-console.log(`🚀 CallCenter server running at http://localhost:${server.port}`);
+server.listen(PORT, () => {
+    console.log(`🚀 CallCenter server running at http://localhost:${PORT}`);
+});
 
 // Graceful shutdown
 process.on('SIGINT', () => {
     console.log('\nShutting down...');
     closeDb();
-    server.stop();
+    server.close();
     process.exit(0);
 });
 
 process.on('SIGTERM', () => {
     closeDb();
-    server.stop();
+    server.close();
     process.exit(0);
 });

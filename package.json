@@ -1,20 +1,24 @@
 {
   "name": "callcenter",
   "private": true,
-  "module": "server.ts",
+  "type": "module",
   "scripts": {
-    "dev": "LOG_REQUESTS=true bun run --watch server.ts",
-    "start": "bun run server.ts",
-    "user:create": "bun run scripts/create-user.ts",
-    "cache:invalidate": "bun run scripts/invalidate-cache.ts"
+    "dev": "LOG_REQUESTS=true tsx watch server.ts",
+    "start": "tsx server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "user:create": "tsx scripts/create-user.ts",
+    "cache:invalidate": "tsx scripts/invalidate-cache.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.0.0",
+    "vitest": "^2.1.0",
+    "tsx": "^4.19.0"
   },
   "dependencies": {
+    "better-sqlite3": "^11.6.0",
+    "hono": "^4.6.0",
     "xlsx": "^0.18.5"
   }
 }

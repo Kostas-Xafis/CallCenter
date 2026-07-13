@@ -1,6 +1,8 @@
-import { Database } from 'bun:sqlite';
-import { readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import DatabaseConstructor from 'better-sqlite3';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+type Database = InstanceType<typeof DatabaseConstructor>;
 
 const DEFAULT_DB_PATH = 'sqlite/callcenter.db';
 const MIGRATIONS_DIR = 'migrations';
@@ -21,10 +23,10 @@ export function getDb(dbPath?: string): Database {
         _db = null;
     }
 
-    _db = new Database(resolvedPath, { create: true });
+    _db = new DatabaseConstructor(resolvedPath);
     _dbPath = resolvedPath;
-    _db.exec('PRAGMA journal_mode = WAL');
-    _db.exec('PRAGMA foreign_keys = ON');
+    _db.pragma('journal_mode = WAL');
+    _db.pragma('foreign_keys = ON');
 
     runMigrations(_db);
     return _db;
@@ -52,7 +54,7 @@ function runMigrations(db: Database): void {
     }
 
     const applied = new Set(
-        (db.query('SELECT name FROM _migrations').all() as { name: string; }[]).map(r => r.name)
+        (db.prepare('SELECT name FROM _migrations').all() as { name: string; }[]).map(r => r.name)
     );
 
     for (const file of files) {
@@ -61,10 +63,11 @@ function runMigrations(db: Database): void {
         const sql = readFileSync(join(MIGRATIONS_DIR, file), 'utf-8');
         console.log(`Applying migration: ${file}`);
 
-        db.transaction(() => {
+        const runAll = db.transaction(() => {
             db.exec(sql);
-            db.query('INSERT OR IGNORE INTO _migrations (name) VALUES (?)').run(file);
-        })();
+            db.prepare('INSERT OR IGNORE INTO _migrations (name) VALUES (?)').run(file);
+        });
+        runAll();
     }
 }
 

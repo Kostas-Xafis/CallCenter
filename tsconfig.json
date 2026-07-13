@@ -3,22 +3,21 @@
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",
-    "types": ["bun-types"],
-    "module": "Preserve",
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
 
-    // Bundler mode
-    "moduleResolution": "bundler",
-    "baseUrl": ".",
+    // Paths
     "paths": {
       "@src/*": ["./src/*"],
       "@_types/*": ["./types/*"]
     },
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true,
+    "esModuleInterop": true,
 
     // Best practices
     "strict": true,

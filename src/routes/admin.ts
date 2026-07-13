@@ -57,7 +57,7 @@ const createUserRoute: ApiRoute = {
             // --- Business rules ---
 
             // Check if the username already exists as a registered user
-            const existingUser = env.DB.query(
+            const existingUser = env.DB.prepare(
                 "SELECT username FROM users WHERE username = ?"
             ).get(username) as { username: string; } | null;
 
@@ -67,12 +67,12 @@ const createUserRoute: ApiRoute = {
 
             // Clean up expired invitations for this username (so they don't block re-creation)
             const now = Math.floor(Date.now() / 1000);
-            env.DB.query(
+            env.DB.prepare(
                 "DELETE FROM signup_invitations WHERE username = ? AND expires_at < ?"
             ).run(username, now);
 
             // Check if a *valid* (non-expired) invitation already exists for this username
-            const existingInvite = env.DB.query(
+            const existingInvite = env.DB.prepare(
                 "SELECT id FROM signup_invitations WHERE username = ? AND expires_at > ?"
             ).get(username, now) as { id: string; } | null;
 
@@ -89,7 +89,7 @@ const createUserRoute: ApiRoute = {
             const hexCode = generateHexCode();
             const expiresAt = expiryTwoWeeks();
 
-            env.DB.query(
+            env.DB.prepare(
                 "INSERT INTO signup_invitations (id, username, role, expires_at) VALUES (?, ?, ?, ?)"
             ).run(hexCode, username, role, expiresAt);
 
@@ -219,7 +219,7 @@ const uploadDataRoute: ApiRoute = {
 
             // --- Replace all phone_records in a transaction ---
             const replaceAll = env.DB.transaction((rows: typeof records) => {
-                env.DB.query("DELETE FROM phone_records").run();
+                env.DB.prepare("DELETE FROM phone_records").run();
 
                 const stmt = env.DB.prepare(
                     "INSERT INTO phone_records (type, service, code, merged) VALUES (?, ?, ?, 0)"
@@ -229,7 +229,7 @@ const uploadDataRoute: ApiRoute = {
                 }
 
                 // Bump the version token so clients invalidate their cache
-                env.DB.query(
+                env.DB.prepare(
                     "UPDATE table_meta SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT) WHERE key = 'records_version'"
                 ).run();
             });

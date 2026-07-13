@@ -13,13 +13,12 @@
  *   - Invalid credentials are rejected
  */
 
-import { Database } from "bun:sqlite";
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { unlinkSync } from "fs";
+import { unlinkSync } from "node:fs";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { appFetch, createEnv } from "../server";
 import { hashPassword } from "../src/auth";
 import type { PhoneRecord } from "../src/phone_repository";
-import type { Env, UserRole } from "../types/types";
+import type { Database, Env, UserRole } from "../types/types";
 
 // ---------------------------------------------------------------------------
 // Response type helpers — narrow the `unknown` returned by Response.json()
@@ -93,12 +92,12 @@ beforeAll(async () => {
     const adminCreds = await hashPassword("adminpass");
     const userCreds = await hashPassword("userpass");
 
-    db.query(
+    db.prepare(
         `INSERT OR REPLACE INTO users (username, password_hash, salt, role)
          VALUES (?, ?, ?, ?)`
     ).run("admin", adminCreds.hash, adminCreds.salt, "admin");
 
-    db.query(
+    db.prepare(
         `INSERT OR REPLACE INTO users (username, password_hash, salt, role)
          VALUES (?, ?, ?, ?)`
     ).run("user", userCreds.hash, userCreds.salt, "user");
@@ -223,19 +222,19 @@ describe("Signup", () => {
         const now = Math.floor(Date.now() / 1000);
 
         // Create a valid signup invitation (expires in 14 days)
-        db.query(
+        db.prepare(
             `INSERT INTO signup_invitations (id, username, role, expires_at, created_at)
              VALUES (?, ?, ?, ?, datetime('now'))`
         ).run(VALID_INVITE_ID, "newuser", "user", now + 60 * 60 * 24 * 14);
 
         // Create an expired invitation (for validate test)
-        db.query(
+        db.prepare(
             `INSERT INTO signup_invitations (id, username, role, expires_at, created_at)
              VALUES (?, ?, ?, ?, datetime('now'))`
         ).run(EXPIRED_INVITE_ID, "expireduser", "user", now - 60); // 1 min ago
 
         // Create another expired invitation (for POST signup test — validate will delete the first)
-        db.query(
+        db.prepare(
             `INSERT INTO signup_invitations (id, username, role, expires_at, created_at)
              VALUES (?, ?, ?, ?, datetime('now'))`
         ).run(EXPIRED_INVITE_ID2, "expireduser2", "user", now - 60);

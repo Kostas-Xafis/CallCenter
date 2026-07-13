@@ -1,4 +1,5 @@
-import type { Database } from 'bun:sqlite';
+
+import type { Database } from '@_types/types';
 
 export type PhoneRecord = {
     id: number;
@@ -16,7 +17,7 @@ export class PhoneRepository {
     }
 
     async getAll(): Promise<PhoneRecord[]> {
-        return this.db.query('SELECT * FROM phone_records ORDER BY id').all() as PhoneRecord[];
+        return this.db.prepare('SELECT * FROM phone_records ORDER BY id').all() as PhoneRecord[];
     }
 
     /**
@@ -25,7 +26,7 @@ export class PhoneRepository {
      * so the client's IndexedDB cache is automatically invalidated.
      */
     async getTableHash(): Promise<string> {
-        const row = this.db.query(`
+        const row = this.db.prepare(`
             SELECT
                 CAST(COUNT(*) AS TEXT) || ':'
                 || CAST(COALESCE(MAX(id), 0) AS TEXT) || ':'
@@ -38,21 +39,21 @@ export class PhoneRepository {
     }
 
     async getUniqueTypes(): Promise<string[]> {
-        const rows = this.db.query(
+        const rows = this.db.prepare(
             'SELECT DISTINCT type FROM phone_records ORDER BY type'
         ).all() as { type: string; }[];
         return rows.map(row => row.type);
     }
 
     async getCount(): Promise<number> {
-        const row = this.db.query(
+        const row = this.db.prepare(
             'SELECT COUNT(*) as count FROM phone_records'
         ).get() as { count: number; } | null;
         return row?.count ?? 0;
     }
 
     async getStatsByType(): Promise<{ type: string; count: number; }[]> {
-        return this.db.query(
+        return this.db.prepare(
             'SELECT type, COUNT(*) as count FROM phone_records GROUP BY type ORDER BY count DESC'
         ).all() as { type: string; count: number; }[];
     }

@@ -1,8 +1,11 @@
-export { };
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SW_PATH = new URL("../public/sw.js", import.meta.url).pathname;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SW_PATH = resolve(__dirname, '..', 'public', 'sw.js');
 
-const swContent = await Bun.file(SW_PATH).text();
+const swContent = readFileSync(SW_PATH, 'utf-8');
 
 const newVersion = `callcenter-v${Date.now()}`;
 
@@ -18,5 +21,5 @@ if (updated === swContent) {
     process.exit(1);
 }
 
-await Bun.write(SW_PATH, updated);
+writeFileSync(SW_PATH, updated);
 console.log(`✅ Service worker cache version bumped to: ${newVersion}`);
