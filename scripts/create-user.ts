@@ -3,7 +3,7 @@
  * Create or update a user in the local callcenter SQLite database.
  *
  * Usage:
- *   tsx scripts/create-user.ts <username> <password> [--admin]
+ *   npm run user:create -- <username> <password> [--admin]
  *
  *   --admin   Give the user administrator privileges (default: regular user)
  */
@@ -21,7 +21,7 @@ const positional = args.filter(a => a !== '--admin');
 const [username, password] = positional;
 
 if (!username || !password) {
-    console.error('Usage: tsx scripts/create-user.ts <username> <password> [--admin]');
+    console.error('Usage: npm run user:create -- <username> <password> [--admin]');
     process.exit(1);
 }
 
