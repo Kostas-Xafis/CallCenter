@@ -95,7 +95,7 @@ function runSeeds(db: Database): void {
     }
 
     const applied = new Set(
-        (db.query('SELECT name FROM _seeds').all() as { name: string; }[]).map(r => r.name)
+        (db.prepare('SELECT name FROM _seeds').all() as { name: string; }[]).map(r => r.name)
     );
 
     for (const file of files) {
@@ -106,7 +106,7 @@ function runSeeds(db: Database): void {
 
         db.transaction(() => {
             db.exec(sql);
-            db.query('INSERT OR IGNORE INTO _seeds (name) VALUES (?)').run(file);
+            db.prepare('INSERT OR IGNORE INTO _seeds (name) VALUES (?)').run(file);
         })();
     }
 }
