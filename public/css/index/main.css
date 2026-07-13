@@ -313,54 +313,74 @@ select {
 	overflow-y: auto;
 }
 
-/* ── Table ── */
+/* ── Results grid ── */
 
-table {
+.results-grid {
+	display: flex;
+	flex-direction: column;
 	width: 100%;
-	border-collapse: collapse;
 }
 
-thead {
+.grid-header,
+.grid-row {
+	display: grid;
+	grid-template-columns: 120px 1fr 160px;
+	border-bottom: 1px solid var(--row-border);
+	align-items: center;
+}
+
+.grid-header {
 	background: var(--surface-muted);
 	position: sticky;
 	top: 0;
 	z-index: 1;
-}
-
-tbody tr:nth-child(even) {
-	background: var(--surface-muted);
-}
-
-th {
-	padding: 12px 14px;
-	text-align: left;
-	font-weight: 600;
-	color: var(--text-primary);
 	border-bottom: 2px solid var(--border-color);
 }
 
-td {
-	padding: 12px 14px;
-	border-bottom: 1px solid var(--row-border);
+.grid-body .grid-row:nth-child(even) {
+	background: var(--surface-muted);
 }
 
-/* Center-align code and type columns */
-th:first-child,
-td:first-child,
-th:last-child,
-td:last-child {
+.grid-cell {
+	padding: 12px 14px;
+	overflow: hidden;
+}
+
+.grid-header .grid-cell {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.grid-cell-code,
+.grid-cell-type {
 	text-align: center;
 }
 
-tr {
+.grid-row {
 	transition: box-shadow 0.2s;
 }
 
-tbody tr:hover {
+.grid-row:hover {
 	position: relative;
+	z-index: 1;
 	box-shadow:
 		0 3px 4px var(--row-hover-shadow),
 		0 -3px 4px var(--row-hover-shadow);
+}
+
+/* ── Fade-in animation ── */
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.fade-in {
+	/* animation: fadeIn 0.15s ease-in-out both; */
 }
 
 /* ── Badges ── */
@@ -575,9 +595,13 @@ tbody tr:hover {
 		align-items: stretch;
 	}
 
-	th,
-	td {
+	.grid-cell {
 		padding: 6px 8px;
 		font-size: 0.95em;
+	}
+
+	.grid-header,
+	.grid-row {
+		grid-template-columns: 80px 1fr 100px;
 	}
 }
