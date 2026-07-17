@@ -46,7 +46,45 @@ const tableHashRoute: ApiRoute = {
     }
 };
 
+const getLatestRoute: ApiRoute = {
+    url: '/latest',
+    method: 'GET',
+    handler: (_: Request, env: Env) => {
+        return trycatch(async () => {
+            const repo = new PhoneRepository(env.DB);
+            const latest = await repo.getLatest();
+            return jsonSuccess(latest);
+        }, 'Error fetching latest records');
+    }
+};
+
+const trackLatestRoute: ApiRoute = {
+    url: '/latest',
+    method: 'POST',
+    handler: (request: Request, env: Env) => {
+        return trycatch(async () => {
+            const { type, service, code } = await request.json() as { type: string; service: string; code: string; };
+            const repo = new PhoneRepository(env.DB);
+            await repo.trackLatest(type, service, code);
+            return new Response(null, { status: 204 });
+        }, 'Error tracking latest record');
+    }
+};
+
+const deleteLatestRoute: ApiRoute = {
+    url: '/latest',
+    method: 'DELETE',
+    handler: (request: Request, env: Env) => {
+        return trycatch(async () => {
+            const { type, service, code } = await request.json() as { type: string; service: string; code: string; };
+            const repo = new PhoneRepository(env.DB);
+            await repo.deleteLatest(type, service, code);
+            return new Response(null, { status: 204 });
+        }, 'Error deleting latest record');
+    }
+};
+
 export const PhoneRecordRoutes: ApiRouteParent = {
     url: '',
-    routes: [phonerecordsRoute, statsRoute, tableHashRoute]
+    routes: [phonerecordsRoute, statsRoute, tableHashRoute, getLatestRoute, trackLatestRoute, deleteLatestRoute]
 };

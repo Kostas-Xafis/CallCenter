@@ -1,3 +1,11 @@
+/**
+ * NOTE: This file is for the **Node.js** branch (Hono + better-sqlite3).
+ * On the Cloudflare Workers ('cf') branch, the server entry point is
+ * `worker.ts` which uses the standard `export default { fetch }` pattern.
+ *
+ * See: worker.ts (CF entry point), wrangler.toml (CF config)
+ */
+
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -73,6 +81,7 @@ function logRequest(method: string, path: string, status: number, durationMs: nu
 }
 
 export function createEnv(dbPath?: string): Env {
+    // @ts-ignore
     return { DB: getDb(dbPath) };
 }
 

@@ -18,14 +18,14 @@ const validateInvitationRoute: ApiRoute = {
             }
 
             const now = Math.floor(Date.now() / 1000);
-            const invite = env.DB.prepare(
+            const invite = await env.DB.prepare(
                 "SELECT id, username, role, expires_at FROM signup_invitations WHERE id = ?"
-            ).get(inviteId) as {
+            ).bind(inviteId).first<{
                 id: string;
                 username: string;
                 role: string;
                 expires_at: number;
-            } | null;
+            }>();
 
             if (!invite) {
                 return jsonError("Η πρόσκληση δεν βρέθηκε.", 404);
@@ -33,7 +33,7 @@ const validateInvitationRoute: ApiRoute = {
 
             if (invite.expires_at < now) {
                 // Clean up expired invitation
-                env.DB.prepare("DELETE FROM signup_invitations WHERE id = ?").run(inviteId);
+                await env.DB.prepare("DELETE FROM signup_invitations WHERE id = ?").bind(inviteId).run();
                 return jsonError("Η πρόσκληση έχει λήξει.", 410);
             }
 

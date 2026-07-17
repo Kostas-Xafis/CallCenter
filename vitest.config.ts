@@ -3,13 +3,15 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
     test: {
-        // Use tsx for TypeScript transformation
         globals: false,
+        // Miniflare needs a longer timeout for D1 operations
+        testTimeout: 15000,
+        hookTimeout: 15000,
     },
     resolve: {
         alias: {
-            '@src': path.resolve(import.meta.dirname!, 'src'),
-            '@_types': path.resolve(import.meta.dirname!, 'types'),
+            '@src': path.resolve(__dirname, 'src'),
+            '@_types': path.resolve(__dirname, 'types'),
         },
     },
 });

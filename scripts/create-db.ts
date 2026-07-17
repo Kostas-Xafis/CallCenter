@@ -1,28 +1,43 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env bun
 /**
- * Create a fresh SQLite database with all migrations applied.
+ * Cloudflare D1 Database Setup Helper
  *
- * Usage:
- *   tsx scripts/create-db.ts
+ * For Cloudflare Workers + D1, the database is managed through Wrangler CLI,
+ * not through local SQLite files. Use the following commands:
+ *
+ *   # Create the D1 database (first time only)
+ *   bun run d1:create
+ *
+ *   # Apply migrations (local dev)
+ *   bun run d1:migrate:local
+ *
+ *   # Apply migrations (production)
+ *   bun run d1:migrate
+ *
+ *   # Seed the database (local dev)
+ *   bun run d1:seed:local
+ *
+ *   # Seed the database (production)
+ *   bun run d1:seed
+ *
+ * This script is kept as a convenience reference.
+ * For local Node.js development with SQLite, switch to the 'node' branch.
  */
 
-import { unlinkSync } from "node:fs";
-import { closeDb, getDb } from "../db";
+console.log(`
+📦 CallCenter — Cloudflare D1 Database Setup
+─────────────────────────────────────────────
 
-const DB_PATH = "sqlite/callcenter.db";
+The database is managed via Wrangler CLI (not local SQLite files).
 
-// Remove existing database files
-for (const suffix of ["", "-wal", "-shm"]) {
-    try {
-        unlinkSync(DB_PATH + suffix);
-        console.log(`Removed ${DB_PATH}${suffix}`);
-    } catch {
-        // File doesn't exist — that's fine
-    }
-}
+Quick start (local dev):
+  1. bun run d1:migrate:local    ← apply all migrations
+  2. bun run d1:seed:local        ← seed initial data
+  3. bun run user:create:local -- <username> <password> [--admin]
 
-// Initialize the database (runs all migrations and seeds)
-const db = getDb(DB_PATH);
-console.log("All migrations and seeds applied successfully.");
+Production:
+  1. bun run d1:migrate           ← apply all migrations
+  2. bun run user:create -- <username> <password> [--admin]
 
-closeDb();
+For local Node.js + SQLite development, switch to the 'node' branch.
+`);

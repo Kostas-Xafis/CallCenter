@@ -1,34 +1,35 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env bun
 /**
- * Create or update a user in the local callcenter SQLite database.
+ * Create or update a user in the callcenter D1 database.
  *
  * Usage:
- *   npm run user:create -- <username> <password> [--admin]
+ *   bun run user:create       -- <username> <password> [--admin]   # production
+ *   bun run user:create:local -- <username> <password> [--admin]   # local dev
  *
- *   --admin   Give the user administrator privileges (default: regular user)
+ * Or directly:
+ *   bun run scripts/create-user.ts <username> <password> [--local] [--admin]
  */
 
-import Database from 'better-sqlite3';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'child_process';
 
 // ---------------------------------------------------------------------------
 // Parse args
 // ---------------------------------------------------------------------------
 const args = process.argv.slice(2);
+const isLocal = args.includes('--local');
 const isAdmin = args.includes('--admin');
-const positional = args.filter(a => a !== '--admin');
+const positional = args.filter(a => a !== '--local' && a !== '--admin');
 const [username, password] = positional;
 
 if (!username || !password) {
-    console.error('Usage: npm run user:create -- <username> <password> [--admin]');
+    console.error('Usage: bun run scripts/create-user.ts <username> <password> [--local] [--admin]');
     process.exit(1);
 }
 
 const role = isAdmin ? 'admin' : 'user';
 
 // ---------------------------------------------------------------------------
-// Hash password — same algorithm used by the server (PBKDF2 / SHA-256)
+// Hash password — same algorithm used by the Worker (PBKDF2 / SHA-256)
 // ---------------------------------------------------------------------------
 function toHex(bytes: Uint8Array): string {
     return Array.from(bytes)
@@ -40,13 +41,13 @@ async function hashPassword(pw: string): Promise<{ hash: string; salt: string; }
     const saltBytes = crypto.getRandomValues(new Uint8Array(16));
     const keyMaterial = await crypto.subtle.importKey(
         'raw',
-        new TextEncoder().encode(pw) as BufferSource,
+        new TextEncoder().encode(pw),
         'PBKDF2',
         false,
         ['deriveBits']
     );
     const hashBuffer = await crypto.subtle.deriveBits(
-        { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes as BufferSource, iterations: 100_000 },
+        { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes, iterations: 100_000 },
         keyMaterial,
         256
     );
@@ -58,35 +59,25 @@ async function hashPassword(pw: string): Promise<{ hash: string; salt: string; }
 // ---------------------------------------------------------------------------
 const { hash, salt } = await hashPassword(password);
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = join(__dirname, '..', 'sqlite', 'callcenter.db');
-const db = new Database(dbPath);
+// Upsert: create or overwrite existing user
+const sql =
+    `INSERT INTO users (username, password_hash, salt, role) VALUES ('${username}', '${hash}', '${salt}', '${role}') ` +
+    `ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, salt = excluded.salt, role = excluded.role;`;
 
-// Ensure the users table exists (in case migrations haven't been run yet)
-// Note: the role column is added by migration 0007; we handle both cases below.
-db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-        username      TEXT PRIMARY KEY,
-        password_hash TEXT NOT NULL,
-        salt          TEXT NOT NULL
-    );
-`);
+const wranglerArgs = [
+    'wrangler', 'd1', 'execute', 'callcenter',
+    isLocal ? '--local' : '--remote',
+    '--command', sql,
+];
 
-// Add role column if it doesn't exist yet (migration 0007 may not have run)
-const hasRole = db.prepare(
-    "SELECT 1 FROM pragma_table_info('users') WHERE name = 'role'"
-).get();
-if (!hasRole) {
-    db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
+console.log(`Creating ${role} "${username}" ${isLocal ? '(local)' : '(production)'}...`);
+
+const result = spawnSync('bunx', wranglerArgs, { stdio: 'inherit' });
+
+if (result.status !== 0) {
+    console.error('Failed to create user.');
+    process.exit(result.status ?? 1);
 }
 
-// Upsert: create or overwrite existing user
-db.prepare(
-    `INSERT INTO users (username, password_hash, salt, role) VALUES (?, ?, ?, ?)
-     ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, salt = excluded.salt, role = excluded.role`
-).run(username, hash, salt, role);
-
-db.close();
-
-console.log(`Done. User "${username}" created with role "${role}".`);
+console.log(`Done. User "${username}" (${role}) is ready.`);
 

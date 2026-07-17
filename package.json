@@ -1,26 +1,33 @@
 {
   "name": "callcenter",
   "private": true,
-  "type": "module",
+  "module": "worker.ts",
   "scripts": {
-    "dev": "LOG_REQUESTS=true tsx watch server.ts",
-    "start": "tsx server.ts",
+    "dev": "wrangler dev",
+    "predeploy": "bun run cache:invalidate",
+    "deploy": "wrangler deploy",
+    "d1:create": "wrangler d1 create callcenter",
+    "d1:migrate": "echo Y | wrangler d1 migrations apply callcenter",
+    "d1:migrate:local": "echo Y | wrangler d1 migrations apply callcenter --local",
+    "d1:seed": "wrangler d1 execute callcenter --file=seeds/0002_seed.sql",
+    "d1:seed:local": "wrangler d1 execute callcenter --local --file=seeds/0002_seed.sql",
+    "user:create": "bun run scripts/create-user.ts",
+    "user:create:local": "bun run scripts/create-user.ts --local",
+    "cache:invalidate": "bun run scripts/invalidate-cache.ts",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "db:create": "tsx scripts/create-db.ts",
-    "user:create": "tsx scripts/create-user.ts",
-    "cache:invalidate": "tsx scripts/invalidate-cache.ts"
+    "test:watch": "vitest"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.11",
-    "@types/node": "^22.0.0",
-    "tsx": "^4.19.0",
-    "vitest": "^2.1.0"
+    "@cloudflare/workers-types": "^4.20260526.1",
+    "@types/bun": "latest",
+    "miniflare": "^4.20260714.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^4.94.0"
   },
   "dependencies": {
-    "@hono/node-server": "^2.0.8",
-    "better-sqlite3": "^11.6.0",
-    "hono": "^4.6.0",
     "xlsx": "^0.18.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }

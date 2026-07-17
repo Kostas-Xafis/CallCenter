@@ -1,4 +1,4 @@
-import type { Database, Env, SessionUser, UserRole } from '@_types/types';
+import type { Env, SessionUser, UserRole } from '@_types/types';
 import { jsonError, jsonSuccess, toHex } from './routes/utils';
 
 const SESSION_COOKIE = 'session';
@@ -61,41 +61,43 @@ export function getSessionCookie(request: Request): string | null {
     return null;
 }
 
-export async function validateSession(db: Database, sessionId: string): Promise<SessionUser | null> {
+export async function validateSession(db: D1Database, sessionId: string): Promise<SessionUser | null> {
     const now = Math.floor(Date.now() / 1000);
-    const row = db.prepare(
+    const row = await db.prepare(
         'SELECT id, username, role FROM sessions WHERE id = ? AND expires_at > ?'
-    ).get(sessionId, now) as { id: string; username: string; role: UserRole; } | null;
+    ).bind(sessionId, now).first<{ id: string; username: string; role: UserRole; }>();
     if (!row) return null;
     return { sessionId: row.id, username: row.username, role: row.role };
 }
 
 /** Convenience: extract session user from a Request. */
-export function getSessionUser(db: Database, request: Request): Promise<SessionUser | null> {
+export async function getSessionUser(db: D1Database, request: Request): Promise<SessionUser | null> {
     const sessionId = getSessionCookie(request);
-    if (!sessionId) return Promise.resolve(null);
+    if (!sessionId) return null;
     return validateSession(db, sessionId);
 }
 
-async function createSession(db: Database, username: string): Promise<string> {
+async function createSession(db: D1Database, username: string): Promise<string> {
     // Fetch the user's role
-    const user = db.prepare('SELECT role FROM users WHERE username = ?').get(username) as { role: UserRole; } | null;
+    const user = await db.prepare('SELECT role FROM users WHERE username = ?')
+        .bind(username)
+        .first<{ role: UserRole; }>();
     const role = user?.role ?? 'user';
 
     const id = crypto.randomUUID();
     const expiresAt = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE;
     // Prune stale sessions opportunistically
-    db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(
-        Math.floor(Date.now() / 1000)
-    );
-    db.prepare(
+    await db.prepare('DELETE FROM sessions WHERE expires_at < ?')
+        .bind(Math.floor(Date.now() / 1000))
+        .run();
+    await db.prepare(
         'INSERT INTO sessions (id, username, role, expires_at) VALUES (?, ?, ?, ?)'
-    ).run(id, username, role, expiresAt);
+    ).bind(id, username, role, expiresAt).run();
     return id;
 }
 
-async function deleteSession(db: Database, sessionId: string): Promise<void> {
-    db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+async function deleteSession(db: D1Database, sessionId: string): Promise<void> {
+    await db.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run();
 }
 
 function sessionCookieHeader(value: string, maxAge: number): string {
@@ -119,9 +121,9 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
         return jsonError('Username and password are required');
     }
 
-    const user = env.DB.prepare(
+    const user = await env.DB.prepare(
         'SELECT password_hash, salt, role FROM users WHERE username = ?'
-    ).get(username) as { password_hash: string; salt: string; role: UserRole; } | null;
+    ).bind(username).first<{ password_hash: string; salt: string; role: UserRole; }>();
 
     if (!user || !(await verifyPassword(password, user.salt, user.password_hash))) {
         return jsonError('Invalid credentials', 401);
@@ -173,9 +175,9 @@ export async function handleSignup(request: Request, env: Env): Promise<Response
 
     // Look up the invitation
     const now = Math.floor(Date.now() / 1000);
-    const invite = env.DB.prepare(
+    const invite = await env.DB.prepare(
         'SELECT id, username, role, expires_at FROM signup_invitations WHERE id = ?'
-    ).get(inviteId) as { id: string; username: string; role: UserRole; expires_at: number; } | null;
+    ).bind(inviteId).first<{ id: string; username: string; role: UserRole; expires_at: number; }>();
 
     if (!invite) {
         return jsonError('Η πρόσκληση δεν βρέθηκε.', 404);
@@ -183,29 +185,29 @@ export async function handleSignup(request: Request, env: Env): Promise<Response
 
     if (invite.expires_at < now) {
         // Clean up expired invitation
-        env.DB.prepare('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
+        await env.DB.prepare('DELETE FROM signup_invitations WHERE id = ?').bind(inviteId).run();
         return jsonError('Η πρόσκληση έχει λήξει.', 410);
     }
 
     // Check if the username is already taken (shouldn't happen, but safety first)
-    const existingUser = env.DB.prepare(
+    const existingUser = await env.DB.prepare(
         'SELECT username FROM users WHERE username = ?'
-    ).get(invite.username) as { username: string; } | null;
+    ).bind(invite.username).first<{ username: string; }>();
 
     if (existingUser) {
-        env.DB.prepare('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
+        await env.DB.prepare('DELETE FROM signup_invitations WHERE id = ?').bind(inviteId).run();
         return jsonError('Υπάρχει ήδη καταχωρημένος χρήστης με αυτό το όνομα.', 409);
     }
 
     // Hash the password and create the user
     const { hash, salt } = await hashPassword(password);
 
-    env.DB.prepare(
+    await env.DB.prepare(
         'INSERT INTO users (username, password_hash, salt, role) VALUES (?, ?, ?, ?)'
-    ).run(invite.username, hash, salt, invite.role);
+    ).bind(invite.username, hash, salt, invite.role).run();
 
     // Delete the used invitation
-    env.DB.prepare('DELETE FROM signup_invitations WHERE id = ?').run(inviteId);
+    await env.DB.prepare('DELETE FROM signup_invitations WHERE id = ?').bind(inviteId).run();
 
     return jsonSuccess({ ok: true, username: invite.username }, 201);
 }

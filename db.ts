@@ -1,3 +1,11 @@
+/**
+ * NOTE: This file is for the **Node.js** branch (better-sqlite3).
+ * On the Cloudflare Workers ('cf') branch, the database is managed
+ * via D1 bindings through `wrangler.toml` and accessed as `D1Database`.
+ *
+ * See: worker.ts (CF entry point), wrangler.toml (D1 config)
+ */
+
 import DatabaseConstructor from 'better-sqlite3';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

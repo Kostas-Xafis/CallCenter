@@ -521,7 +521,7 @@ select {
 
 /* ── Mobile ── */
 
-@media (max-width: 768px) {
+@media (max-width: 964px) {
 	body {
 		padding: 10px;
 	}

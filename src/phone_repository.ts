@@ -1,6 +1,4 @@
 
-import type { Database } from '@_types/types';
-
 export type PhoneRecord = {
     id: number;
     type: string;
@@ -9,53 +7,88 @@ export type PhoneRecord = {
     merged: number;
 };
 
-export class PhoneRepository {
-    private db: Database;
+export type LatestRecord = {
+    type: string;
+    service: string;
+    code: string;
+    count: number;
+};
 
-    constructor(db: Database) {
+export class PhoneRepository {
+    private db: D1Database;
+
+    constructor(db: D1Database) {
         this.db = db;
     }
 
     async getAll(): Promise<PhoneRecord[]> {
-        return this.db.prepare('SELECT * FROM phone_records ORDER BY id').all() as PhoneRecord[];
+        const result = await this.db
+            .prepare('SELECT * FROM phone_records ORDER BY id')
+            .all<PhoneRecord>();
+        return result.results;
     }
 
-    /**
-     * Compute a lightweight content fingerprint of the phone_records table.
-     * Any insert, delete, or content change produces a different hash,
-     * so the client's IndexedDB cache is automatically invalidated.
-     */
     async getTableHash(): Promise<string> {
-        const row = this.db.prepare(`
-            SELECT
-                CAST(COUNT(*) AS TEXT) || ':'
-                || CAST(COALESCE(MAX(id), 0) AS TEXT) || ':'
-                || CAST(COALESCE(SUM(
-                    LENGTH(type) + LENGTH(service) + LENGTH(code) + merged
-                ), 0) AS TEXT) AS hash
-            FROM phone_records
-        `).get() as { hash: string; } | null;
-        return row?.hash ?? '0';
+        const result = await this.db
+            .prepare("SELECT value FROM table_meta WHERE key = 'records_version'")
+            .first<{ value: string; }>();
+        return result?.value ?? '0';
     }
 
     async getUniqueTypes(): Promise<string[]> {
-        const rows = this.db.prepare(
-            'SELECT DISTINCT type FROM phone_records ORDER BY type'
-        ).all() as { type: string; }[];
-        return rows.map(row => row.type);
+        const result = await this.db
+            .prepare('SELECT DISTINCT type FROM phone_records ORDER BY type')
+            .all<{ type: string; }>();
+        return result.results.map(row => row.type);
     }
 
     async getCount(): Promise<number> {
-        const row = this.db.prepare(
-            'SELECT COUNT(*) as count FROM phone_records'
-        ).get() as { count: number; } | null;
-        return row?.count ?? 0;
+        const result = await this.db
+            .prepare('SELECT COUNT(*) as count FROM phone_records')
+            .first<{ count: number; }>();
+        return result?.count ?? 0;
     }
 
     async getStatsByType(): Promise<{ type: string; count: number; }[]> {
-        return this.db.prepare(
-            'SELECT type, COUNT(*) as count FROM phone_records GROUP BY type ORDER BY count DESC'
-        ).all() as { type: string; count: number; }[];
+        const result = await this.db
+            .prepare(
+                'SELECT type, COUNT(*) as count FROM phone_records GROUP BY type ORDER BY count DESC'
+            )
+            .all<{ type: string; count: number; }>();
+        return result.results;
     }
 
+    async getLatest(): Promise<LatestRecord[]> {
+        const result = await this.db
+            .prepare(
+                `SELECT type, service, code, count
+                 FROM latest_requests
+                 WHERE date = date('now')
+                 ORDER BY count DESC
+                 LIMIT 5`
+            )
+            .all<LatestRecord>();
+        return result.results;
+    }
+
+    async trackLatest(type: string, service: string, code: string): Promise<void> {
+        await this.db
+            .prepare(
+                `INSERT INTO latest_requests (date, type, service, code, count)
+                 VALUES (date('now'), ?, ?, ?, 1)
+                 ON CONFLICT(date, type, service, code) DO UPDATE SET count = count + 1`
+            )
+            .bind(type, service, code)
+            .run();
+    }
+
+    async deleteLatest(type: string, service: string, code: string): Promise<void> {
+        await this.db
+            .prepare(
+                `DELETE FROM latest_requests
+                 WHERE date = date('now') AND type = ? AND service = ? AND code = ?`
+            )
+            .bind(type, service, code)
+            .run();
+    }
 }

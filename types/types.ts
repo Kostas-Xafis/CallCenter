@@ -1,12 +1,9 @@
 
-import DatabaseConstructor from "better-sqlite3";
-
-export type Database = InstanceType<typeof DatabaseConstructor>;
-
 export type UserRole = 'admin' | 'user';
 
 export type Env = {
-    DB: Database;
+    DB: D1Database;
+    ASSETS: Fetcher;
 };
 
 export type SessionUser = {

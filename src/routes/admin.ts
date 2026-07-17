@@ -1,4 +1,5 @@
 import type { ApiRoute, ApiRouteParent, Env, UserRole } from "@_types/types";
+import type { D1PreparedStatement } from "@cloudflare/workers-types";
 import { jsonError, jsonSuccess, toHex, trycatch } from "./utils";
 
 // ---------------------------------------------------------------------------
@@ -57,9 +58,9 @@ const createUserRoute: ApiRoute = {
             // --- Business rules ---
 
             // Check if the username already exists as a registered user
-            const existingUser = env.DB.prepare(
+            const existingUser = await env.DB.prepare(
                 "SELECT username FROM users WHERE username = ?"
-            ).get(username) as { username: string; } | null;
+            ).bind(username).first<{ username: string; }>();
 
             if (existingUser) {
                 return jsonError("Υπάρχει ήδη καταχωρημένος χρήστης με αυτό το όνομα.", 409);
@@ -67,14 +68,14 @@ const createUserRoute: ApiRoute = {
 
             // Clean up expired invitations for this username (so they don't block re-creation)
             const now = Math.floor(Date.now() / 1000);
-            env.DB.prepare(
+            await env.DB.prepare(
                 "DELETE FROM signup_invitations WHERE username = ? AND expires_at < ?"
-            ).run(username, now);
+            ).bind(username, now).run();
 
             // Check if a *valid* (non-expired) invitation already exists for this username
-            const existingInvite = env.DB.prepare(
+            const existingInvite = await env.DB.prepare(
                 "SELECT id FROM signup_invitations WHERE username = ? AND expires_at > ?"
-            ).get(username, now) as { id: string; } | null;
+            ).bind(username, now).first<{ id: string; }>();
 
             if (existingInvite) {
                 return jsonError(
@@ -89,9 +90,9 @@ const createUserRoute: ApiRoute = {
             const hexCode = generateHexCode();
             const expiresAt = expiryTwoWeeks();
 
-            env.DB.prepare(
+            await env.DB.prepare(
                 "INSERT INTO signup_invitations (id, username, role, expires_at) VALUES (?, ?, ?, ?)"
-            ).run(hexCode, username, role, expiresAt);
+            ).bind(hexCode, username, role, expiresAt).run();
 
             const signupUrl = `/signup?id=${hexCode}`;
 
@@ -125,9 +126,9 @@ const uploadDataRoute: ApiRoute = {
             }
 
             const formData = await request.formData();
-            const file = formData.get("file");
+            const file = formData.get("file") as File | null;
 
-            if (!file || !(file instanceof File)) {
+            if (!file) {
                 return jsonError("Δεν βρέθηκε αρχείο στο αίτημα.");
             }
 
@@ -217,24 +218,24 @@ const uploadDataRoute: ApiRoute = {
                 return jsonError("Δεν βρέθηκαν έγκυρες εγγραφές δεδομένων.");
             }
 
-            // --- Replace all phone_records in a transaction ---
-            const replaceAll = env.DB.transaction((rows: typeof records) => {
-                env.DB.prepare("DELETE FROM phone_records").run();
+            // --- Replace all phone_records using D1 batch ---
+            const statements: D1PreparedStatement[] = [];
 
-                const stmt = env.DB.prepare(
-                    "INSERT INTO phone_records (type, service, code, merged) VALUES (?, ?, ?, 0)"
-                );
-                for (const row of rows) {
-                    stmt.run(row.type, row.service, row.code);
-                }
+            statements.push(env.DB.prepare("DELETE FROM phone_records"));
 
-                // Bump the version token so clients invalidate their cache
-                env.DB.prepare(
-                    "UPDATE table_meta SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT) WHERE key = 'records_version'"
-                ).run();
-            });
+            const insertStmt = env.DB.prepare(
+                "INSERT INTO phone_records (type, service, code, merged) VALUES (?, ?, ?, 0)"
+            );
+            for (const row of records) {
+                statements.push(insertStmt.bind(row.type, row.service, row.code));
+            }
 
-            replaceAll(records);
+            // Bump the version token so clients invalidate their cache
+            statements.push(env.DB.prepare(
+                "UPDATE table_meta SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT) WHERE key = 'records_version'"
+            ));
+
+            await env.DB.batch(statements);
 
             return jsonSuccess({
                 success: true,
