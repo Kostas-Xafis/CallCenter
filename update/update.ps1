@@ -49,7 +49,11 @@ $DataEnd = '<!--CATALOG-DATA-END-->'
 $BackupsToKeep = 10
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+# Ο φάκελος του script. Το $PSScriptRoot μπορεί να είναι κενό σε ορισμένους τρόπους
+# εκτέλεσης (π.χ. από τον επεξεργαστή PowerShell), οπότε υπάρχουν εναλλακτικές.
 $ScriptDir = $PSScriptRoot
+if (-not $ScriptDir -and $MyInvocation.MyCommand.Path) { $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path }
+if (-not $ScriptDir) { $ScriptDir = (Get-Location).Path }
 $RestrictedFileName = 'ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt'
 
 function Write-Ok([string]$Message) { Write-Host "  ✓ $Message" -ForegroundColor Green }
@@ -139,11 +143,33 @@ function Read-RestrictedNumbers([string]$Path) {
 
 function Find-HtmlFile {
     $default = Join-Path $ScriptDir 'katalogos.html'
-    if (Test-Path -LiteralPath $default) { return $default }
-    foreach ($f in (Get-ChildItem -LiteralPath $ScriptDir -Filter '*.html' -File)) {
-        if ([System.IO.File]::ReadAllText($f.FullName).Contains($DataBegin)) { return $f.FullName }
+    if (Test-Path -LiteralPath $default -PathType Leaf) { return $default }
+
+    # Άλλο όνομα (π.χ. «katalogos (1).html» ή «katalogos.html.html»): η πιο πρόσφατη
+    # σελίδα του φακέλου που έχει τους δείκτες δεδομένων.
+    $pages = @(Get-ChildItem -LiteralPath $ScriptDir -File |
+            Where-Object { $_.Extension -ieq '.html' -or $_.Extension -ieq '.htm' } |
+            Sort-Object LastWriteTime -Descending)
+    foreach ($f in $pages) {
+        if ([System.IO.File]::ReadAllText($f.FullName).Contains($DataBegin)) {
+            Write-Warn "Δεν βρέθηκε το katalogos.html — χρησιμοποιείται η σελίδα «$($f.Name)»."
+            return $f.FullName
+        }
     }
-    throw "Δεν βρέθηκε η σελίδα katalogos.html δίπλα στο script ('$ScriptDir')."
+
+    $message = "Δεν βρέθηκε η σελίδα katalogos.html στον φάκελο:`n      $ScriptDir`n"
+    if ($pages.Count -gt 0) {
+        $message += "    Στον φάκελο υπάρχουν μόνο: $(($pages | ForEach-Object { $_.Name }) -join ', ') (χωρίς δεδομένα καταλόγου).`n"
+    } else {
+        $message += "    Ο φάκελος δεν περιέχει κανένα αρχείο .html.`n"
+    }
+    $inTemp = $env:TEMP -and $ScriptDir.StartsWith($env:TEMP, [System.StringComparison]::OrdinalIgnoreCase)
+    if ($ScriptDir -match '\\Temp\d*_[^\\]*\.zip' -or $inTemp) {
+        $message += "    Φαίνεται ότι εκτελείτε το update.cmd μέσα από αρχείο .zip. Κάντε πρώτα δεξί κλικ στο .zip → «Εξαγωγή όλων» και εκτελέστε το από τον φάκελο που θα δημιουργηθεί."
+    } else {
+        $message += "    Βάλτε το katalogos.html στον ίδιο φάκελο με το update.cmd (με αυτό ακριβώς το όνομα) και δοκιμάστε ξανά."
+    }
+    throw $message
 }
 
 # ── Κύρια ροή ────────────────────────────────────────────────────────
