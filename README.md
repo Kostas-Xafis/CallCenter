@@ -82,7 +82,7 @@ bun test             # parsers, search, payload, and dist/ being up to date
 ```
 
 - **`dist/` is committed** because administrators cannot run Bun/Node: they
-  download it from GitHub (Code → Download ZIP) and copy it to their PC.
+  download the `static-catalog` branch ZIP from GitHub and copy it to their PC.
   Always run `bun run build` before committing; `tests/release.test.ts` fails
   if `dist/` is out of date or its page contains data.
 - `dist/data/*` and `dist/backup/` are git-ignored, so nothing an administrator
@@ -130,7 +130,9 @@ tests/
 ## Release
 
 1. `bun run build` (and `bun run guide` if the guide changed), `bun test`.
-2. Commit and push to the **default branch** — GitHub's "Download ZIP" serves it.
+2. Commit and push to the **`static-catalog`** branch. Administrators download
+   it as `https://github.com/kostas-xafis/callcenter/archive/refs/heads/static-catalog.zip`
+   (the default branch, `main`, still holds the old server app).
 3. Administrators follow «Εγκατάσταση και νέες εκδόσεις» in `ΟΔΗΓΙΕΣ.pdf`:
    first time, copy all of `dist/`; for a new version, replace only
    `katalogos.html`, `update.cmd`, `update.ps1`, `ΟΔΗΓΙΕΣ.pdf` (never their

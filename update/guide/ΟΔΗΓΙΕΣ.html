@@ -213,6 +213,11 @@
 	}
 
 	/* Folder picture */
+	.file.url {
+		white-space: nowrap;
+		font-size: 10pt;
+	}
+
 	.folder {
 		font-family: Consolas, "Cascadia Mono", "DejaVu Sans Mono", monospace;
 		font-size: 11pt;
@@ -528,17 +533,17 @@ DECT:       ...\Κατάλογος\data\DECT ΑΠΟΓΡΑΦΗ.csv
 
 <!-- ── Install / upgrade ── -->
 <h2 class="page-break">Εγκατάσταση και νέες εκδόσεις</h2>
-<p>Ο φάκελος του καταλόγου υπάρχει έτοιμος στο GitHub, στον φάκελο <span class="file">dist</span>. Δεν χρειάζεται να εγκαταστήσετε κανένα πρόγραμμα.</p>
+<p>Ο φάκελος του καταλόγου υπάρχει έτοιμος στο GitHub (κλάδος <b>static-catalog</b>), στον φάκελο <span class="file">dist</span>. Δεν χρειάζεται να εγκαταστήσετε κανένα πρόγραμμα.</p>
 
 <div class="step" style="margin-top:6px">
 	<div class="num">↓</div>
 	<div>
 		<h2>Πρώτη εγκατάσταση</h2>
 		<ol class="actions">
-			<li>Ανοίξτε στον browser τη διεύθυνση:<br><span class="file">github.com/kostas-xafis/callcenter</span></li>
-			<li>Πατήστε το πράσινο κουμπί <span class="ui">Code</span> → <span class="ui">Download ZIP</span>.</li>
-			<li>Στις Λήψεις, κάντε <b>δεξί κλικ</b> στο αρχείο <span class="file">.zip</span> → <span class="ui">Εξαγωγή όλων…</span> → <span class="ui">Εξαγωγή</span>.</li>
-			<li>Μέσα στον φάκελο που δημιουργήθηκε, ανοίξτε τον φάκελο <span class="file">dist</span>.</li>
+			<li>Γράψτε στον browser αυτή τη διεύθυνση και πατήστε Enter. Η λήψη ξεκινά αμέσως:<br><span class="file url">github.com/kostas-xafis/callcenter/archive/refs/heads/static-catalog.zip</span>
+				<div class="small">Ή: ανοίξτε το <span class="file">github.com/kostas-xafis/callcenter</span>, πάνω αριστερά αλλάξτε το <span class="ui">main</span> σε <span class="ui">static-catalog</span>, και πατήστε <span class="ui">Code</span> → <span class="ui">Download ZIP</span>. <b>Προσοχή:</b> το <span class="ui">main</span> είναι παλιά έκδοση χωρίς φάκελο <span class="file">dist</span>.</div></li>
+			<li>Στις Λήψεις, κάντε <b>δεξί κλικ</b> στο <span class="file">CallCenter-static-catalog.zip</span> → <span class="ui">Εξαγωγή όλων…</span> → <span class="ui">Εξαγωγή</span>.</li>
+			<li>Μέσα στον φάκελο <span class="file">CallCenter-static-catalog</span> που δημιουργήθηκε, ανοίξτε τον φάκελο <span class="file">dist</span>.</li>
 			<li>Αντιγράψτε <b>όλο το περιεχόμενο</b> του <span class="file">dist</span> σε έναν μόνιμο φάκελο (π.χ. <span class="file">Έγγραφα\Κατάλογος</span>). Αυτός είναι πλέον ο <b>φάκελος του καταλόγου</b>.</li>
 			<li>Κάντε τα <b>βήματα 1–5</b>. Μέχρι να τρέξει το <span class="file">update.cmd</span>, η σελίδα γράφει «Δεν υπάρχουν δεδομένα» — αυτό είναι φυσιολογικό.</li>
 		</ol>
