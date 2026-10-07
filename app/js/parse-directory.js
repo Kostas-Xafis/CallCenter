@@ -36,6 +36,10 @@ const EXTERNAL_RE = /\b(?:2\d{2}\s?-\s?\d{3}\s?\d{4}|2\d{9}|69\d{8})\b/g;
 const RANGE_RE = /(\d{2,5})\s*(?:έως|εως|-|–)\s*(?:και\s*)?(\d{2,5})/g;
 const NUMBER_RE = /\d{2,5}/g;
 const MAX_RANGE_EXPANSION = 100;
+/** Internal extensions are exactly 4 digits; anything else is a typo in the document. */
+const EXTENSION_RE = /^\d{4}$/;
+/** Short codes the document uses on purpose, and the extension they stand for. */
+const EXTENSION_ALIASES = { "09": "3399" }; // switchboard (210-746 3399)
 
 const HEADLESS_FIRST_BLOCK_NAME = "Διοίκηση";
 const HEADLESS_BLOCK_NAME = "Γενικά";
@@ -273,6 +277,22 @@ export function parseDirectory(text) {
 			const nums = parseNumbers(l.entry.numbers);
 			if (nums.leftover) {
 				warnings.push({ line: l.line, raw: l.raw, message: `Μη αναγνωρίσιμο τμήμα αριθμών: "${nums.leftover}"` });
+			}
+			nums.extensions = nums.extensions.map(n => EXTENSION_ALIASES[n] ?? n);
+			const invalid = [
+				...nums.extensions.filter(n => !EXTENSION_RE.test(n)),
+				...nums.ranges.filter(r => !EXTENSION_RE.test(r.from) || !EXTENSION_RE.test(r.to)).map(r => `${r.from} έως ${r.to}`)
+			];
+			if (invalid.length) {
+				nums.extensions = nums.extensions.filter(n => EXTENSION_RE.test(n));
+				nums.ranges = nums.ranges.filter(r => EXTENSION_RE.test(r.from) && EXTENSION_RE.test(r.to));
+				const dropped = !nums.extensions.length && !nums.ranges.length && !nums.external.length;
+				warnings.push({
+					line: l.line,
+					raw: l.raw,
+					message: `Μη έγκυρος εσωτερικός αριθμός (πρέπει να είναι τετραψήφιος): ${invalid.map(n => `«${n}»`).join(", ")}${dropped ? " — η εγγραφή παραλείπεται" : " — παραλείπεται"}`
+				});
+				if (dropped) continue;
 			}
 
 			// Continuation line: no description, only more numbers for the previous entry.

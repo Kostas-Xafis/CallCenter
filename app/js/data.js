@@ -31,6 +31,10 @@ export const SOURCES = {
 
 // Extra searchable words per source, so "ασύρματο καρδιολογ" or "σταθερό γραμματεία"
 // narrows the results to that kind of phone. Low weight: the type never outranks a real match.
+// The directorate code is what callers usually say ("ΔΟΥ", "ΚΑΙ"): an exact hit on
+// it must outrank names that merely start with the same letters (ΔΟΥΛΓΕΡΑΚΗΣ).
+const ABBR_WEIGHT = 1.6;
+
 const SOURCE_TERMS = {
 	dir: { text: "Σταθερά σταθερό σταθερός σταθεροί", weight: 0.3 },
 	dect: { text: "Ασύρματα ασύρματο ασύρματος ασύρματοι DECT", weight: 0.3 }
@@ -130,8 +134,9 @@ export function buildModel(payload) {
 				searchFields: {
 					name: { text: e.label, weight: 1 },
 					unit: { text: e.path.join(" › "), weight: 0.85 },
-					dir: { text: abbr ? `${abbr} ${section.name}` : section.name, weight: 0.6 },
-					parent: { text: section.parent ?? "", weight: 0.5 },
+					abbr: { text: abbr ?? "", weight: ABBR_WEIGHT },
+					parent: { text: section.parent ?? "", weight: ABBR_WEIGHT },
+					dir: { text: section.name, weight: 0.6 },
 					source: SOURCE_TERMS.dir
 				}
 			});
@@ -164,7 +169,8 @@ export function buildModel(payload) {
 				name: { text: r.name, weight: 1 },
 				position: { text: r.position, weight: 0.8 },
 				unit: { text: r.unit, weight: 0.85 },
-				dir: { text: title ? `${r.dir} ${title}` : r.dir, weight: 0.6 },
+				abbr: { text: r.dir, weight: ABBR_WEIGHT },
+				dir: { text: title, weight: 0.6 },
 				source: SOURCE_TERMS.dect
 			}
 		});

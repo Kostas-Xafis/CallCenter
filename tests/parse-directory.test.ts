@@ -21,7 +21,7 @@ const SAMPLE = [
 	"Γραμματεία – Τμήμα Εκπαίδευσης Υγειον. Ιατρών\t4138",
 	"",
 	"ΔΥΠ / Σμήνος Τηλεπικοινωνιών – Ηλεκτρονικών (ΣΜ. Τ-Η)",
-	"ΚΕΠΙΚ. Τηλεφωνικό Κέντρο\t09",
+	"ΚΕΠΙΚ. Γραφείο Σημάτων\t5001",
 	"",
 	"Κλινικές",
 	"Α΄ Παθολογική. Δωμάτια Ασθενών\t4852 έως 4861,4864",
@@ -115,7 +115,7 @@ describe("parseDirectory", () => {
 	test("dotted paths", () => {
 		expect(entry("Αιμοδοσία (Τράπεζα Αίματος)")).toMatchObject({ path: ["Βιοπαθολογία"], external: ["210-7786449"] });
 		expect(sectionOf("Αιμοδοσία (Τράπεζα Αίματος)").abbr).toBe("ΔΤΕ");
-		expect(entry("Τηλεφωνικό Κέντρο")).toMatchObject({ path: ["ΚΕΠΙΚ"], extensions: ["09"] });
+		expect(entry("Γραφείο Σημάτων")).toMatchObject({ path: ["ΚΕΠΙΚ"], extensions: ["5001"] });
 	});
 
 	test("continuation line with empty description", () => {
@@ -142,6 +142,20 @@ describe("parseDirectory", () => {
 		const word = "Κλινικές\rΑ΄ Ορθοπεδική. Γραφείο Ιατρών\x074348\x07\rΚαρδιολογική\vΓραφείο\t4452";
 		const r = parseDirectory("Διοικητής\t4057\r\r" + word);
 		expect(r.entries.map(e => [e.label, e.extensions])).toContainEqual(["Γραφείο Ιατρών", ["4348"]]);
+	});
+
+	test("«09» is the switchboard and becomes 3399 without a warning", () => {
+		const r = parseDirectory("Διοικητής\t4057\n\nΣΜ. Τ-Η\nΚΕΠΙΚ. Τηλεφωνικό Κέντρο\t09");
+		expect(r.entries[1]).toMatchObject({ label: "Τηλεφωνικό Κέντρο", extensions: ["3399"] });
+		expect(r.warnings).toEqual([]);
+	});
+
+	test("other numbers that are not 4 digits are dropped and reported", () => {
+		const r = parseDirectory("Διοικητής\t4057\n\nΣΜ. Τ-Η\nΚάτι\t123\nΒλάβες\t3010,401");
+		expect(r.entries.map(e => [e.label, e.extensions])).toEqual([["Διοικητής", ["4057"]], ["Βλάβες", ["3010"]]]);
+		expect(r.warnings.map(w => w.line)).toEqual([4, 5]);
+		expect(r.warnings[0].message).toContain("«123»");
+		expect(r.warnings[0].message).toContain("η εγγραφή παραλείπεται");
 	});
 
 	test("unparseable numbers are reported", () => {

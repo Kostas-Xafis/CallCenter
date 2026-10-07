@@ -58,7 +58,7 @@ function renderRecord(record, hl = {}) {
 	const dirTitle = record.dirTitle && record.dirTitle !== record.dir ? record.dirTitle : "";
 	return `<div class="${classes.join(" ")}" role="row">
 		<div class="c-num"><span class="src-icon src-${record.source}" title="${SOURCES[record.source].long}"></span><div class="nums">${renderNumbers(record, hl)}</div></div>
-		<div class="c-dir">${record.dir ? `<button type="button" class="dir-badge" data-dir="${escapeHtml(record.dirKey)}" title="${escapeHtml(dirTitle ? dirTitle + " · " : "")}Φιλτράρισμα">${highlight(record.dir, hl.dir?.filter(([a]) => a < record.dir.length))}</button>` : ""}</div>
+		<div class="c-dir">${record.dir ? `<button type="button" class="dir-badge" data-dir="${escapeHtml(record.dirKey)}" title="${escapeHtml(dirTitle ? dirTitle + " · " : "")}Φιλτράρισμα">${highlight(record.dir, record.searchFields.abbr.text ? hl.abbr : hl.dir)}</button>` : ""}</div>
 		<div class="c-name">${name}</div>
 		<div class="c-pos">${highlight(record.position, hl.position)}</div>
 		<div class="c-unit">${highlight(record.unit, hl.unit)}</div>
@@ -208,7 +208,7 @@ function renderSidePanel() {
 	if (model.warnings.length) {
 		const btn = $("warningsBtn");
 		btn.hidden = false;
-		btn.textContent = `⚠ ${model.warnings.length} προειδοποιήσεις επεξεργασίας`;
+		btn.textContent = model.warnings.length === 1 ? "⚠ 1 προειδοποίηση επεξεργασίας" : `⚠ ${model.warnings.length} προειδοποιήσεις επεξεργασίας`;
 		$("warningsList").innerHTML = model.warnings
 			.map(
 				w =>

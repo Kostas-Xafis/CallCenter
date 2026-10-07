@@ -31,6 +31,18 @@ const DIRECTORY = [
 	"Διεύθυνση Οδοντιατρικού Τομέα (ΔΟΤ)",
 	"Γναθοχειρουργικό. Γραμματεία\t4289",
 	"",
+	"ΑΝΩΤΑΤΗ ΑΕΡΟΠΟΡΙΑΣ ΥΓΕΙΟΝΟΜΙΚΗ ΕΠΙΤΡΟΠΗ (AAYE)",
+	"Πρόεδρος\t5610",
+	"",
+	"ΔΥΠ / Σμήνος Τηλεπικοινωνιών – Ηλεκτρονικών (ΣΜ. Τ-Η)",
+	"Συνεργείο Τηλεπικοινωνιών. Βλάβες\t3010",
+	"",
+	"Διεύθυνση Οικονομικών Υπηρεσιών (ΔΟΥ)",
+	"Λογιστήριο\t4136",
+	"",
+	"Οικήματα Αγάμων",
+	"Δωμάτιο Δουλγεράκη\t4888",
+	"",
 	"Κλινικές",
 	"Γ΄ Παθολογική. Δωμάτια Ασθενών\t5501 έως 5511",
 	"Καρδιολογική. Γραφείο Ιατρών\t4452\t\t210-7700315"
@@ -123,7 +135,7 @@ describe("decodeBytes", () => {
 
 describe("model", () => {
 	test("records from both sources", () => {
-		expect(model.records.filter(r => r.source === "dir")).toHaveLength(7);
+		expect(model.records.filter(r => r.source === "dir")).toHaveLength(11);
 		expect(model.warnings).toEqual([]);
 		expect(model.records.filter(r => r.source === "dect")).toHaveLength(4);
 	});
@@ -162,8 +174,24 @@ describe("search", () => {
 		expect(top("5505")).toEqual(["5501–5511 Δωμάτια Ασθενών"]);
 		expect(top("7700315")).toEqual(["4452 Γραφείο Ιατρών"]);
 	});
-	test("typo tolerance", () => {
-		expect(top("καρδιλογικης")).toContain("3478 ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ");
+	test("typo tolerance: missing, wrong, extra and swapped letters", () => {
+		expect(top("καρδιλογικης")).toContain("3478 ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ"); // missing
+		expect(top("καρδιολογεκης")).toContain("3478 ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ"); // wrong
+		expect(top("καρδιολλογικης")).toContain("3478 ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ"); // extra
+		expect(top("καρδιολογκιης")).toContain("3478 ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ"); // swapped
+		expect(top("γναθοχειρουργκο")).toEqual(["4289 Γραμματεία"]);
+	});
+	test("Greek spelling confusions (ο/ω, ι/η/υ) are free", () => {
+		expect(top("χειμονας")).toEqual(["3995 ΧΕΙΜΩΝΑΣ ΑΝΤΩΝΙΟΣ"]);
+		expect(top("τσιτλακιδις")).toEqual(["3478 ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ"]);
+	});
+	test("typos are only tolerated when nothing matches exactly", () => {
+		// "γραμ" has exact hits, so it must not loosely match other words
+		expect(top("γραμ").every(r => /Γραμματεία/.test(r))).toBe(true);
+		// the first letter must be right
+		expect(top("ξειμωνας")).toEqual([]);
+		// short words are never matched loosely
+		expect(top("ωρκ")).toEqual([]);
 	});
 	test("phone type can be part of the query", () => {
 		const types = (q: string) => [...new Set(search(index, q).map(r => r.record.source))];
@@ -179,6 +207,20 @@ describe("search", () => {
 	test("type words do not pollute other searches", () => {
 		expect(top("τηλεφωνο")).toEqual([]);
 		expect(top("γραμ")).toHaveLength(3);
+	});
+	test("Latin look-alike letters in the source still match Greek queries", () => {
+		expect(top("ΑΑΥΕ")).toEqual(["5610 Πρόεδρος"]);
+		expect(top("ααυε προεδρος")).toEqual(["5610 Πρόεδρος"]);
+		expect(top("AAYE")).toEqual(["5610 Πρόεδρος"]);
+	});
+	test("dotted abbreviations match with or without spaces", () => {
+		expect(top("ΣΜ.Τ-Η")).toEqual(["3010 Βλάβες"]);
+		expect(top("σμ.τ-η βλαβες")).toEqual(["3010 Βλάβες"]);
+		expect(top("ΣΜ. Τ-Η")).toEqual(["3010 Βλάβες"]);
+	});
+	test("an exact directorate code outranks names starting with the same letters", () => {
+		expect(top("ΔΟΥ")).toEqual(["4136 Λογιστήριο", "4888 Δωμάτιο Δουλγεράκη"]);
+		expect(top("ΔΠΤ")[0]).toMatch(/Γραμματεία|ΤΣΙΤΛΑΚΙΔΗΣ/);
 	});
 	test("every word must match", () => {
 		expect(top("γναθ επιμελητες")).toEqual([]);
