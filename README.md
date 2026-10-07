@@ -1,79 +1,125 @@
-# Call Center
+# 251 ΓΝΑ · Τηλεφωνικός Κατάλογος
 
-A phone records management app with client-side fuzzy search and IndexedDB caching. Built with Bun, TypeScript, and SQLite.
+A single, self-contained HTML page for the hospital call center: search the
+telephone directory and the DECT handset inventory, with no server, no
+network and no installation. Users open `katalogos.html` with a double click.
 
-## Stack
+```
+            development (this repo, Bun)                       administrator (Windows)
+ app/  ──►  bun run build  ──►  dist/katalogos.html  ──copy──►  update.cmd  ──►  katalogos.html
+                                dist/update.cmd, update.ps1         ▲            (data block rewritten)
+                                                                    │
+                                          data\DECT ΑΠΟΓΡΑΦΗ.csv      (Excel → Save as → CSV)
+                                          data\THL_KATALOGOS_251_GNA.txt (Word → Save as → Plain text)
+```
 
-- **Runtime:** [Bun](https://bun.com)
-- **Database:** SQLite via `bun:sqlite`
-- **Search:** Client-side fuzzy search (custom implementation, no external libraries)
-- **Caching:** IndexedDB with server-side hash-based cache invalidation
+## How it works
 
-## Setup
+- `katalogos.html` contains the whole app (HTML, CSS, JS, icon) **and** the
+  data, inside a block delimited by `<!--CATALOG-DATA-BEGIN-->` /
+  `<!--CATALOG-DATA-END-->`.
+- The administrator exports the two source files (see `update/ΟΔΗΓΙΕΣ.txt`):
+  the DECT spreadsheet's first sheet as **.csv** and the directory document as
+  **.txt**, into `data\`.
+- `update.ps1` (run through `update.cmd`, Windows PowerShell 5.1+) embeds the
+  two files **byte for byte** (base64) in the data block. It does no parsing
+  and needs nothing beyond stock Windows.
+- The page does everything else when it opens (`app/js`):
+  - `decode.js` — encoding detection: UTF-8 (± BOM), UTF-16, Windows-1253;
+  - `parse-csv.js` — RFC 4180 CSV, separator detected (`,` `;` or tab);
+  - `parse-dect.js`, `parse-directory.js` — the actual data model.
+
+Payload (schema 2):
+
+```js
+{ schema: 2, generatedAt, generator,
+  dect:      { file, modified, base64 },   // the .csv
+  directory: { file, modified, base64 },   // the .txt
+  restricted: ["3995", …] }
+```
+
+The DECT export is used exactly as maintained: columns are found by their
+header text (`ΑΡΙΘΜΟΣ`, `ΟΝΟΜΑΤΕΠΩΝΥΜΟ`, `ΔΙΕΥΘΥΝΣΗ`, `ΘΕΣΗ`, `ΕΠΙΣΤΑΣΙΑ`),
+unassigned numbers are skipped and `*`-prefixed names are shown as
+shared/duty handsets. Full directorate names come from the directory
+headings ("Διεύθυνση Τομέα Εργαστηρίων (ΔΤΕ)").
+
+The directory text is preprocessed into this schema (see
+`app/js/parse-directory.js` for all the rules and edge cases):
+
+```js
+Section { id, name, abbr, parent, heading }
+// "ΔΥΠ / Σμήνος Μεταφορικών Μέσων (ΣΜΜ)" → { name: "Σμήνος Μεταφορικών Μέσων", abbr: "ΣΜΜ", parent: "ΔΥΠ" }
+
+Entry { id, sectionId, path[], label, extensions[], ranges[], external[], raw, line }
+// "Βιοπαθολογία. Αιμοδοσία\t4332,4384\t\t210-7786449"
+//   → { path: ["Βιοπαθολογία"], label: "Αιμοδοσία", extensions: ["4332","4384"], external: ["210-7786449"] }
+```
+
+Problems (unrecognized lines, missing columns, duplicate numbers, a file that
+looks like it was saved with the wrong encoding) appear as a
+«⚠ προειδοποιήσεις» link under the «Τελευταία ενημέρωση» date (only when
+there are any), so the administrator can fix the source.
+
+### Restricted numbers
+
+Numbers that calls must never be transferred to are shown with a red tint and
+a «Μη συνδέετε» tag. The list currently lives in `$RestrictedNumbers` at the
+top of `update/update.ps1` and is written into the data block (the dev script
+reads the same list). It will be derived from the DECT spreadsheet once the
+final file format is known.
+
+## Development
 
 ```bash
 bun install
+bun run dev          # build dist/katalogos.html and load ./actual_data into it
+bun test             # parser, search and payload tests
 ```
 
-The database is auto-created on first startup from the migrations in `migrations/`.
+- `bun run build` — bundles `app/` into `dist/katalogos.html` (keeps any data
+  already in it) and copies `update/*` next to it.
+- `bun run data:dev [folder]` — Linux/macOS equivalent of `update.ps1`
+  (embeds the newest .csv and .txt of the folder). The real script can also be
+  run here with PowerShell for Linux: `pwsh -File dist/update.ps1`.
 
-## Running
+`actual_data/` holds personal data and is git-ignored.
 
-```bash
-bun run dev              # Development (watch mode + request logging)
-bun run start            # Production
-bun run user:create      # Create a user (CLI)
-bun run cache:invalidate # Bump service worker cache version
+### Layout
+
+```
+app/
+  index.html            page template (placeholders for CSS/JS + empty data block)
+  styles.css
+  assets/
+    icon.svg            browser-tab icon (inlined by the build)
+    logo-128.png        header logo (inlined by the build; trimmed/downscaled from logo.png)
+    logo.png            original 1024×1024 logo (source only, not embedded)
+  js/
+    main.js             UI: search box, source tabs, directorate filter, results
+    data.js             payload → unified records for both sources
+    decode.js           embedded bytes → text (encoding detection)
+    parse-csv.js        CSV → rows (separator detection)
+    parse-directory.js  telephone directory text → sections/entries
+    parse-dect.js       DECT rows → handset records
+    search.js           word-based, accent-insensitive search + highlighting
+    normalize.js        text folding helpers
+    greek-layout.js     Latin-keyboard → Greek conversion
+    theme.js            light/dark theme
+update/
+  update.ps1            Windows data updater (PowerShell 5.1+, UTF-8 BOM)
+  update.cmd            double-click wrapper
+  ΟΔΗΓΙΕΣ.txt           instructions for administrators (Greek): how to export and update
+scripts/
+  build.ts, dev-data.ts, lib/payload.ts
+tests/
 ```
 
-Server starts on `http://localhost:3000`.
+## Release
 
-## Authentication & Authorization
-
-The app uses session-based authentication with HttpOnly cookies. Passwords are hashed via PBKDF2/SHA-256 (100 000 iterations).
-
-- **Roles:** `admin` and `user`
-- Write operations (`POST`/`PUT`/`PATCH`/`DELETE`) on `/api/*` require the `admin` role
-- The `/admin` panel is restricted to admin users
-- Signup is invitation-only: admins create invitations and share the signup link
-
-## API
-
-### Phone Records
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/records` | All phone records |
-| GET | `/api/records/hash` | Content fingerprint for cache invalidation |
-| GET | `/api/stats` | Total count, unique types & per-type breakdown |
-
-### Auth
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/login` | Authenticate with username/password → session cookie |
-| POST | `/auth/logout` | Clear session |
-| POST | `/auth/signup` | Complete registration from invitation (body: `{ inviteId, password }`) |
-
-### Signup (invitation-based)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/signup/validate?id=<hex>` | Validate an invitation code, returns the username |
-
-### Admin (admin role required)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/admin/create-user` | Create a signup invitation (body: `{ username, role }`) |
-| POST | `/api/admin/upload-data` | Replace all records from an `.xlsx` file (multipart/form-data) |
-
-## Frontend Pages
-
-| Path | Description |
-|------|-------------|
-| `/` | Main SPA — search, type filter, pagination, dark mode |
-| `/login` | Login page |
-| `/signup` | Signup page (requires `?id=<invitation>`) |
-| `/admin` | Admin panel — create user invitations, upload Excel data (admin only) |
-
+Give the administrators the contents of `dist/` (`katalogos.html`,
+`update.cmd`, `update.ps1`, `ΟΔΗΓΙΕΣ.txt`, empty `data/`). After that they
+only re-export the .csv/.txt into `data\` and run `update.cmd`; a new build is needed
+only when the app itself changes (the data block is preserved by
+`bun run build`, but on their side they would replace `katalogos.html` and
+re-run `update.cmd`).

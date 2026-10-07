@@ -1,22 +1,17 @@
 {
 	"name": "callcenter",
 	"private": true,
-	"module": "server.ts",
+	"type": "module",
 	"scripts": {
-		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env'",
-		"dev": "LOG_REQUESTS=true bun run --watch server.ts",
-		"start": "bun run server.ts",
-		"db:create": "bun run scripts/create-db.ts",
-		"user:create": "bun run scripts/create-user.ts",
-		"cache:invalidate": "bun run scripts/invalidate-cache.ts"
+		"build": "bun run scripts/build.ts",
+		"data:dev": "bun run scripts/dev-data.ts",
+		"dev": "bun run build && bun run data:dev",
+		"test": "bun test tests"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
-	},
-	"dependencies": {
-		"xlsx": "^0.18.5"
 	}
 }

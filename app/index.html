@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>251 ΓΝΑ · Τηλεφωνικός Κατάλογος</title>
+	<link rel="icon" type="image/svg+xml" href="@FAVICON@">
+	<script>
+		(function () {
+			var t = null;
+			try { t = localStorage.getItem("callcenter-theme"); } catch (e) {}
+			if (!t) t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+			if (t === "dark") document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+	<style>/*@CSS@*/</style>
+</head>
+<body>
+	<div class="layout">
+		<aside class="side">
+			<header class="card brand">
+				<img class="brand-logo" src="@LOGO@" alt="251 ΓΝΑ" width="64" height="64">
+				<div>
+					<h1>Τηλεφωνικός Κατάλογος</h1>
+					<p class="subtitle">251 Γενικό Νοσοκομείο Αεροπορίας</p>
+					<p class="updated" id="lastUpdate" hidden></p>
+					<button class="link-btn warn" id="warningsBtn" type="button" hidden></button>
+				</div>
+				<button class="icon-btn theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Εναλλαγή σκούρας εμφάνισης">
+					<svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+					<svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+				</button>
+			</header>
+
+			<section class="card side-card visiting">
+				<h2>Επισκεπτήριο</h2>
+				<dl class="visiting-hours">
+					<dt>Καθημερινά</dt>
+					<dd>17:00 – 20:00</dd>
+					<dt>Σάββατο, Κυριακή &amp; αργίες</dt>
+					<dd>10:00 – 12:00 <span class="and">και</span> 17:00 – 20:00</dd>
+				</dl>
+			</section>
+
+			<section class="card side-card" id="infoCard" hidden>
+				<h2>Χρήσιμοι αριθμοί</h2>
+				<dl class="info-list" id="infoList"></dl>
+			</section>
+
+			<section class="card side-card">
+				<h2>Υπόμνημα</h2>
+				<ul class="legend">
+					<li><span class="swatch swatch-restricted"></span>Δεν συνδέουμε κλήσεις σε αυτόν τον αριθμό</li>
+					<li><span class="src-icon src-dir" aria-hidden="true"></span>Σταθερά</li>
+					<li><span class="src-icon src-dect" aria-hidden="true"></span>Ασύρματοι</li>
+					<li><span class="tag tag-shared">Κοινόχρηστο</span>Συσκευή υπηρεσίας / εφημερίας</li>
+				</ul>
+				<p class="hint">Κλικ σε αριθμό για αντιγραφή. Πληκτρολογήστε οπουδήποτε για αναζήτηση, <kbd>Esc</kbd> για καθαρισμό.</p>
+			</section>
+
+		</aside>
+
+		<main class="main">
+			<section class="card search-card">
+				<div class="search-box">
+					<svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+					<input id="searchInput" type="search" placeholder="Αναζήτηση ονόματος, υπηρεσίας, θέσης ή αριθμού…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Αναζήτηση">
+					<button class="icon-btn clear-btn" id="clearBtn" type="button" aria-label="Καθαρισμός" hidden>
+						<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+					</button>
+					<div class="search-hint" id="searchHint"></div>
+				</div>
+				<div class="filters">
+					<div class="tabs" role="tablist" id="sourceTabs">
+						<button type="button" role="tab" data-source="all" aria-selected="true">Όλα <span class="count" data-count="all"></span></button>
+						<button type="button" role="tab" data-source="dir" aria-selected="false"><span class="src-icon src-dir" aria-hidden="true"></span>Σταθερά <span class="count" data-count="dir"></span></button>
+						<button type="button" role="tab" data-source="dect" aria-selected="false"><span class="src-icon src-dect" aria-hidden="true"></span>Ασύρματοι <span class="count" data-count="dect"></span></button>
+					</div>
+					<label class="select-wrap">
+						<span class="visually-hidden">Διεύθυνση</span>
+						<select id="dirFilter">
+							<option value="">Όλες οι διευθύνσεις</option>
+						</select>
+					</label>
+				</div>
+			</section>
+
+			<section class="card results-card">
+				<div class="results-header">
+					<span id="resultsCount" aria-live="polite"></span>
+					<button class="link-btn" id="resetFilters" type="button" hidden>Καθαρισμός φίλτρων</button>
+				</div>
+				<div class="results-scroll" id="resultsScroll">
+					<div class="grid-head" role="row">
+						<div>Αριθμός</div>
+						<div>Όνομα / Περιγραφή</div>
+						<div>Θέση</div>
+						<div>Επιστασία / Τμήμα</div>
+						<div>Διεύθυνση</div>
+					</div>
+					<div id="results" role="rowgroup"></div>
+					<div id="sentinel"></div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+	<dialog id="warningsDialog">
+		<form method="dialog">
+			<h2>Προειδοποιήσεις επεξεργασίας δεδομένων</h2>
+			<p class="hint">Γραμμές των αρχείων που δεν αναγνωρίστηκαν πλήρως. Διορθώστε τις στο αρχικό αρχείο και εκτελέστε ξανά την ενημέρωση.</p>
+			<ul id="warningsList"></ul>
+			<button type="submit">Κλείσιμο</button>
+		</form>
+	</dialog>
+
+	<!--
+		Τα δεδομένα παρακάτω ενημερώνονται αυτόματα από το update.cmd.
+		Μην επεξεργάζεστε χειροκίνητα το τμήμα ανάμεσα στους δείκτες.
+	-->
+	<!--CATALOG-DATA-BEGIN--><script id="catalog-data" type="application/json">null</script><!--CATALOG-DATA-END-->
+	<script>/*@JS@*/</script>
+</body>
+</html>
