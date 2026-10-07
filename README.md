@@ -75,17 +75,24 @@ dev script reads the same file.
 
 ```bash
 bun install
-bun run dev          # build dist/katalogos.html and load ./actual_data into it
-bun test             # parser, search and payload tests
+bun run build        # app/ + update/ → dist/ (committed; page has NO data)
+bun run data:dev     # page with the real data from ./actual_data → preview/ (git-ignored)
+bun run guide        # update/guide/ΟΔΗΓΙΕΣ.html → update/ΟΔΗΓΙΕΣ.pdf (needs Chrome)
+bun test             # parsers, search, payload, and dist/ being up to date
 ```
 
-- `bun run build` — bundles `app/` into `dist/katalogos.html` (keeps any data
-  already in it) and copies `update/*` next to it.
-- `bun run data:dev [folder]` — Linux/macOS equivalent of `update.ps1`
-  (embeds the newest .csv and .txt of the folder). The real script can also be
-  run here with PowerShell for Linux: `pwsh -File dist/update.ps1`.
+- **`dist/` is committed** because administrators cannot run Bun/Node: they
+  download it from GitHub (Code → Download ZIP) and copy it to their PC.
+  Always run `bun run build` before committing; `tests/release.test.ts` fails
+  if `dist/` is out of date or its page contains data.
+- `dist/data/*` and `dist/backup/` are git-ignored, so nothing an administrator
+  adds there can be committed by accident. `dist/**` is stored byte for byte
+  (`-text`) so the Windows scripts keep their CRLF and BOM in the ZIP.
+- `bun run data:dev [folder]` is the Linux/macOS equivalent of `update.ps1`.
+  The real script can also be run here with PowerShell for Linux:
+  `pwsh -File dist/update.ps1` (in a copy of dist/, not in the repo).
 
-`actual_data/` holds personal data and is git-ignored.
+`actual_data/` and `preview/` hold personal data and are git-ignored.
 
 ### Layout
 
@@ -122,9 +129,9 @@ tests/
 
 ## Release
 
-Give the administrators the contents of `dist/` (`katalogos.html`,
-`update.cmd`, `update.ps1`, `ΟΔΗΓΙΕΣ.pdf`, `ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt`, empty `data/`). After that they
-only re-export the .csv/.txt into `data\` and run `update.cmd`; a new build is needed
-only when the app itself changes (the data block is preserved by
-`bun run build`, but on their side they would replace `katalogos.html` and
-re-run `update.cmd`).
+1. `bun run build` (and `bun run guide` if the guide changed), `bun test`.
+2. Commit and push to the **default branch** — GitHub's "Download ZIP" serves it.
+3. Administrators follow «Εγκατάσταση και νέες εκδόσεις» in `ΟΔΗΓΙΕΣ.pdf`:
+   first time, copy all of `dist/`; for a new version, replace only
+   `katalogos.html`, `update.cmd`, `update.ps1`, `ΟΔΗΓΙΕΣ.pdf` (never their
+   `ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt` or `data\`) and run `update.cmd`.

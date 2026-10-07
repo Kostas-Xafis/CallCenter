@@ -283,15 +283,15 @@
 		width: 100%;
 		border-collapse: collapse;
 		font-size: 10pt;
-		line-height: 1.32;
-		margin: 4px 0;
+		line-height: 1.28;
+		margin: 2px 0;
 	}
 
 	th,
 	td {
 		text-align: left;
 		vertical-align: top;
-		padding: 4px 8px;
+		padding: 3px 8px;
 		border-bottom: 1px solid var(--line);
 	}
 
@@ -340,6 +340,10 @@
 </div>
 
 <p>Κάνετε αυτή τη διαδικασία <b>κάθε φορά που αλλάζει</b> ο τηλεφωνικός κατάλογος (Word) ή η λίστα με τα ασύρματα τηλέφωνα (Excel).</p>
+
+<div class="box warn">
+	<b>Πρώτη φορά;</b> Αν δεν έχετε ακόμη τον φάκελο του καταλόγου στον υπολογιστή σας, ξεκινήστε από τη <b>σελίδα 7 «Εγκατάσταση»</b>.
+</div>
 
 <div class="box info">
 	<h3>Τι θα χρειαστείτε</h3>
@@ -522,10 +526,53 @@ DECT:       ...\Κατάλογος\data\DECT ΑΠΟΓΡΑΦΗ.csv
 	</div>
 </div>
 
+<!-- ── Install / upgrade ── -->
+<h2 class="page-break">Εγκατάσταση και νέες εκδόσεις</h2>
+<p>Ο φάκελος του καταλόγου υπάρχει έτοιμος στο GitHub, στον φάκελο <span class="file">dist</span>. Δεν χρειάζεται να εγκαταστήσετε κανένα πρόγραμμα.</p>
+
+<div class="step" style="margin-top:6px">
+	<div class="num">↓</div>
+	<div>
+		<h2>Πρώτη εγκατάσταση</h2>
+		<ol class="actions">
+			<li>Ανοίξτε στον browser τη διεύθυνση:<br><span class="file">github.com/kostas-xafis/callcenter</span></li>
+			<li>Πατήστε το πράσινο κουμπί <span class="ui">Code</span> → <span class="ui">Download ZIP</span>.</li>
+			<li>Στις Λήψεις, κάντε <b>δεξί κλικ</b> στο αρχείο <span class="file">.zip</span> → <span class="ui">Εξαγωγή όλων…</span> → <span class="ui">Εξαγωγή</span>.</li>
+			<li>Μέσα στον φάκελο που δημιουργήθηκε, ανοίξτε τον φάκελο <span class="file">dist</span>.</li>
+			<li>Αντιγράψτε <b>όλο το περιεχόμενο</b> του <span class="file">dist</span> σε έναν μόνιμο φάκελο (π.χ. <span class="file">Έγγραφα\Κατάλογος</span>). Αυτός είναι πλέον ο <b>φάκελος του καταλόγου</b>.</li>
+			<li>Κάντε τα <b>βήματα 1–5</b>. Μέχρι να τρέξει το <span class="file">update.cmd</span>, η σελίδα γράφει «Δεν υπάρχουν δεδομένα» — αυτό είναι φυσιολογικό.</li>
+		</ol>
+	</div>
+</div>
+
+<div class="step">
+	<div class="num">↻</div>
+	<div>
+		<h2>Νέα έκδοση της εφαρμογής</h2>
+		<p>Όταν σας πουν ότι υπάρχει νέα έκδοση:</p>
+		<ol class="actions">
+			<li>Κάντε τα βήματα 1–4 της «Πρώτης εγκατάστασης» (λήψη, εξαγωγή, φάκελος <span class="file">dist</span>).</li>
+			<li>Αντιγράψτε στον φάκελο του καταλόγου <b>μόνο</b> αυτά τα αρχεία και επιλέξτε <span class="ui">Αντικατάσταση</span>:
+				<div class="folder" style="margin:6px 0">📄 katalogos.html
+⚙️ update.cmd
+⚙️ update.ps1
+📄 ΟΔΗΓΙΕΣ.pdf</div></li>
+			<li>Κάντε διπλό κλικ στο <span class="file">update.cmd</span> (η νέα σελίδα έρχεται <b>χωρίς δεδομένα</b>) και μοιράστε τη σελίδα (βήμα 5).</li>
+		</ol>
+		<div class="box stop">
+			<b>Μην αντικαταστήσετε</b> το <span class="file">ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt</span> και τον φάκελο <span class="file">data</span>: περιέχουν τα δικά σας στοιχεία.
+		</div>
+	</div>
+</div>
+
 <!-- ── Troubleshooting ── -->
 <h2 class="page-break">Αν κάτι πάει στραβά</h2>
 <table>
 	<tr><th>Τι βλέπετε</th><th>Τι κάνετε</th></tr>
+	<tr>
+		<td>Η σελίδα γράφει «Δεν υπάρχουν δεδομένα»</td>
+		<td>Η σελίδα είναι καινούρια (πρώτη εγκατάσταση ή νέα έκδοση). Κάντε τα βήματα 1–3.</td>
+	</tr>
 	<tr>
 		<td>«Δεν βρέθηκε η σελίδα katalogos.html»</td>
 		<td>Το <span class="file">katalogos.html</span> πρέπει να είναι στον <b>ίδιο φάκελο</b> με το <span class="file">update.cmd</span>. Αν τα αρχεία ήρθαν σε <b>.zip</b>, κάντε πρώτα δεξί κλικ → <span class="ui">Εξαγωγή όλων</span> και δουλέψτε από τον νέο φάκελο. Το μήνυμα γράφει ποιον φάκελο έψαξε.</td>

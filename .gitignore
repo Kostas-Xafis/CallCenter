@@ -3,7 +3,6 @@ node_modules
 
 # output
 out
-dist
 *.tgz
 
 # code coverage
@@ -42,6 +41,13 @@ seeds/
 
 # source data (contains personal data — never commit)
 actual_data/
+preview/
+
+# dist/ is committed (administrators download it from GitHub), but never
+# the files an administrator adds there: exports and backups hold personal data
+dist/data/*
+!dist/data/.gitkeep
+dist/backup/
 
 # local preview config
 .claude/

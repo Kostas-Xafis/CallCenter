@@ -1,22 +1,29 @@
-// ── Build: app/ → dist/katalogos.html (single self-contained file) ──
+// ── Build: app/ → dist/ (the ready-to-copy folder for administrators) ──
 //
-// Inlines the stylesheet, the bundled JavaScript and the favicon into
-// app/index.html. If dist/katalogos.html already exists its data block is
-// carried over, so rebuilding the app never drops the data. Also copies the
-// Windows update scripts next to the page.
+// dist/ is committed to git: administrators cannot run Bun/Node, so they
+// download it from GitHub and copy it to their machine as is.
+//
+//   dist/katalogos.html     the whole app in one file, with an EMPTY data block
+//                           (update.cmd fills it in on the administrator's PC;
+//                           personal data must never end up in git)
+//   dist/update.cmd, update.ps1, ΟΔΗΓΙΕΣ.pdf, ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt
+//   dist/data/              where the exported .csv/.txt go
+//
+// For a preview with real data use `bun run data:dev` (writes preview/).
 //
 //   bun run build
 
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { DATA_BEGIN, DATA_END, extractDataBlock, injectData } from "./lib/payload.ts";
+import { DATA_BEGIN, DATA_END, dataBlock, injectData } from "./lib/payload.ts";
 
 const ROOT = join(import.meta.dir, "..");
 const APP = join(ROOT, "app");
-const DIST = join(ROOT, "dist");
-export const OUTPUT = join(DIST, "katalogos.html");
+export const DIST = join(ROOT, "dist");
+export const RELEASE_FILES = ["update.ps1", "update.cmd", "ΟΔΗΓΙΕΣ.pdf", "ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"];
 
-export async function build() {
+/** Builds the single-file page (empty data block) and returns its HTML. */
+export async function buildPage(): Promise<string> {
 	const result = await Bun.build({
 		entrypoints: [join(APP, "js/main.js")],
 		format: "iife",
@@ -37,28 +44,26 @@ export async function build() {
 		if (text.includes(DATA_BEGIN) || text.includes(DATA_END)) throw new Error(`${what} contains a data marker`);
 	}
 
-	let html = readFileSync(join(APP, "index.html"), "utf8");
-	// Function replacers: the inserted code may contain "$&"-style sequences.
-	html = html
+	const html = readFileSync(join(APP, "index.html"), "utf8")
+		// Function replacers: the inserted code may contain "$&"-style sequences.
 		.replace("/*@CSS@*/", () => css)
 		.replace("/*@JS@*/", () => js)
 		.replace("@FAVICON@", () => `data:image/svg+xml,${encodeURIComponent(icon)}`)
 		.replace("@LOGO@", () => `data:image/png;base64,${logo}`);
+	return injectData(html, dataBlock(null));
+}
 
-	if (existsSync(OUTPUT)) {
-		const previous = extractDataBlock(readFileSync(OUTPUT, "utf8"));
-		if (previous) html = injectData(html, previous);
-	}
-
-	mkdirSync(DIST, { recursive: true });
-	writeFileSync(OUTPUT, html);
-	for (const f of ["update.ps1", "update.cmd", "ΟΔΗΓΙΕΣ.pdf", "ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"]) copyFileSync(join(ROOT, "update", f), join(DIST, f));
-	mkdirSync(join(DIST, "data"), { recursive: true });
-
+export async function build(outDir = DIST) {
+	const html = await buildPage();
+	mkdirSync(join(outDir, "data"), { recursive: true });
+	writeFileSync(join(outDir, "katalogos.html"), html);
+	for (const f of RELEASE_FILES) copyFileSync(join(ROOT, "update", f), join(outDir, f));
+	// Keeps the empty data/ folder in git; update.ps1 only looks at .csv/.txt.
+	writeFileSync(join(outDir, "data", ".gitkeep"), "");
 	return { size: Buffer.byteLength(html) };
 }
 
 if (import.meta.main) {
 	const { size } = await build();
-	console.log(`✓ ${OUTPUT} (${(size / 1024).toFixed(0)} KB)`);
+	console.log(`✓ ${join(DIST, "katalogos.html")} (${(size / 1024).toFixed(0)} KB, χωρίς δεδομένα)`);
 }

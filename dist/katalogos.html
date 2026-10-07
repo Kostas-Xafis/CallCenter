@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>251 ΓΝΑ · Τηλεφωνικός Κατάλογος</title>
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%20%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%233e54ad%22%2F%3E%20%3Cpath%20transform%3D%22translate(4%204)%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M22%2016.92v3a2%202%200%200%201-2.18%202%2019.79%2019.79%200%200%201-8.63-3.07%2019.5%2019.5%200%200%201-6-6%2019.79%2019.79%200%200%201-3.07-8.67A2%202%200%200%201%204.11%202h3a2%202%200%200%201%202%201.72c.13.96.36%201.9.7%202.81a2%202%200%200%201-.45%202.11L8.09%209.91a16%2016%200%200%200%206%206l1.27-1.27a2%202%200%200%201%202.11-.45c.91.34%201.85.57%202.81.7A2%202%200%200%201%2022%2016.92z%22%2F%3E%20%3C%2Fsvg%3E">
+	<script>
+		(function () {
+			var t = null;
+			try { t = localStorage.getItem("callcenter-theme"); } catch (e) {}
+			if (!t) t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+			if (t === "dark") document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+	<style>/* ── Theme ─────────────────────────────────────────────────────────── */
+
+:root {
+	--bg-gradient-start: #41509b;
+	--bg-gradient-end: #513275;
+	--surface: #e4e6ea;
+	--surface-muted: #d6d9de;
+	--surface-alt: #dcdfe4;
+	--surface-hover: #c9d0dc;
+	--text-primary: #1f2640;
+	--text-secondary: #28304d;
+	--text-muted: #3d4663;
+	--accent: #3e54ad;
+	--accent-hover: #34489a;
+	--accent-contrast: #ffffff;
+	--border-color: #bcc8dc;
+	--row-border: #cdd5e2;
+	--badge-bg: #d4e6ff;
+	--badge-text: #0a366a;
+	--highlight-bg: #ffd96a;
+	--highlight-text: #3d3000;
+	--restricted-bg: #f8d7da;
+	--restricted-bg-alt: #f3cdd1;
+	--restricted-edge: #d9485a;
+	--restricted-tag-bg: #c82333;
+	--restricted-tag-text: #ffffff;
+	--shared-bg: #e5dcf7;
+	--shared-text: #4b2a8c;
+	--warn: #9a5b00;
+	--shadow-color: rgba(15, 26, 52, 0.22);
+	--src-dir: #2f7d5b;
+	--src-dect: #3e54ad;
+	--radius: 12px;
+	--head-h: 40px;
+	color-scheme: light;
+}
+
+html.dark-mode {
+	--bg-gradient-start: #151d31;
+	--bg-gradient-end: #232038;
+	--surface: #1f2638;
+	--surface-muted: #2a3146;
+	--surface-alt: #232a3d;
+	--surface-hover: #323a52;
+	--text-primary: #edf1ff;
+	--text-secondary: #e1e6f8;
+	--text-muted: #c3cbe6;
+	--accent: #8ea6ff;
+	--accent-hover: #a3b6ff;
+	--accent-contrast: #111a33;
+	--border-color: #3a435f;
+	--row-border: #2e3650;
+	--badge-bg: #26365c;
+	--badge-text: #cddfff;
+	--highlight-bg: #6b5716;
+	--highlight-text: #fff1bf;
+	--restricted-bg: #4a2229;
+	--restricted-bg-alt: #44202a;
+	--restricted-edge: #ff6b7d;
+	--restricted-tag-bg: #ff6b7d;
+	--restricted-tag-text: #2a0b10;
+	--shared-bg: #3a2e5c;
+	--shared-text: #d9ccff;
+	--warn: #ffc266;
+	--shadow-color: rgba(0, 0, 0, 0.4);
+	--src-dir: #5fd1a0;
+	--src-dect: #8ea6ff;
+	color-scheme: dark;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+	font-size: 15px;
+	line-height: 1.4;
+	color: var(--text-primary);
+	background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+	background-attachment: fixed;
+	padding: 16px;
+	overflow: hidden;
+}
+
+button,
+input,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+button {
+	cursor: pointer;
+	background: none;
+	border: none;
+}
+
+svg {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+kbd {
+	font-family: inherit;
+	font-size: 0.85em;
+	padding: 1px 6px;
+	border: 1px solid var(--border-color);
+	border-bottom-width: 2px;
+	border-radius: 4px;
+	background: var(--surface-muted);
+}
+
+mark {
+	background: var(--highlight-bg);
+	color: var(--highlight-text);
+	border-radius: 3px;
+	padding: 0 1px;
+}
+
+[hidden] {
+	display: none !important;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+.card {
+	background: var(--surface);
+	border-radius: var(--radius);
+	box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+
+.layout {
+	display: grid;
+	grid-template-columns: 300px minmax(0, 1fr);
+	gap: 16px;
+	height: 100%;
+	max-width: 1600px;
+	margin: 0 auto;
+}
+
+.side {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.main {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-height: 0;
+	min-width: 0;
+}
+
+/* ── Side panel ────────────────────────────────────────────────────── */
+
+.brand {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: 12px;
+	padding: 16px;
+}
+
+.brand-logo {
+	width: 64px;
+	height: 64px;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 1px 4px var(--shadow-color);
+}
+
+h1 {
+	font-size: 1.15em;
+	line-height: 1.2;
+	color: var(--accent);
+}
+
+.subtitle {
+	font-size: 0.82em;
+	color: var(--text-muted);
+}
+
+.updated {
+	margin-top: 4px;
+	font-size: 0.75em;
+	color: var(--text-muted);
+}
+
+.icon-btn {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	color: var(--text-secondary);
+	transition: background 0.2s;
+}
+
+.icon-btn:hover {
+	background: var(--surface-hover);
+}
+
+.icon-btn svg {
+	width: 20px;
+	height: 20px;
+}
+
+.theme-toggle .icon-sun,
+html.dark-mode .theme-toggle .icon-moon {
+	display: none;
+}
+
+html.dark-mode .theme-toggle .icon-sun {
+	display: block;
+}
+
+.side-card {
+	padding: 14px 16px;
+}
+
+.side-card h2 {
+	font-size: 0.78em;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+	margin-bottom: 10px;
+}
+
+.info-list {
+	display: grid;
+	gap: 2px 0;
+}
+
+.info-list dt {
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.info-list dd {
+	font-weight: 600;
+	font-size: 1.05em;
+	margin-bottom: 8px;
+	font-variant-numeric: tabular-nums;
+}
+
+.info-list dd small {
+	display: block;
+	font-size: 0.75em;
+	font-weight: 400;
+	color: var(--text-muted);
+}
+
+
+/* ── Visiting hours ── */
+
+.visiting-hours {
+	display: grid;
+	gap: 1px 0;
+}
+
+.visiting-hours dt {
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.visiting-hours dd {
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	margin-bottom: 6px;
+}
+
+.visiting-hours .and {
+	font-weight: 400;
+	color: var(--text-muted);
+}
+
+.legend {
+	list-style: none;
+	display: grid;
+	gap: 8px;
+	font-size: 0.85em;
+}
+
+.legend li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.swatch {
+	flex-shrink: 0;
+	width: 22px;
+	height: 14px;
+	border-radius: 3px;
+}
+
+.swatch-restricted {
+	background: var(--restricted-bg);
+	border-left: 4px solid var(--restricted-edge);
+}
+
+.hint {
+	margin-top: 12px;
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.link-btn {
+	color: var(--accent);
+	font-weight: 600;
+	font-size: 0.85em;
+	padding: 2px 0;
+}
+
+.link-btn:hover {
+	text-decoration: underline;
+}
+
+.link-btn.warn {
+	display: block;
+	color: var(--warn);
+	font-size: 0.75em;
+	margin-top: 2px;
+	text-align: left;
+}
+
+/* ── Source icons & tags ───────────────────────────────────────────── */
+
+.src-icon {
+	display: inline-block;
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	background-color: currentColor;
+	-webkit-mask: var(--icon) center / contain no-repeat;
+	mask: var(--icon) center / contain no-repeat;
+}
+
+.src-dir {
+	color: var(--src-dir);
+	/* desk phone */
+	--icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='10' width='18' height='11' rx='2'/%3E%3Cpath d='M7 10V6a5 5 0 0 1 10 0v4'/%3E%3Cpath d='M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01M16 17h.01'/%3E%3C/svg%3E");
+}
+
+.src-dect {
+	color: var(--src-dect);
+	/* cordless handset */
+	--icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='5' width='10' height='17' rx='2'/%3E%3Cpath d='M10 2v3M10 9h4M10 13h.01M14 13h.01M10 16h.01M14 16h.01M10 19h.01M14 19h.01'/%3E%3C/svg%3E");
+}
+
+.tag {
+	display: inline-block;
+	font-size: 0.72em;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	padding: 1px 6px;
+	border-radius: 4px;
+	vertical-align: 1px;
+	white-space: nowrap;
+}
+
+.tag-shared {
+	background: var(--shared-bg);
+	color: var(--shared-text);
+}
+
+.tag-restricted {
+	background: var(--restricted-tag-bg);
+	color: var(--restricted-tag-text);
+	text-transform: uppercase;
+}
+
+/* ── Search ────────────────────────────────────────────────────────── */
+
+.search-card {
+	padding: 16px;
+	display: grid;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.search-box {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.search-icon {
+	position: absolute;
+	left: 14px;
+	width: 20px;
+	height: 20px;
+	color: var(--text-muted);
+	pointer-events: none;
+}
+
+#searchInput {
+	width: 100%;
+	padding: 12px 44px;
+	font-size: 1.05em;
+	border: 2px solid var(--border-color);
+	border-radius: 10px;
+	background: var(--surface-alt);
+	transition: border-color 0.2s;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+#searchInput::-webkit-search-cancel-button {
+	display: none;
+}
+
+#searchInput:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+
+.clear-btn {
+	position: absolute;
+	right: 6px;
+}
+
+.search-hint {
+	position: absolute;
+	top: 100%;
+	left: 14px;
+	z-index: 5;
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	padding: 0 10px;
+	font-size: 0.8em;
+	color: #fff;
+	background: var(--accent-hover);
+	border-radius: 0 0 8px 8px;
+	transition:
+		max-height 0.2s ease,
+		opacity 0.2s ease,
+		padding 0.2s ease;
+}
+
+html.dark-mode .search-hint {
+	color: var(--accent-contrast);
+}
+
+.search-hint--visible {
+	max-height: 30px;
+	opacity: 1;
+	padding: 3px 10px;
+}
+
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tabs {
+	display: inline-flex;
+	padding: 3px;
+	gap: 2px;
+	border-radius: 10px;
+	background: var(--surface-muted);
+}
+
+.tabs button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.9em;
+	color: var(--text-secondary);
+	transition: background 0.15s;
+}
+
+.tabs button:hover {
+	background: var(--surface-hover);
+}
+
+.tabs button[aria-selected="true"] {
+	background: var(--surface);
+	color: var(--text-primary);
+	box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.tabs .count {
+	font-size: 0.8em;
+	font-weight: 600;
+	padding: 0 6px;
+	border-radius: 10px;
+	background: var(--badge-bg);
+	color: var(--badge-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.select-wrap {
+	flex: 1 1 260px;
+	max-width: 460px;
+}
+
+select {
+	width: 100%;
+	padding: 8px 10px;
+	border: 2px solid var(--border-color);
+	border-radius: 8px;
+	background: var(--surface-alt);
+	cursor: pointer;
+}
+
+select:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+
+/* ── Results ───────────────────────────────────────────────────────── */
+
+.results-card {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	padding: 12px 16px 0;
+	overflow: hidden;
+}
+
+.results-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 4px 10px;
+	color: var(--text-secondary);
+	font-size: 0.9em;
+	flex-shrink: 0;
+}
+
+.results-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding-bottom: 16px;
+}
+
+.results-scroll::-webkit-scrollbar {
+	width: 8px;
+}
+
+.results-scroll::-webkit-scrollbar-thumb {
+	background: var(--border-color);
+	border-radius: 4px;
+}
+
+.grid-head,
+.row {
+	display: grid;
+	grid-template-columns: minmax(150px, 0.9fr) minmax(90px, 0.7fr) minmax(180px, 2fr) minmax(90px, 0.8fr) minmax(140px, 1.5fr);
+	column-gap: 12px;
+	align-items: center;
+	padding: 0 10px;
+}
+
+.grid-head {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	height: var(--head-h);
+	font-size: 0.78em;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+	background: var(--surface-muted);
+	border-radius: 8px;
+}
+
+.group {
+	position: sticky;
+	top: var(--head-h);
+	z-index: 2;
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	padding: 10px 10px 6px;
+	background: var(--surface);
+	border-bottom: 2px solid var(--accent);
+}
+
+.group-title {
+	font-weight: 700;
+	color: var(--accent);
+}
+
+.group-sub {
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.group-count {
+	margin-left: auto;
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.row {
+	min-height: 44px;
+	padding-top: 6px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid var(--row-border);
+	border-left: 4px solid transparent;
+}
+
+.row:nth-child(even of .row) {
+	background: var(--surface-alt);
+}
+
+.row:hover {
+	background: var(--surface-hover);
+}
+
+.row.restricted {
+	background: var(--restricted-bg);
+	border-left-color: var(--restricted-edge);
+}
+
+.row.restricted:nth-child(even of .row) {
+	background: var(--restricted-bg-alt);
+}
+
+.row > div {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.c-num {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.c-num .src-icon {
+	margin-top: 4px;
+}
+
+.nums {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px 4px;
+}
+
+.num {
+	padding: 1px 5px;
+	border-radius: 5px;
+	font-weight: 700;
+	font-size: 1.05em;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	transition: background 0.15s;
+}
+
+.num:hover {
+	background: var(--badge-bg);
+	color: var(--badge-text);
+}
+
+.num-ext {
+	font-weight: 600;
+	font-size: 0.85em;
+	color: var(--text-secondary);
+}
+
+.num-hit {
+	background: var(--highlight-bg);
+	color: var(--highlight-text);
+}
+
+.c-name {
+	font-weight: 600;
+}
+
+.row-dir .c-name {
+	font-weight: 500;
+}
+
+.c-pos,
+.c-unit {
+	font-size: 0.9em;
+	font-weight: 500;
+	color: var(--text-secondary);
+}
+
+.dir-badge {
+	display: inline-block;
+	max-width: 100%;
+	padding: 3px 9px;
+	border-radius: 20px;
+	font-size: 0.8em;
+	font-weight: 700;
+	background: var(--badge-bg);
+	color: var(--badge-text);
+	text-align: left;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dir-badge:hover {
+	outline: 2px solid var(--accent);
+}
+
+.empty {
+	padding: 48px 16px;
+	text-align: center;
+	color: var(--text-muted);
+}
+
+.empty code {
+	font-weight: 700;
+}
+
+/* ── Toast & dialog ────────────────────────────────────────────────── */
+
+.toast {
+	position: fixed;
+	left: 50%;
+	bottom: 24px;
+	transform: translate(-50%, 20px);
+	padding: 10px 18px;
+	border-radius: 10px;
+	background: var(--text-primary);
+	color: var(--surface);
+	font-weight: 600;
+	box-shadow: 0 6px 18px var(--shadow-color);
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		opacity 0.2s,
+		transform 0.2s;
+	z-index: 50;
+}
+
+.toast.visible {
+	opacity: 1;
+	transform: translate(-50%, 0);
+}
+
+dialog {
+	margin: auto;
+	max-width: min(720px, calc(100vw - 32px));
+	max-height: calc(100vh - 64px);
+	border: none;
+	border-radius: var(--radius);
+	padding: 20px;
+	background: var(--surface);
+	color: var(--text-primary);
+	box-shadow: 0 10px 40px var(--shadow-color);
+}
+
+dialog::backdrop {
+	background: rgba(10, 14, 30, 0.55);
+}
+
+dialog h2 {
+	font-size: 1.1em;
+}
+
+dialog ul {
+	margin: 12px 0 16px 18px;
+	display: grid;
+	gap: 8px;
+	font-size: 0.9em;
+}
+
+dialog pre {
+	margin-top: 4px;
+	padding: 6px 8px;
+	border-radius: 6px;
+	background: var(--surface-muted);
+	white-space: pre-wrap;
+	font-size: 0.9em;
+}
+
+dialog button[type="submit"] {
+	padding: 8px 18px;
+	border-radius: 8px;
+	background: var(--accent);
+	color: var(--accent-contrast);
+	font-weight: 600;
+}
+
+/* ── Narrow screens ────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+	.layout {
+		grid-template-columns: 250px minmax(0, 1fr);
+	}
+
+	.grid-head,
+	.row {
+		grid-template-columns: minmax(120px, 0.9fr) minmax(70px, 0.6fr) minmax(160px, 2fr) minmax(80px, 0.8fr) minmax(120px, 1.3fr);
+	}
+}
+
+@media (max-width: 820px) {
+	body {
+		padding: 8px;
+		overflow: auto;
+	}
+
+	.layout {
+		display: flex;
+		flex-direction: column;
+		height: auto;
+		min-height: 100%;
+		gap: 8px;
+	}
+
+	.side {
+		overflow: visible;
+		gap: 8px;
+	}
+
+	.side-card {
+		display: none;
+	}
+
+	.main {
+		gap: 8px;
+	}
+
+	.results-card {
+		height: calc(100dvh - 210px);
+		min-height: 400px;
+		padding: 8px 8px 0;
+	}
+
+	.grid-head {
+		display: none;
+	}
+
+	.group {
+		top: 0;
+	}
+
+	.tabs {
+		display: flex;
+		width: 100%;
+	}
+
+	.tabs button {
+		flex: 1 1 0;
+		justify-content: center;
+		padding: 6px 4px;
+		min-width: 0;
+	}
+
+	.select-wrap {
+		max-width: none;
+	}
+
+	.row {
+		grid-template-columns: minmax(96px, 36%) minmax(0, 1fr);
+		grid-template-areas:
+			"num name"
+			"num pos"
+			"num unit"
+			"num dir";
+		row-gap: 2px;
+		align-items: start;
+		padding: 8px;
+	}
+
+	.c-num {
+		grid-area: num;
+	}
+
+	.num-ext {
+		font-size: 0.78em;
+	}
+
+	.c-name {
+		grid-area: name;
+	}
+
+	.c-pos {
+		grid-area: pos;
+	}
+
+	.c-unit {
+		grid-area: unit;
+	}
+
+	.c-dir {
+		grid-area: dir;
+	}
+
+	.c-pos:empty,
+	.c-unit:empty,
+	.c-dir:empty {
+		display: none;
+	}
+}
+</style>
+</head>
+<body>
+	<div class="layout">
+		<aside class="side">
+			<header class="card brand">
+				<img class="brand-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAABgFBMVEX////+/v////7//v7+/v79/v7+/v39/v3+/f79/f79/f39/fv8/f39/Pz8/P38/Pz7/Pz8/Pr7+/z7+/v7+vr6+/z6+vz5+vv6+vr4+Pnz9Pfr7fPj5vDd4u/U2uvK0ePW08fGv6+zusums9Sdqci+kDi2iDyxhDmugTeUnLGGkK2Vg2N1hKupfTWlfDaleDSfdjKaczOUbjCVbiqObC+MaSuLZiqHZimIYyiDYyqDXyZnd6RNZqhycnFtZFB8XSh8WyR3WiZRXHt3VyNzViRxUyFsUSNsUB5LU2xpTiBnSx1jSh5fSCF1PBxbQxtXQhxVOxhKSUZEQj1QPBo/PTlNOBZENh5CMRQ+KxAoR5wgQJggP5IgPo0dPJAwN0otLjAoKSk1KRQlJiUoIxshISEiGhIcPJMbO5EcPI8cO44bO48bOo8bOo4aOpAbOo0aOY4aOY0ZOI4XOZMaOYsZOIwWN48TNpIPMpAWNIUQMYcNLoQLK4ENIFUXFhULDA4DAgFwbsapAAAarElEQVR42r18h0MaS9f3xGctGC949VpokqAU+aR3wgq8tLssAWlSDAG8FBGkWxDBf/07s2hERUzyvPedWJCy85tzfqfObNDyL42VZTb6MRYenvwPPJ6D3/i55V8dv/oJ9qJQ9Di4y2yMieCJd8U8gkOIdneFBOdfBrCJDq7LHTyuygK0Bs+sIUHnuiNAW8h+PdhFW/8HADKZdDpTLmeEjwDSmTQG8KVz+S8C+PigAhaoYK9TtjMqwGMVCdPltIDNZduvrv99CTBUE1917D9IuIoEmXKaB39/wQA2fx/Ays99YpXL2gUArM0N+IP1ACDz5eDgIF1+BYD1L0gAaIABoEe6cwBAJnMNo5P5t1SwOAsAQ8KMHUYm83/CgSkSABIKt3hb9v+SA78JADiQ7qT5iPNfk/C/AABm+GHrw5fO1c8CYP03ALbGANhPHChfl8ee8HpvKgD2/7YExOXMEwA24gMB+WgTKex2Mdr491WwvMwTCPgTFk7Mzc2NXRTx69f6LQBz0+Mum738rwLgTMzEzPXSdbI5K+988H9LAr8y/njrhaXfA/BD9QTr2XV+ezwDsL79x/K/Pjjb628CABpvP1fYwjtXI35NbIswPRCYMxXANvoU2dtCaHv9nbTu94X+x19/IcTfj+ygH0JgPQHgoJ1RKqoQoJ/A8DjmF98M/aylFyJgr+PF75DxVIk/kbpOqGAdkQn10TEp5sIb17e3OS8JMf++rKdLh7O2zV2Hi/LEh8chdXIfbT/pcBIAf4X0S9T+ZJwU85nE/89t7vZPS2OaJDiwDu72H8zF+GIynnArJTSJ+JwpHGAT3Fz0cJTUSKX6QCofIfd2eA8FyBwGwvlBODwDMT+VFqwJg3qcGM8t2iMjx0kvXFuTKpLxKFbB0ksJbCOyZPMmYy4DxhAKJJLxCEnui0UCLnMVDjaQxalEZL2ytI/MR3hCkXifPIwcH4eOQnh2oyOccFpKWAfEw8fQ08eBA0m5RK2zeGmv1eyQyJR6mzcQjh0DEIVYiMnJeV/srOX1vzDZ8MTx41go4LXplVKVz2T1UW6zTilRJhVofbof4PLIfzxquUyuMTh8iYTVajUbDDqdVq+3+RPHkX0BhkAswRzEMot4Y/VrwLYdReT4yG/T6/U6g8FgtFpdhYTPpsOXVvr/UXC5EyJEE0bw9z/BQukIYGrkUqnS5D7SGFwOly8Yoh0aqdIGBiJCYwITT8Le/usZS0FdmOoWmVTjoIM+j8Ph0BkTlBFfUaMzOmKlgq9EwlWWXgMgxCWbVKYxWF0+ivI4LDq3V642mA06re0oRulkMo03SQrQXxN2wxmTjIEA9CDYH8GbpdxKqVRHx4IWjdZg1alUtNdkcXp9gMZqBCb4//m0vD7dD3yKho1KqUwmV2l0Jk+QisXMKpVaZ3AF9M4j2qiSKgOFfVAgI3bWArjuHfHnz9hm15exZjj/mScLXrlUZQiGrUbKYcXTW8NhOkhZtRqlXCaTyowxcIScZznh0pMd8MjiMAEMNBl0GpXOYvIkkpRVp1PTlMYUSniNcpk+RT5SaBt9jhz7bTZvkBSiP7E+OLxIUiVTmamEz6Cl/WqdyUmnElYgglaj1RnNJneilCcRkzeyppCQsy4oJR1um8Xp8sDwUklKLZObvIEAHaJ9Ln8oEdSqZCkFaJCF5xeXnLAqqUQZ8H2e28YiPDySqnShRIxyeGg6QFFuvVyuCSQ8bhd8OW0mq9uZyvHWJ/IW1vNwjMRRl1I2HlKl1kz5vAGP2QyrTBl1nrCeCmvU+jgPc3B9WVzQqlQqIKlGIg/tgIGgnaRcpY25dGG3yZQEyFaLh/ZRHkAtfRhyV+TTkxEuPkjghw44HPT3aFQIedxuj9frpSgqdkQ7DAaLw+E+8jmokCXgUqljoMNlNheRIZVGJdPv50pmjcQgQlwkTshVPsp65HVQMZfLYTKaHIFQjKYpyu91uxwOKjUcgQWwJiPL84xoe5ksWcxmIww9qM1kC5nkMpVGb7ZRMYsLeOj0qeUJ8QqXvYA+4/mVWncwaDFK9BLNpw1CEZJpQjZjiHZbwz6rUQfEU5pCVoNGqwUe6PWwlJJieXvSgTxXwfJHzgfy2A++RwM2awVFhpPJVMLvdpgNxjBtC4WMtFbuPWRCyz9yq16p0jqNGo0Ej/+HUMSi1IVMYdpCx8w6o83tSxYKyXDIAx+HK2o02sCxAnHeSUqRkLxPhnwerxtIY7JQDvBKMiX4A8pN0V4XGKMqub9nT9+FXFa5TqmWG7x6vRIA6Pf2j+RKR8jlCQRcPodOJcc08gasDovNBRT0BFP35LitNBMAF4EtmeRypVINluOKhV2uIOV2mrSGhM0Qc3topVo/GlzfjEwauRVWpVIbHIHv34sSw90/apUq7PAkdbZjg87scNFBhysW85jApJXYA6RAdNx303JiHa3sR0oJn8cDNNIbjJ5ESCeXq0w+jy/mpL0en1JuGQ5ujy20RW20qQ0mCHF3met8Ma9XKoMeb8AW8zkcBpVMaQzFPGaDyWxzOlxU8p/DfcRZf9VxQNPqCIQjM0QONazDFwtbbLTXaVLqwhZvDPwDpZY7C8NkKKyVWzQ6t5Xy+kt3dyVardQF3ZQ3ZrIkDHKjg6KMphBwESKgXKr0QgxGU4IpC02LrdvgZMhCKhymXNiXxgq0Wioze4xUUhv0GGhao7UWaLnTTGlVar1GrbV5j1JOpcoQokw+Spvy63wQjLThQtiqVBrddDicipKf0Pb2tMQWzU/NsyGm7peccolUCZGZDluMdMwh14Udfh+oOOiW+VI2c4imbPqA3GjThUKBgkcro2hDyuLyuoNapSNBGaxhiGlmlUQi9w7F6NH9LDyP3wR6I7dYB7dyGEskkrRFKdN4Egm1xJgwaBO2oDPhiJnplJO2abwuf9hkDgatTneSVoHnSlrDrrDGEDNItMmYQylTWoPJRAwvn7v2Rl7/CGBxkfUiuwAhCIoJmUSq0po8AaczVDBKHbaAzxUIJWOFhNZtsvm1tM4ZNgYcJos3cXSUdAaclM9mkloLIafL5zJr5VKJtBCFaLlGTO19LRCzakMQwk4kQfvApqVKDxW2yVy0Uu89sgVtsVCCdtp8Oki3nH6PhfJSiRIVsvmsMadOHXLInEcxn0xm8Pg8dOKQj7jrb2aQrJnF6Tpii6MpmURu8hi1VMhX0EnBv9Nuny9RMEOc0dFgIFrKYvG7w0OwU2/IZDVLdSlfjDLYPCalVJ6KiH+Qn/Ub5fn6n4h/GEtROnC5Oi2dUFsppdpEhTylkMHqNNE2r99GaR1Oo88dOnIFXGalykPpIH0yubQqA50Mk1xIl5Z+tjomXnoJJupDNZWkPCaZ3ONyJQt6qSWpNAZjJT+ku7TBRhspID7ljpUStFod00qspWODwy1XGj2BgkII1e7Pl+eLU0tdzhYSDUZ+pZXSSVxh11EgGZSYw46UzW0IGQJuK633u/UBD10whU2SQNIDkcgq0VFGZeBusIe4nHe6xtgMCdbsxgw/fXlzN0xJpQ5KCemGj9YVvNZCzG2mTC6vxW2zuf3GQCkp9xa0AQqsUE5ZJbLU8K7bGohw7GHNUgEGMLsHsIYObqv1cr8YS3klKp9WHQ5RyVAslTCFbP6gMaSlbDba7QylwnTSG4qpdF6VxJ88Kt6UG91+mrfC/nkVvDG/qJ9tNHsXl4O7VIhWSb1mORWyhgvACwtt8ztps8dvDR8VCjFIQpQOj0RF08m7wWWtUW9lBwez+4YflxfRO23ylS17P9tst9sXlfLgruRMuCWGoNQapBNWp9PnDTkhefVaHY4CIJEFjRJ3wlK4G5ycZGuVWq11c7PzYW32Ngx6ty98+61Rb/Za9Xa71lYo/j6OjdzekreQ8tBBqw9qWMgAPB5/IeEsef2jWBLq2fTlWSNbqVYq7dbgC1r7dRVMWgPXflMFYXZb9YvsQIGrTtH+IbkfHZU8emsw5C2Fg3RYpwwXCodQjn4WQfGGRDeNbLZWq9Za7d7NzkslvKAkYv2wfdYbAugCgFatUunbVzaZRgdCe2FDTOPUmml3qUB7DFaHJuyIfh6XaVwu2h9kG/XzWrPWqr7FAtakBKabIY7THMJ+W21cXNRg/tolsxiIEHwyBMFebgQPnLy/D1kpp0pTCBpS5AfG7lfWMG9qrVb9/Lxx842PfqpTOhXEKtrpNqr1i8oFVsAB2lzEnlEcdatciYJUY7MmjgBA2OFWqgpWqzxwuIP+WGfa6QCgcX5ebTSqg73ZWwhoVgNwC+3dfqvDlVqtVu+bgFhdX4flx7Qqj5oKq3Ryqy+RKiR9ZplOlXTofHJLeP8D7mKszoEIKtVatdJs3D419ifJtcR6cPloaheMBS8SeCvA3q82WvXmRbt6e4DWoBrfj9gg9dNKC2GpUePzFmLHSatHp1SmElIDrdX4IfrNcTaQ+DZbbXbr1W4XgM/QAYtA09m/gEGwEf+kV2+0Ws2LVr0vQhAVDv1yqSGmk6mSXqMn5U2mguEkFQsFtbEjqdQUNsj0IZKHVglu+ibb6Hbhq3o7cxNjMh8gXprLBtYlCL/XbDb66Q0O61MQKhDHsc6k0pSS3iNLyVYKhksxZ8gU8pe0Noc1aZRILIc80J3i9qTR6MJnq2C8M7byZnrCTbQ3+NbqdcEN4stAlhjUGZLHMqlZa7Q5oR48kviPj4/1Er/EInHa/Da5Jhkz2A758EnRDdCw1Wu3H0kwGZIWn5zBJID513HgC3iBbrfWBABYkEggjh9JNLTKgOfXS0AC9/f3BVtKEpBY/BatTy5N/S3mIQ4oL91rtnvdVqN7meaNEUz1BaCCxbd7y5iD3W69VrvodXfQGmsdzUe8jmOHLjG6l0BKMorlYBwfD/UFZ+A+5UskLT4SfVwBXwAfPQMA9Ua319uZ5Y7R2x139hxQCUwZhxW8DLgu50++UBwsjUbDYej0OPZ3PDIe4XyhMIJnSymokbcJ5pjB7Umt2+yBEoC+G7NIyHqr/c/BRlCt1WrZah3cMMF4Ri6ZGxaLQxil09HTKA6Z54qnOdwBWWJYmM3WQQu9Sl88wxUtorebnhwk/IYBVLPVRt+OHrpQ+dxpcVTMR+LDYv60yAz8axgl48XhKJ+L5HEPBvMXPEGz3u5lb19vp7J+KiFZw474/KJdr9brYypvIzIeKWIAuWjxkIzfP44oeViMR0EIeQAS5TEGdJttNWvVOjiCmc54JgDht8Y5hMJms8YA4Hzg5w6L+WJxdD+6vyf3nwDE90l4bnQPOiiSkX20DQD6VUgi6k0GwNZv+YFVAACXyNaa7VbfTiz9sYE+xyPDITBweD8a4qRgxEw/GkX3yWEcMwFePSRJYhtHkQZ4sF6vWx3M2NFmzZLA2BPXwQiaTUgvEWcbfT49HYHO86f3wALydJiLkLkcCVoh/z49vB/mT0+BjblDLAHFAACAEbQat+KfUQHrtadgI266f35Rg3/NXleI2NxlxX3xFMYQ5H06vM+R8Xg0fxqJRCP3o2j0ntEAhiggNsGHVbENtnuNsRl+fI8DxOvsHXuTags00GyfwTK2EIow9sbI/RRWGs/FSRj5ooIcRnKMNjAR7z+jP9fgowAAVNBrCNHqDAnM2InaAG8CtnwONDwZ7H9Y2SFP/yZJRZQBUAS2AfcwBmDjaT6ex4QYYUDFTwgJsxDFgQK91s0JH7Hf3mtEM08q7A1OzsETN1tZcAS8yGdFXkGS0fvR16/3w0j0MKo4xbQjSbCDXDH1tcQAOMxvb3zYBStsYRaACyF+tzBZwzGtWq03W43zXo//iUQCEvzu4dev6qPR8FAxJBXgFU9HERBBNDcq6b9+JeENh5/xsa7bahvygVbjG07lXnF//qf6A2zES/fOzmt1yC6zg72PJD5FBd/Sr/rScHi4H88pSNB5VAGLPgTn8PWrdLyBsYoE33oQjHutdv1sMPtcCZpdl325zdbqEIzOq327OPeZ4LKJv+YF+q/D02GcBOvb3ycV+5H7+wg5Kt5/VQtWuRzO+iZ2xNUqBEKIh91vMzg4zwAg3szbcVlwUjmvVC6a7Yub7zm8UwD+SREr5E/zo/3P5HBIHkaAAaefc8P8KPXpwzqzScvipW9aEIkhlXmPAjMlQKzM8U8us1moCZrtzk08LoYwA94oHof588Xh/qdIPDq6B9f3KQJhKD/aWVof496//dbCmXS7lX3miJdelwBo5tEtbIgnZ5Bg11oYgJDgcJZ5kfhpHiJh/nR0+PnTJ4Xi86f90xFEiMg9yeyprX0QQjUFdQlwoNU7m+kFpvQJXwbEXvYsC3VmrXMTzUFizAggnhuP0Qgc8mF0eF+E56KQKTDb4hvgv7L1VrvdarUbUJ2uTj2R9kMCizMRrKIv/ZNqtVyudr5H88y5STJaBO8Tj0ajYJLReD4XjRwyaVE8f7+PuEw1k72o1yvNWrfXHbxIh+ancmBphjMU3VSBhZXKzff43bWdh/iw4nz+MRdhQgP+zeRDowiCOCjuNyCNurioNLuQEs+zJ3m99IsqGFviSbZSL99E44PMwL71KZp7WDwecWbgJ7APPs1zAXG3DXjPLy7a3Ua2L3q3P8CafSxjlRCe1LNAgbtI7gayczv2/rBuEEI+9zTyOcW+QpEbCpHorJe9qILzumi3s7fv9ife7REtbIBKTy6anbvo95sGJHi5yGmOmT5/+myQCgWEqU+7vV72vFKtggouzpmC9u1DL0tLEwCW3khYWMtrhL1/0gUVRG/KF5d30Xgxnn89wCmCSxz9T6eRrWTPz8BuKhc4Hd1Y+C8lACwgBFBpVi6/R3J3g7t49PsdQzgmFx4vnmEj5kDuflCunpcxZyGMn7xUAOt3ACwylnBZr5cH8QioP/K92xtG4VFxGM+dPtoCuARgYuSfuwqUMVUwm3IWIniat/L++RP0lhN83inqZ8/Ob75H49+/d7Plm+/f4/Hi/wi4H//k8ng87p8fFwTfwTV8v7upAWGr55DHVbKXJxMlGevNOd6TAPFQJvez1fYNjHI5W8lcDgaDm3LartgTiXZEol2FPf0Nnup3ak0QwMV5vd066/VEuKXzVqBjPTyY4geIZ16LWMTZA64zWvVsuVyuwFe9Ws7Az8v+7W3/8rLfHwxu+yCY8kXjvFK7APa12mc3vam58MLCK0fEYmYinqZ8fjqEyVVxr2Kvf3kCs8MAFWdPGKKdnGTPzrJZyJqq53UoxetQCTWblUq70q+KmPnnX3QIWS/18SQB1ixZLeJuycn1CZ4fZi5nsTDgG7ztebXWbjabDcidz+tQCTUvKtnsIL2D51+aaIQ/9uRZz68/qQLWO01bof22kr1ghAA5Av5ZqUCiUoNJW/hfq14bJ7DdAT7j+nTBye16FrM5tviahEvvHp/bQFuKdh/Wzqye0Ual2oSYU2MwQCXMjLPqbXcPvRMCX6ng2fSLLNa4p/MC1NoCEtlvb0Dx2coZBlKtNFvntUq9VavVGwCg2240zvu39h3EZi9MD//EVD+wNLFQYgmfsSKIN9RA7KZv+1mAgEcF4k0D0hUw/LNqHZh4Vr8d2Hfx8uenT740e8/oCcVb/nNtGXF37Zf9Hkx/VilXWq1zkEX1on1xDs/cDPr23U3EWV2eJ6a0JH9h245YWnqrxb5JoDnRQbo/uL2snGBtgC2e1Nrty9vBbfpAhBCxMX3naVoTjOkPEFNo8kIFz6FvQmnCE4Hzu+j3b7EvuoW5e+AWRVwoWzbZv3j6FL2ZLb69y7C2gY9W83bEe4qDgy9fDhR7Yubs4dzmrx4s/1EdT1f6245hZW1j4o6rcTm2ufY752/HZrj46uVHlbxhDgzL1ja2Njc31tY28U/21A2Pd0+bvg5Gi8uLk137hWXW/FQXzfpJBzqZW/1mRvRciPMMIVi/rutHicy/4wd+gb8/8+qYwARBvDqA/OI03eK08nCJYQBr1sxLP2U2Py4yQTbi4VTrMxU8HdZlsoTF8XXYGw8cY6+uclZXH+jG/MYvr7CZwcH3FzCvceClpR83IfwAu8icEyGeKYT1mgPEs9Rh3DLGA2xs4cHgMJTNOXw/x/hc7sMgCPjBZt429/g8sfxuyone0OnC2HWD/pBAJBbxoMbdEjCDD6tfRjyhYIt5K8EfPy3YwK/PcfDbePP4Nkj4kzm7MvNEOAvN5tbKPO9L5vq6kxYjtJPGNxqW7WgFbeymM2mm8N9Eik6aGQJhJl2GtwnTHXzD17w9k86IXuSFi6+J8Y4ZriLhddqeznTKO0jUhhwkc2X/DyGyX1+eZB4BXGfw/ZcdgbBT7qT5xE7meg+qeGEG3nvw/n1PaGmKIU3sGRD8Xf6KMJ252kWi8uWecGdHsIEUA5DEE4COAt+BurVTzmSuFSAoAMBFe9fpdCfNm3vPdjEA1iynBWzjIHunI0aiyhXeG0dQpyj49qvxHZ8YAIDDY6cDi+7sCBgJEPbrA8VVR/TujU8PrdrFxQnreH5qe2ONxUuX03wkuoJaxK7gIzbw3X4FHOAwAK6udle4a1sAoGPPXH0RYgBzwvT1rugKdDBRnS6xXmTlMOn8G+cH5ifcwhbw7AryTPF1unx7dW3nsdhra4wE2I8AQNWraKd8vXtwndnDKsAa4KP0VZpHrMzYu584P/C2nkDineuDlQ2CLxII9jLpazHaWmC/ALCB+1mZ611+ppzGAFZAQgoFkPddHaCH1S6+1bZnw/wgSXAu8D2HvmBhbBHsCQ6MJTAGACvPpOEdO5nM1WBwje1gY/YhoR8bFm9IgsPau+p84fP5PEIAWQ8/nQEJbAKAzmsAoIIPW7B0ALB3fXKwt6fAt+P+Z2WqbF8EI6hAWW90yZj7nNOZA3SQPjiwl4EDy2xiddIKrp8AIKBqBgDYr9MbYBhgPe/ogIVm5xVQEl7hm6yB3TBTf3BdtuN5AUDnyRN2njgADuCgc7XLT18dfOBy5xWd93Twfn+AtyNkBn+ZuyPe3RWh8faHQCgcxwIWXyhkDpsvc/ED9vIW/MIPWRAMeUKhYP79Dsk8QcAXQTxk40zCwyIWCSZmzz1Gu4dH+P5NKOdxqJtfWJ6fJ8aREOLsHPNg/J8BPERC5sbExYdUf565B4K5QeTB0ucX54n/D4yYaBIefLlbAAAAAElFTkSuQmCC" alt="251 ΓΝΑ" width="64" height="64">
+				<div>
+					<h1>Τηλεφωνικός Κατάλογος</h1>
+					<p class="subtitle">251 Γενικό Νοσοκομείο Αεροπορίας</p>
+					<p class="updated" id="lastUpdate" hidden></p>
+					<button class="link-btn warn" id="warningsBtn" type="button" hidden></button>
+				</div>
+				<button class="icon-btn theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Εναλλαγή σκούρας εμφάνισης">
+					<svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+					<svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+				</button>
+			</header>
+
+			<section class="card side-card visiting">
+				<h2>Επισκεπτήριο</h2>
+				<dl class="visiting-hours">
+					<dt>Καθημερινά</dt>
+					<dd>17:00 – 20:00</dd>
+					<dt>Σάββατο, Κυριακή &amp; αργίες</dt>
+					<dd>10:00 – 12:00 <span class="and">και</span> 17:00 – 20:00</dd>
+				</dl>
+			</section>
+
+			<section class="card side-card" id="infoCard" hidden>
+				<h2>Χρήσιμοι αριθμοί</h2>
+				<dl class="info-list" id="infoList"></dl>
+			</section>
+
+			<section class="card side-card">
+				<h2>Υπόμνημα</h2>
+				<ul class="legend">
+					<li><span class="swatch swatch-restricted"></span>Δεν συνδέουμε κλήσεις σε αυτόν τον αριθμό</li>
+					<li><span class="src-icon src-dir" aria-hidden="true"></span>Σταθερά</li>
+					<li><span class="src-icon src-dect" aria-hidden="true"></span>Ασύρματοι</li>
+					<li><span class="tag tag-shared">Κοινόχρηστο</span>Συσκευή υπηρεσίας / εφημερίας</li>
+				</ul>
+				<p class="hint">Κλικ σε αριθμό για αντιγραφή. Πληκτρολογήστε οπουδήποτε για αναζήτηση, <kbd>Esc</kbd> για καθαρισμό.</p>
+			</section>
+
+		</aside>
+
+		<main class="main">
+			<section class="card search-card">
+				<div class="search-box">
+					<svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+					<input id="searchInput" type="search" placeholder="Αναζήτηση ονόματος, υπηρεσίας, θέσης ή αριθμού…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Αναζήτηση">
+					<button class="icon-btn clear-btn" id="clearBtn" type="button" aria-label="Καθαρισμός" hidden>
+						<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+					</button>
+					<div class="search-hint" id="searchHint"></div>
+				</div>
+				<div class="filters">
+					<div class="tabs" role="tablist" id="sourceTabs">
+						<button type="button" role="tab" data-source="all" aria-selected="true">Όλα <span class="count" data-count="all"></span></button>
+						<button type="button" role="tab" data-source="dir" aria-selected="false"><span class="src-icon src-dir" aria-hidden="true"></span>Σταθερά <span class="count" data-count="dir"></span></button>
+						<button type="button" role="tab" data-source="dect" aria-selected="false"><span class="src-icon src-dect" aria-hidden="true"></span>Ασύρματοι <span class="count" data-count="dect"></span></button>
+					</div>
+					<label class="select-wrap">
+						<span class="visually-hidden">Διεύθυνση</span>
+						<select id="dirFilter">
+							<option value="">Όλες οι διευθύνσεις</option>
+						</select>
+					</label>
+				</div>
+			</section>
+
+			<section class="card results-card">
+				<div class="results-header">
+					<span id="resultsCount" aria-live="polite"></span>
+					<button class="link-btn" id="resetFilters" type="button" hidden>Καθαρισμός φίλτρων</button>
+				</div>
+				<div class="results-scroll" id="resultsScroll">
+					<div class="grid-head" role="row">
+						<div>Αριθμός</div>
+						<div>Διεύθυνση</div>
+						<div>Όνομα / Περιγραφή</div>
+						<div>Θέση</div>
+						<div>Επιστασία / Τμήμα</div>
+					</div>
+					<div id="results" role="rowgroup"></div>
+					<div id="sentinel"></div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+	<dialog id="warningsDialog">
+		<form method="dialog">
+			<h2>Προειδοποιήσεις επεξεργασίας δεδομένων</h2>
+			<p class="hint">Γραμμές των αρχείων που δεν αναγνωρίστηκαν πλήρως. Διορθώστε τις στο αρχικό αρχείο και εκτελέστε ξανά την ενημέρωση.</p>
+			<ul id="warningsList"></ul>
+			<button type="submit">Κλείσιμο</button>
+		</form>
+	</dialog>
+
+	<!--
+		Τα δεδομένα παρακάτω ενημερώνονται αυτόματα από το update.cmd.
+		Μην επεξεργάζεστε χειροκίνητα το τμήμα ανάμεσα στους δείκτες.
+	-->
+	<!--CATALOG-DATA-BEGIN--><script id="catalog-data" type="application/json">null</script><!--CATALOG-DATA-END-->
+	<script>(()=>{var EXTERNAL_RE=/\b(?:2\d{2}\s?-\s?\d{3}\s?\d{4}|2\d{9}|69\d{8})\b/g,RANGE_RE=/(\d{2,5})\s*(?:έως|εως|-|–)\s*(?:και\s*)?(\d{2,5})/g,NUMBER_RE=/\d{2,5}/g;var EXTENSION_RE=/^\d{4}$/,EXTENSION_ALIASES={"09":"3399"};function toLines(text){return String(text??"").replace(/^﻿/,"").replace(/\r\x07/g,"\t").replace(/\x07/g,"\t").replace(/\r\n?|[\v\f\u2028\u2029]/g,`
+`).replace(/\x1e/g,"-").replace(/[\x1f­]/g,"").replace(/ /g," ").replace(/…+|\.{3,}/g,"\t").split(`
+`)}var isBlank=(line)=>line.trim()==="",hasLowercase=(s)=>/[a-zα-ωάέήίόύώϊϋΐΰ]/.test(s);function splitEntry(line){let tab=line.indexOf("\t");if(tab>=0){let rest=line.slice(tab+1);if(/\d/.test(rest))return{label:line.slice(0,tab),numbers:rest};return null}let m=line.match(/^(.*?\S)\s{2,}(\d{2,5}(?:\s*,\s*\d{2,5})*)\s*$/);return m?{label:m[1],numbers:m[2]}:null}function parseNumbers(text){let rest=String(text),external=[],ranges=[],extensions=[];rest=rest.replace(EXTERNAL_RE,(m)=>(external.push(m.replace(/\s+/g,"").replace(/^(\d{3})-?(\d{7})$/,"$1-$2"))," ")),rest=rest.replace(RANGE_RE,(_,from,to)=>(ranges.push({from,to})," ")),rest=rest.replace(NUMBER_RE,(m)=>(extensions.push(m)," "));let leftover=rest.replace(/[\s,;&/]+/g,"").replace(/^(και)+$/,"");return{extensions,ranges,external,leftover}}function expandRanges(ranges){let out=[];for(let{from,to}of ranges){let a=Number(from),b=Number(to);if(!(b>=a)||b-a>100)continue;for(let n=a;n<=b;n++)out.push(String(n).padStart(from.length,"0"))}return out}function splitPath(label){let text=String(label).trim(),segments=[],start=0,re=/\.(?=\s|$)/g,m;while(m=re.exec(text)){let segment=text.slice(start,m.index).trim(),lastWord=segment.split(/\s+/).pop()??"",isAcronym=/^[Α-ΩA-Z0-9][Α-ΩA-Z0-9.\-]*$/.test(segment)&&segment.length>=2,isWord=!lastWord.includes(".")&&/(?:[αεηιουωάέήίόύώϊϋΐΰςΑΕΗΙΟΥΩΆΈΉΊΌΎΏ0-9]|[ωώΩ][νΝ])$/.test(lastWord);if(!segment||!(isAcronym||isWord))continue;segments.push(isAcronym&&segment.includes(".")?segment+".":segment),start=m.index+1}let tail=text.slice(start).trim();if(tail)segments.push(tail);return segments}function parseHeading(text){let t=text.replace(/\s+/g," ").trim(),parent=null,org=null,abbr=null,name=t,parentMatch=t.match(/^([^\s/()]+)\s*\/\s*(.+)$/);if(parentMatch&&!hasLowercase(parentMatch[1]))parent=parentMatch[1],t=parentMatch[2];let orgMatch=t.match(/^(.*\([^)]*\))\s*\/\s*(\S.*)$/);if(orgMatch)t=orgMatch[1],org=orgMatch[2].trim();let paren=t.match(/^(.*?)\s*\(([^)]+)\)\s*$/);if(paren){let[,outside,inside]=paren;if(!hasLowercase(inside))name=outside,abbr=inside.trim();else if(!hasLowercase(outside))name=inside.trim(),abbr=outside;else name=t}else if(name=t,!hasLowercase(t)&&!/\s/.test(t)&&t.length<=10)abbr=t;if(org){if(name=`${name} / ${org}`,abbr)abbr=`${abbr}/${org}`}return{name:name.trim(),abbr,parent}}function firstSegment(label){let parts=splitPath(label);return parts.length>1?parts[0]:null}function parseDirectory(text){let lines=toLines(text),warnings=[],sections=[],entries=[],blocks=[],current=null;lines.forEach((raw,i)=>{if(isBlank(raw)){current=null;return}if(!current)blocks.push(current=[]);current.push({raw,line:i+1,entry:splitEntry(raw)})});let title=null,info=[],b=0;for(;b<blocks.length;b++){let block=blocks[b],firstEntryIdx=block.findIndex((l)=>l.entry);if(firstEntryIdx===0)break;if(firstEntryIdx>0)break;for(let l of block){let t=l.raw.replace(/\s+/g," ").trim();if(/:/.test(t))info.push(t);else if(!title)title=t;else title=`${title} — ${t}`}}let firstContentBlock=!0;for(;b<blocks.length;b++){let block=blocks[b],idx=0,section;if(!block[0].entry)section={id:sections.length,...parseHeading(block[0].raw),heading:block[0].raw.trim()},idx=1;else section=headlessSection(block,firstContentBlock,sections.length);sections.push(section),firstContentBlock=!1;let subheadings=[],pendingPrefix="",lastEntry=null;for(;idx<block.length;idx++){let l=block[idx];if(!l.entry){let t=l.raw.trim();if(block[idx+1]?.entry&&(/\s$/.test(l.raw)||lastEntry&&firstSegment(t)&&firstSegment(t)===lastEntry.path[0]))pendingPrefix+=t+" ";else if(/^Διεύθυνση/i.test(t)||!subheadings.length)subheadings=[t];else if(/^Τμήμα/i.test(t)&&/^Διεύθυνση/i.test(subheadings[0]))subheadings=[subheadings[0],t];else subheadings=[t];continue}let label=(pendingPrefix+l.entry.label).replace(/\s+/g," ").trim();pendingPrefix="";let nums=parseNumbers(l.entry.numbers);if(nums.leftover)warnings.push({line:l.line,raw:l.raw,message:`Μη αναγνωρίσιμο τμήμα αριθμών: "${nums.leftover}"`});nums.extensions=nums.extensions.map((n)=>EXTENSION_ALIASES[n]??n);let invalid=[...nums.extensions.filter((n)=>!EXTENSION_RE.test(n)),...nums.ranges.filter((r)=>!EXTENSION_RE.test(r.from)||!EXTENSION_RE.test(r.to)).map((r)=>`${r.from} έως ${r.to}`)];if(invalid.length){nums.extensions=nums.extensions.filter((n)=>EXTENSION_RE.test(n)),nums.ranges=nums.ranges.filter((r)=>EXTENSION_RE.test(r.from)&&EXTENSION_RE.test(r.to));let dropped=!nums.extensions.length&&!nums.ranges.length&&!nums.external.length;if(warnings.push({line:l.line,raw:l.raw,message:`Μη έγκυρος εσωτερικός αριθμός (πρέπει να είναι τετραψήφιος): ${invalid.map((n)=>`«${n}»`).join(", ")}${dropped?" — η εγγραφή παραλείπεται":" — παραλείπεται"}`}),dropped)continue}if(!label&&lastEntry){lastEntry.extensions.push(...nums.extensions),lastEntry.ranges.push(...nums.ranges),lastEntry.external.push(...nums.external),lastEntry.raw+=`
+`+l.raw;continue}if(!label)warnings.push({line:l.line,raw:l.raw,message:"Αριθμοί χωρίς περιγραφή"});let segments=splitPath(label);if(section.stripSegment&&segments.length>1&&segments[0]===section.stripSegment)segments=segments.slice(1);let entryLabel=segments.pop()??"",entry={id:entries.length,sectionId:section.id,path:[...subheadings,...segments],label:entryLabel,extensions:nums.extensions,ranges:nums.ranges,external:nums.external,raw:l.raw,line:l.line};entries.push(entry),lastEntry=entry}if(pendingPrefix)warnings.push({line:block[block.length-1].line,raw:pendingPrefix,message:"Γραμμή χωρίς αριθμό στο τέλος ενότητας"});delete section.stripSegment}let used=new Set(entries.map((e)=>e.sectionId));for(let s of sections)if(!used.has(s.id))warnings.push({line:null,raw:s.heading??s.name,message:"Ενότητα χωρίς αριθμούς"});return{title,info,sections:sections.filter((s)=>used.has(s.id)),entries,warnings}}function headlessSection(block,isFirst,id){let entryLines=block.filter((l)=>l.entry);if(entryLines.length===1&&block.length===1){let label=entryLines[0].entry.label.trim();return{id,...parseHeading(label),heading:null}}let firsts=entryLines.map((l)=>firstSegment(l.entry.label));if(firsts[0]&&firsts.every((f)=>f===firsts[0]))return{id,...parseHeading(firsts[0]),heading:null,stripSegment:firsts[0]};return{id,name:isFirst?"Διοίκηση":"Γενικά",abbr:null,parent:null,heading:null}}var LATIN_LOOKALIKES={A:"Α",B:"Β",E:"Ε",H:"Η",I:"Ι",K:"Κ",M:"Μ",N:"Ν",O:"Ο",P:"Ρ",T:"Τ",X:"Χ",Y:"Υ",Z:"Ζ"},foldCache=new Map;function foldChar(ch){let out=foldCache.get(ch);if(out!==void 0)return out;if(out=ch.normalize("NFD").charAt(0).toLowerCase(),out==="ς")out="σ";if(out.length!==1)out=ch.toLowerCase().charAt(0)||ch;return foldCache.set(ch,out),out}function fold(text){let out="";for(let ch of String(text??""))out+=foldChar(ch);return out}function abbrKey(text){return String(text??"").toUpperCase().replace(/[ABEHIKMNOPTXYZ]/g,(ch)=>LATIN_LOOKALIKES[ch]).normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[\s.]/g,"")}function clean(text){return String(text??"").replace(/[\s ]+/g," ").trim()}var COLUMNS={number:"ΑΡΙΘΜΟΣ",name:"ΟΝΟΜΑΤΕΠΩΝΥΜΟ",dir:"ΔΙΕΥΘΥΝΣΗ",position:"ΘΕΣΗ",unit:"ΕΠΙΣΤΑΣΙΑ"},HEADER_SCAN_ROWS=20,headerKey=(v)=>clean(v).toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g,""),value=(v)=>{let t=clean(v);return/^[.\-–]*$/.test(t)?"":t};function parseDect(rows){let warnings=[],records=[],header=null;for(let r=0;r<Math.min(rows.length,HEADER_SCAN_ROWS)&&!header;r++){let keys=(rows[r]??[]).map(headerKey),cols={};for(let[field,title]of Object.entries(COLUMNS))cols[field]=keys.indexOf(title);if(cols.number>=0&&cols.name>=0)header={row:r,cols}}if(!header)return warnings.push({message:"Δεν βρέθηκε γραμμή επικεφαλίδων με στήλες ΑΡΙΘΜΟΣ και ΟΝΟΜΑΤΕΠΩΝΥΜΟ στο αρχείο DECT"}),{records,warnings};for(let[field,title]of Object.entries(COLUMNS))if(header.cols[field]<0)warnings.push({message:`Λείπει η στήλη ${title} από το αρχείο DECT`});let cell=(row,field)=>header.cols[field]>=0?value(row[header.cols[field]]):"",seen=new Map;for(let r=header.row+1;r<rows.length;r++){let row=rows[r]??[],number=cell(row,"number");if(!number)continue;let name=cell(row,"name"),dir=cell(row,"dir"),position=cell(row,"position"),unit=cell(row,"unit");if(!name&&!dir&&!position&&!unit)continue;let shared=name.startsWith("*");if(shared)name=name.replace(/^\*+\s*/,"");if(seen.has(number))warnings.push({line:r+1,message:`Ο αριθμός ${number} εμφανίζεται πολλές φορές (γραμμές ${seen.get(number)} και ${r+1})`});seen.set(number,r+1),records.push({id:records.length,number,name,shared,dir,position,unit,row:r+1})}return{records,warnings}}var SEPARATORS=[",",";","\t"];function countOutsideQuotes(line,sep){let n=0,quoted=!1;for(let ch of line)if(ch==='"')quoted=!quoted;else if(ch===sep&&!quoted)n++;return n}function detectSeparator(text){let lines=text.split(/\r\n|\r|\n/,50),header=lines.find((l)=>/ΑΡΙΘΜΟΣ/i.test(l)),sample=header?[header]:lines,best=",",bestCount=0;for(let sep of SEPARATORS){let count=sample.reduce((sum,l)=>sum+countOutsideQuotes(l,sep),0);if(count>bestCount)best=sep,bestCount=count}return best}function parseCsv(text,separator=detectSeparator(text)){let rows=[],row=[],field="",quoted=!1,s=text.replace(/^﻿/,"");for(let i=0;i<s.length;i++){let ch=s[i];if(quoted)if(ch==='"')if(s[i+1]==='"')field+='"',i++;else quoted=!1;else field+=ch;else if(ch==='"'&&field==="")quoted=!0;else if(ch===separator)row.push(field),field="";else if(ch==="\r"||ch===`
+`){if(ch==="\r"&&s[i+1]===`
+`)i++;row.push(field),rows.push(row),row=[],field=""}else field+=ch}if(field!==""||row.length)row.push(field),rows.push(row);return rows}function base64ToBytes(base64){let bin=atob(base64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return bytes}function decodeBytes(bytes){if(bytes[0]===239&&bytes[1]===187&&bytes[2]===191)return{text:new TextDecoder("utf-8").decode(bytes.subarray(3)),encoding:"UTF-8 (BOM)"};if(bytes[0]===255&&bytes[1]===254)return{text:new TextDecoder("utf-16le").decode(bytes.subarray(2)),encoding:"UTF-16 LE"};if(bytes[0]===254&&bytes[1]===255)return{text:new TextDecoder("utf-16be").decode(bytes.subarray(2)),encoding:"UTF-16 BE"};let sample=bytes.subarray(0,2000),evenNul=0,oddNul=0;for(let i=0;i<sample.length;i++){if(sample[i]!==0)continue;if(i%2)oddNul++;else evenNul++}if(oddNul>sample.length/4)return{text:new TextDecoder("utf-16le").decode(bytes),encoding:"UTF-16 LE"};if(evenNul>sample.length/4)return{text:new TextDecoder("utf-16be").decode(bytes),encoding:"UTF-16 BE"};try{return{text:new TextDecoder("utf-8",{fatal:!0}).decode(bytes),encoding:"UTF-8"}}catch{}return{text:new TextDecoder("windows-1253").decode(bytes),encoding:"Windows-1253"}}function looksGreek(text){return/[Ά-ώ]/.test(text)}var SOURCES={dir:{label:"Σταθερά",long:"Σταθερά"},dect:{label:"Ασύρματοι",long:"Ασύρματοι"}},ABBR_WEIGHT=1.6,SOURCE_TERMS={dir:{text:"Σταθερά σταθερό σταθερός σταθεροί",weight:0.3},dect:{text:"Ασύρματα ασύρματο ασύρματος ασύρματοι DECT",weight:0.3}};function readEmbeddedPayload(doc=document){let el=doc.getElementById("catalog-data");if(!el)return null;try{return JSON.parse(el.textContent||"null")}catch(err){return console.error("Μη έγκυρα ενσωματωμένα δεδομένα",err),null}}function decodeSource(source,label,warnings,key){if(!source)return null;try{let decoded=decodeBytes(base64ToBytes(source.base64??""));if(decoded.text.trim()&&!looksGreek(decoded.text))warnings.push({source:key,message:`Το αρχείο ${label} «${source.file}» δεν περιέχει ελληνικούς χαρακτήρες — πιθανώς αποθηκεύτηκε με λάθος κωδικοποίηση (επιλέξτε UTF-8).`});return decoded}catch(err){return warnings.push({source:key,message:`Αδύνατη η ανάγνωση του αρχείου ${label} «${source.file}»: ${err.message}`}),null}}function buildModel(payload){let warnings=[],records=[],restricted=new Set((payload?.restricted??[]).map(String)),directorates=new Map,addDirectorate=(key,abbr,title)=>{let d=directorates.get(key);if(!d)directorates.set(key,d={key,abbr,title,count:0,hasAbbr:Boolean(abbr)});if(!d.title&&title)d.title=title;return d.count++,d},dectSource=decodeSource(payload?.dect,"DECT",warnings,"dect"),dirSource=decodeSource(payload?.directory,"καταλόγου",warnings,"dir"),dect=parseDect(dectSource?parseCsv(dectSource.text):[]);if(dectSource)warnings.push(...dect.warnings.map((w)=>({source:"dect",...w})));let directory=dirSource?parseDirectory(dirSource.text):null;if(directory)warnings.push(...directory.warnings.map((w)=>({source:"dir",...w})));let lookup=new Map;for(let s of directory?.sections??[])if(s.abbr&&!lookup.has(abbrKey(s.abbr)))lookup.set(abbrKey(s.abbr),s.name);if(directory){let sectionById=new Map(directory.sections.map((s)=>[s.id,s]));for(let e of directory.entries){let section=sectionById.get(e.sectionId),abbr=section.abbr,key=abbr?abbrKey(abbr):`name:${section.name}`,title=section.name;addDirectorate(key,abbr,title);let numbers=[...e.extensions,...e.ranges.map((r)=>`${r.from}–${r.to}`)];records.push({key:`dir:${e.id}`,source:"dir",order:records.length,numbers,searchNumbers:[...e.extensions,...expandRanges(e.ranges),...e.ranges.map((r)=>r.from),...e.external.map((x)=>x.replace(/\D/g,""))],external:e.external,name:e.label,position:"",unit:e.path.join(" › "),dir:abbr||section.name,dirKey:key,dirTitle:title,shared:!1,restricted:[...e.extensions,...expandRanges(e.ranges)].some((n)=>restricted.has(n)),section,raw:e.raw,searchFields:{name:{text:e.label,weight:1},unit:{text:e.path.join(" › "),weight:0.85},abbr:{text:abbr??"",weight:ABBR_WEIGHT},parent:{text:section.parent??"",weight:ABBR_WEIGHT},dir:{text:section.name,weight:0.6},source:SOURCE_TERMS.dir}})}}let dectSorted=[...dect.records].sort((a,b)=>Number(a.number)-Number(b.number)||a.number.localeCompare(b.number));for(let r of dectSorted){let key=r.dir?abbrKey(r.dir):"name:—",title=lookup.get(abbrKey(r.dir))||"";addDirectorate(key,r.dir||"—",title),records.push({key:`dect:${r.id}`,source:"dect",order:records.length,numbers:[r.number],searchNumbers:[r.number],external:[],name:r.name,position:r.position,unit:r.unit,dir:r.dir,dirKey:key,dirTitle:title,shared:r.shared,restricted:restricted.has(r.number),section:null,searchFields:{name:{text:r.name,weight:1},position:{text:r.position,weight:0.8},unit:{text:r.unit,weight:0.85},abbr:{text:r.dir,weight:ABBR_WEIGHT},dir:{text:title,weight:0.6},source:SOURCE_TERMS.dect}})}return{records,directorates:[...directorates.values()].sort((a,b)=>(a.abbr||a.title).localeCompare(b.abbr||b.title,"el")),title:directory?.title??null,info:directory?.info??[],warnings,meta:{generatedAt:payload?.generatedAt??null,dect:dectSource?{file:payload.dect.file,modified:payload.dect.modified,encoding:dectSource.encoding,count:dect.records.length}:null,directory:dirSource?{file:payload.directory.file,modified:payload.directory.modified,encoding:dirSource.encoding,count:directory.entries.length}:null,restrictedCount:restricted.size}}}var LATIN_TO_GREEK={a:"α",b:"β",c:"ψ",d:"δ",e:"ε",f:"φ",g:"γ",h:"η",i:"ι",j:"ξ",k:"κ",l:"λ",m:"μ",n:"ν",o:"ο",p:"π",r:"ρ",s:"σ",t:"τ",u:"θ",v:"ω",w:"ς",x:"χ",y:"υ",z:"ζ",A:"Α",B:"Β",C:"Ψ",D:"Δ",E:"Ε",F:"Φ",G:"Γ",H:"Η",I:"Ι",J:"Ξ",K:"Κ",L:"Λ",M:"Μ",N:"Ν",O:"Ο",P:"Π",R:"Ρ",S:"Σ",T:"Τ",U:"Θ",V:"Ω",X:"Χ",Y:"Υ",Z:"Ζ"};function toGreekQuery(text){if(/[\u0370-\u03FF\u1F00-\u1FFF]/.test(text))return{query:text,converted:!1};let converted=text.split("").map((ch)=>LATIN_TO_GREEK[ch]??ch).join("").replace(/σ(?![\p{L}])/gu,"ς");return{query:converted,converted:converted!==text}}function updateSearchHint(raw){let hint=document.getElementById("searchHint");if(!hint)return;let{query,converted}=toGreekQuery(raw);if(converted)hint.textContent=`Αναζήτηση ως: ${query}`,hint.classList.add("search-hint--visible");else hint.classList.remove("search-hint--visible")}var IGNORED=new Set([".","'","΄","’","`","´","ʼ"]),MIN_FUZZY_LENGTH=4,LATIN_TWIN={α:"a",β:"b",ε:"e",η:"h",ι:"i",κ:"k",μ:"m",ν:"n",ο:"o",ρ:"p",τ:"t",υ:"y",χ:"x",ζ:"z"};function alternatives(word){if(!/[α-ω]/.test(word))return[word];let latin="";for(let ch of word)if(/\d/.test(ch))latin+=ch;else if(LATIN_TWIN[ch])latin+=LATIN_TWIN[ch];else return[word];return[word,latin]}var maxTypos=(len)=>len<MIN_FUZZY_LENGTH?0:len<=5?1:len<=10?2:3,SOUND={ω:"ο",η:"ι",υ:"ι"},sound=(ch)=>SOUND[ch]??ch;function prepare(text,{dropSpaces=!1}={}){let original=String(text??""),folded="",map=[];for(let i=0;i<original.length;i++){let ch=original[i];if(IGNORED.has(ch)||dropSpaces&&/\s/.test(ch))continue;folded+=foldChar(ch),map.push(i)}return{original,folded,map}}function prepareQueryWord(word){let out="";for(let ch of word)if(!IGNORED.has(ch))out+=foldChar(ch);return out}var isWordChar=(ch)=>ch!==void 0&&/[\p{L}\p{N}]/u.test(ch);function matchExact(word,field){let s=field.folded,best=null,idx=s.indexOf(word);while(idx>=0){let atStart=!isWordChar(s[idx-1]),wholeWord=atStart&&!isWordChar(s[idx+word.length]),quality=wholeWord?1.2:atStart?1:0.6;if(!best||quality>best.quality){if(best={quality,start:idx,end:idx+word.length},wholeWord)break}idx=s.indexOf(word,idx+1)}return best&&{quality:best.quality,ranges:[[field.map[best.start],field.map[best.end-1]+1]]}}function matchTypo(word,field){let limit=maxTypos(word.length);if(!limit)return null;let q=soundFold(word),best=null;for(let w of field.words){if(w.text[0]!==q[0]||w.text.length<q.length-limit)continue;let r=prefixDistance(q,w.text,limit);if(r&&(!best||r.distance<best.distance)){if(best={distance:r.distance,start:w.start,end:w.start+r.length},r.distance===0)break}}if(!best)return null;return{quality:0.45-0.08*best.distance,ranges:[[field.map[best.start],field.map[Math.max(best.start,best.end-1)]+1]]}}var soundFold=(text)=>{let out="";for(let ch of text)out+=sound(ch);return out};function fieldWords(folded){let words=[];for(let m of folded.matchAll(/[\p{L}\p{N}]+/gu))words.push({start:m.index,text:soundFold(m[0])});return words}function prefixDistance(q,w,limit){let m=q.length,n=w.length,prev2=null,prev=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){let cur=[i],rowMin=i;for(let j=1;j<=n;j++){let cost=q[i-1]===w[j-1]?0:1,d=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+cost);if(i>1&&j>1&&q[i-1]===w[j-2]&&q[i-2]===w[j-1])d=Math.min(d,prev2[j-2]+1);if(cur.push(d),d<rowMin)rowMin=d}if(rowMin>limit)return null;prev2=prev,prev=cur}let distance=1/0,length=0;for(let j=0;j<=n;j++)if(prev[j]<distance)distance=prev[j],length=j;return distance<=limit?{distance,length}:null}function matchNumber(word,numbers){let best=null;for(let n of numbers){let idx=n.indexOf(word);if(idx<0)continue;let quality=n===word?3:idx===0?2:1;if(!best||quality>best.quality)best={quality,number:n,start:idx,end:idx+word.length}}return best}function buildIndex(records){return records.map((record)=>({record,fields:Object.fromEntries(Object.entries(record.searchFields).map(([k,v])=>{let prepared=prepare(v.text);return[k,{...prepared,compact:prepare(v.text,{dropSpaces:!0}),words:fieldWords(prepared.folded),weight:v.weight}]})),numbers:record.searchNumbers}))}function queryVariants(raw){let trimmed=String(raw??"").trim();if(!trimmed)return[];let{query,converted}=toGreekQuery(trimmed);return converted?[query,trimmed]:[trimmed]}function searchVariant(index,text){let rawWords=text.split(/\s+/).filter((w)=>prepareQueryWord(w)),words=rawWords.map(prepareQueryWord),dotted=new Set(rawWords.filter((w)=>/\.\S/.test(w)).map(prepareQueryWord));if(!words.length)return[];let results=[],alts=new Map(words.map((word)=>{let texts=alternatives(word),list=texts.map((text)=>({text,compact:!1}));if(dotted.has(word))list.push(...texts.map((text)=>({text,compact:!0})));return[word,list]})),fieldFor=(field,alt)=>alt.compact?field.compact:field,loose=new Set(words.filter((word)=>!/^\d+$/.test(word)&&maxTypos(word.length)>0&&!index.some((item)=>Object.values(item.fields).some((f)=>alts.get(word).some((alt)=>fieldFor(f,alt).folded.includes(alt.text))))));for(let item of index){let score=0,highlights={},ok=!0;for(let word of words){let best=null;if(/^\d+$/.test(word)){let m=matchNumber(word,item.numbers);if(m)best={score:m.quality*2,number:m}}for(let[key,field]of Object.entries(item.fields)){let m=null;for(let alt of alts.get(word)){let e=matchExact(alt.text,fieldFor(field,alt));if(e&&(!m||e.quality>m.quality))m=e}if(m??=loose.has(word)?matchTypo(word,field):null,!m)continue;let s=m.quality*field.weight;if(!best||s>best.score)best={score:s,key,ranges:m.ranges}}if(!best){ok=!1;break}if(score+=best.score,best.number)(highlights.numbers??=[]).push(best.number);else(highlights[best.key]??=[]).push(...best.ranges)}if(ok)results.push({record:item.record,score,highlights})}return results}function search(index,raw){let variants=queryVariants(raw),best=new Map;for(let v of variants)for(let r of searchVariant(index,v)){let prev=best.get(r.record.key);if(!prev||r.score>prev.score)best.set(r.record.key,r)}return[...best.values()].sort((a,b)=>b.score-a.score||a.record.order-b.record.order)}function highlight(text,ranges){let s=String(text??"");if(!ranges||!ranges.length)return escapeHtml(s);let sorted=ranges.map(([a,b])=>[Math.max(0,a),Math.min(s.length,b)]).filter(([a,b])=>b>a).sort((x,y)=>x[0]-y[0]),merged=[];for(let r of sorted){let last=merged[merged.length-1];if(last&&r[0]<=last[1])last[1]=Math.max(last[1],r[1]);else merged.push([...r])}let out="",pos=0;for(let[a,b]of merged)out+=escapeHtml(s.slice(pos,a))+"<mark>"+escapeHtml(s.slice(a,b))+"</mark>",pos=b;return out+escapeHtml(s.slice(pos))}function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,(ch)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[ch])}function readStoredTheme(){try{return localStorage.getItem("callcenter-theme")}catch{return null}}function applyTheme(theme){let isDark=theme==="dark";document.documentElement.classList.toggle("dark-mode",isDark);let toggle=document.getElementById("themeToggle");if(toggle)toggle.setAttribute("aria-pressed",String(isDark)),toggle.title=isDark?"Φωτεινή εμφάνιση":"Σκούρα εμφάνιση"}function initializeTheme(){let prefersDark=window.matchMedia?.("(prefers-color-scheme: dark)").matches;applyTheme(readStoredTheme()||(prefersDark?"dark":"light"))}function toggleTheme(){let next=document.documentElement.classList.contains("dark-mode")?"light":"dark";applyTheme(next);try{localStorage.setItem("callcenter-theme",next)}catch{}}var BATCH_SIZE=150,SEARCH_DEBOUNCE_MS=120,$=(id)=>document.getElementById(id),state={query:"",source:"all",dirKey:"",items:[],rendered:0},model=null,index=null,ICON_COPY_TITLE="Κλικ για αντιγραφή";function renderNumbers(record,hl){let hits=hl?.numbers??[],parts=record.numbers.map((token)=>{let hit=hits.find((h)=>h.number===token),inner=escapeHtml(token),cls="num";if(hit)inner=highlight(token,[[hit.start,hit.end]]);else if(token.includes("–")){let[a,b]=token.split("–").map(Number);if(hits.some((h)=>Number(h.number)>=a&&Number(h.number)<=b&&h.number.length===String(a).length))cls+=" num-hit"}let copy=token.includes("–")?token.split("–")[0]:token;return`<button type="button" class="${cls}" data-copy="${escapeHtml(copy)}" title="${ICON_COPY_TITLE}">${inner}</button>`}),external=record.external.map((x)=>`<button type="button" class="num num-ext${hits.some((h)=>h.number===x.replace(/\D/g,""))?" num-hit":""}" data-copy="${escapeHtml(x)}" title="Εξωτερική γραμμή · ${ICON_COPY_TITLE}">${escapeHtml(x)}</button>`);return parts.join("")+external.join("")}function renderRecord(record,hl={}){let classes=["row",`row-${record.source}`];if(record.restricted)classes.push("restricted");let name=highlight(record.name,hl.name)+(record.shared?' <span class="tag tag-shared">Κοινόχρηστο</span>':"")+(record.restricted?' <span class="tag tag-restricted" title="Δεν συνδέουμε κλήσεις σε αυτόν τον αριθμό">Μη συνδέετε</span>':""),dirTitle=record.dirTitle&&record.dirTitle!==record.dir?record.dirTitle:"";return`<div class="${classes.join(" ")}" role="row">
+		<div class="c-num"><span class="src-icon src-${record.source}" title="${SOURCES[record.source].long}"></span><div class="nums">${renderNumbers(record,hl)}</div></div>
+		<div class="c-dir">${record.dir?`<button type="button" class="dir-badge" data-dir="${escapeHtml(record.dirKey)}" title="${escapeHtml(dirTitle?dirTitle+" · ":"")}Φιλτράρισμα">${highlight(record.dir,record.searchFields.abbr.text?hl.abbr:hl.dir)}</button>`:""}</div>
+		<div class="c-name">${name}</div>
+		<div class="c-pos">${highlight(record.position,hl.position)}</div>
+		<div class="c-unit">${highlight(record.unit,hl.unit)}</div>
+	</div>`}function renderGroup(item){return`<div class="group" role="row"><span class="group-title">${escapeHtml(item.title)}</span>${item.subtitle?`<span class="group-sub">${escapeHtml(item.subtitle)}</span>`:""}<span class="group-count">${item.count}</span></div>`}function renderBatch(){let container=$("results"),slice=state.items.slice(state.rendered,state.rendered+BATCH_SIZE);if(!slice.length)return;let html=slice.map((item)=>item.type==="group"?renderGroup(item):renderRecord(item.record,item.highlights)).join("");container.insertAdjacentHTML("beforeend",html),state.rendered+=slice.length}function renderEmpty(message){$("results").innerHTML=`<div class="empty">${message}</div>`}var searchCache={query:null,results:[]};function searchResults(){if(searchCache.query!==state.query)searchCache={query:state.query,results:search(index,state.query)};return searchCache.results}function matchesFilters(record){if(state.source!=="all"&&record.source!==state.source)return!1;if(state.dirKey&&record.dirKey!==state.dirKey)return!1;return!0}function browseItems(records){let items=[],lastGroup=null,group=null;for(let record of records){let groupId=record.source==="dir"?`s:${record.section.id}`:"dect";if(groupId!==lastGroup){if(lastGroup=groupId,record.source==="dir"){let s=record.section;group={type:"group",title:s.abbr?`${s.name} (${s.abbr})`:s.name,subtitle:s.parent?`υπάγεται: ${s.parent}`:"",count:0}}else group={type:"group",title:SOURCES.dect.long,subtitle:"κατά αριθμό",count:0};items.push(group)}group.count++,items.push({type:"record",record,highlights:{}})}return items}function update(){let filtered=state.query?searchResults().filter((r)=>matchesFilters(r.record)):model.records.filter(matchesFilters);state.items=state.query?filtered.map((r)=>({type:"record",record:r.record,highlights:r.highlights})):browseItems(filtered),state.rendered=0;let count=filtered.length;if($("resultsCount").textContent=`${count} ${count===1?"εγγραφή":"εγγραφές"}`,$("resetFilters").hidden=!state.query&&state.source==="all"&&!state.dirKey,$("clearBtn").hidden=!state.query,$("resultsScroll").scrollTop=0,$("results").innerHTML="",!count){renderEmpty(state.query?`Δεν βρέθηκαν αποτελέσματα για «${escapeHtml(state.query)}»`:"Δεν υπάρχουν εγγραφές");return}renderBatch(),requestAnimationFrame(fillViewport)}function fillViewport(){let scroll=$("resultsScroll"),guard=20;while(state.rendered<state.items.length&&scroll.scrollHeight<=scroll.clientHeight*2&&guard--)renderBatch()}function updateCounts(){let counts={all:0,dir:0,dect:0},base=state.query?searchResults().map((r)=>r.record):model.records;for(let r of base){if(state.dirKey&&r.dirKey!==state.dirKey)continue;counts.all++,counts[r.source]++}for(let el of document.querySelectorAll("[data-count]"))el.textContent=counts[el.dataset.count]}function refresh(){update(),updateCounts()}var INFO_LABELS=[[/^Επισύνδεση(?!\p{L})/iu,"Επισύνδεση με VPN"]],infoLabel=(label)=>INFO_LABELS.find(([re])=>re.test(label))?.[1]??label,formatDate=(iso)=>{if(!iso)return"—";let d=new Date(iso);return isNaN(d)?iso:d.toLocaleString("el-GR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})};function renderSidePanel(){if(model.info.length)$("infoCard").hidden=!1,$("infoList").innerHTML=model.info.map((line)=>{let i=line.lastIndexOf(":"),label=i>0?line.slice(0,i):line,value=i>0?line.slice(i+1).trim():"",note=value.match(/^(.*?)\s*(\(.*\))$/),dd=note?`${escapeHtml(note[1])} <small>${escapeHtml(note[2])}</small>`:escapeHtml(value);return`<dt>${escapeHtml(infoLabel(label))}</dt><dd>${dd}</dd>`}).join("");if(model.meta.generatedAt)$("lastUpdate").hidden=!1,$("lastUpdate").textContent=`Τελευταία ενημέρωση: ${formatDate(model.meta.generatedAt)}`;if(model.warnings.length){let btn=$("warningsBtn");btn.hidden=!1,btn.textContent=model.warnings.length===1?"⚠ 1 προειδοποίηση επεξεργασίας":`⚠ ${model.warnings.length} προειδοποιήσεις επεξεργασίας`,$("warningsList").innerHTML=model.warnings.map((w)=>`<li><strong>${SOURCES[w.source]?.label??""}${w.line?` · γραμμή ${w.line}`:""}:</strong> ${escapeHtml(w.message)}${w.raw?`<pre>${escapeHtml(w.raw)}</pre>`:""}</li>`).join(""),btn.addEventListener("click",()=>$("warningsDialog").showModal())}}function renderDirectorateFilter(){let select=$("dirFilter"),option=(d)=>{let label=d.hasAbbr?d.title&&d.title!==d.abbr?`${d.abbr} — ${d.title}`:d.abbr:d.title||d.abbr;return`<option value="${escapeHtml(d.key)}">${escapeHtml(label)} (${d.count})</option>`},withAbbr=model.directorates.filter((d)=>d.hasAbbr),others=model.directorates.filter((d)=>!d.hasAbbr);select.insertAdjacentHTML("beforeend",`<optgroup label="Διευθύνσεις & Υπηρεσίες">${withAbbr.map(option).join("")}</optgroup>`+(others.length?`<optgroup label="Λοιπές ενότητες">${others.map(option).join("")}</optgroup>`:""))}var toastTimer=null;function toast(message){let el=$("toast");el.textContent=message,el.classList.add("visible"),clearTimeout(toastTimer),toastTimer=setTimeout(()=>el.classList.remove("visible"),1600)}async function copyText(text){try{await navigator.clipboard.writeText(text)}catch{let ta=document.createElement("textarea");ta.value=text,ta.style.position="fixed",ta.style.opacity="0",document.body.appendChild(ta),ta.select(),document.execCommand("copy"),ta.remove()}toast(`Αντιγράφηκε: ${text}`)}var URL_TYPE={dir:"σταθερα",dect:"ασυρματα"},directorateParam=(key)=>{let d=model.directorates.find((x)=>x.key===key);return d?d.hasAbbr?d.abbr:d.title:key};function directorateFromParam(value){if(!value)return"";let d=model.directorates.find((x)=>x.key===value||x.abbr===value||x.title===value||x.key===abbrKey(value));return d?d.key:""}function syncUrl(){let params=new URLSearchParams;if(state.query)params.set("q",state.query);if(state.source!=="all")params.set("τυπος",URL_TYPE[state.source]);if(state.dirKey)params.set("διευθυνση",directorateParam(state.dirKey));let hash=params.toString();try{history.replaceState(null,"",hash?`#${hash}`:location.pathname+location.search)}catch{}}function readUrl(){let params=new URLSearchParams(location.hash.replace(/^#/,"")),type=fold(params.get("τυπος")??""),source=Object.keys(URL_TYPE).find((k)=>URL_TYPE[k]===type)??"all";return{query:(params.get("q")??"").trim(),source,dirKey:directorateFromParam(params.get("διευθυνση"))}}function applyState({query,source,dirKey}){state.query=query,state.source=source,state.dirKey=dirKey,$("searchInput").value=query,updateSearchHint(query),$("dirFilter").value=dirKey;for(let tab of document.querySelectorAll("#sourceTabs [data-source]"))tab.setAttribute("aria-selected",String(tab.dataset.source===source));syncUrl(),refresh()}function setSource(source){state.source=source;for(let tab of document.querySelectorAll("#sourceTabs [data-source]"))tab.setAttribute("aria-selected",String(tab.dataset.source===source));syncUrl(),update()}function setDirectorate(key){state.dirKey=key,$("dirFilter").value=key,syncUrl(),refresh()}function setQuery(raw){state.query=raw.trim(),updateSearchHint(state.query),syncUrl(),refresh()}function bindEvents(){let input=$("searchInput"),timer=null;input.addEventListener("input",()=>{if(clearTimeout(timer),!input.value.trim())return setQuery("");timer=setTimeout(()=>setQuery(input.value),SEARCH_DEBOUNCE_MS)}),input.addEventListener("keydown",(e)=>{if(e.key==="Escape")input.value="",setQuery("");else if(e.key==="Enter")clearTimeout(timer),setQuery(input.value)}),$("clearBtn").addEventListener("click",()=>{input.value="",setQuery(""),input.focus()}),document.addEventListener("keydown",(e)=>{if(e.target===input||e.ctrlKey||e.metaKey||e.altKey)return;if($("warningsDialog").open)return;if(e.key==="/"||e.key.length===1&&!/\s/.test(e.key)&&!(e.target instanceof HTMLSelectElement)){if(e.key==="/")e.preventDefault();input.focus()}else if(e.key==="Escape"&&state.query)input.value="",setQuery("")}),$("sourceTabs").addEventListener("click",(e)=>{let tab=e.target.closest("[data-source]");if(tab)setSource(tab.dataset.source)}),$("dirFilter").addEventListener("change",(e)=>setDirectorate(e.target.value)),$("resetFilters").addEventListener("click",()=>applyState({query:"",source:"all",dirKey:""})),window.addEventListener("hashchange",()=>applyState(readUrl())),$("results").addEventListener("click",(e)=>{let num=e.target.closest("[data-copy]");if(num)return copyText(num.dataset.copy);let dir=e.target.closest("[data-dir]");if(dir)setDirectorate(dir.dataset.dir)}),new IntersectionObserver((entries)=>{if(entries.some((en)=>en.isIntersecting))renderBatch()},{root:$("resultsScroll"),rootMargin:"600px"}).observe($("sentinel")),$("themeToggle").addEventListener("click",toggleTheme)}function init(){initializeTheme();let payload=readEmbeddedPayload();if(model=buildModel(payload),index=buildIndex(model.records),renderSidePanel(),renderDirectorateFilter(),bindEvents(),!payload){renderEmpty("Δεν υπάρχουν δεδομένα. Εκτελέστε το <code>update.cmd</code> για να φορτωθούν τα σταθερά και τα ασύρματα τηλέφωνα."),$("resultsCount").textContent="";return}applyState(readUrl()),$("searchInput").focus()}init();})();
+</script>
+</body>
+</html>
