@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { dataBlock, DATA_BEGIN, DATA_END, extractDataBlock, injectData, restrictedFromScript, toEmbeddedJson } from "../scripts/lib/payload.ts";
+import { dataBlock, DATA_BEGIN, DATA_END, extractDataBlock, injectData, parseRestricted, toEmbeddedJson } from "../scripts/lib/payload.ts";
 
 describe("payload helpers", () => {
 	test("embedded JSON cannot close the script element", () => {
@@ -19,10 +19,15 @@ describe("payload helpers", () => {
 		expect(() => injectData("<p>no markers</p>", "x")).toThrow();
 	});
 
-	test("restricted list is read from update.ps1", () => {
-		const list = restrictedFromScript(readFileSync("update/update.ps1", "utf8"));
-		expect(list.length).toBeGreaterThan(0);
-		expect(list).toContain("3995");
+	test("restricted numbers: first number of each line, comments ignored", () => {
+		const text = "\uFEFF# σχόλιο 1234\r\n3995  ΧΕΙΜΩΝΑΣ 251 ΓΝΑ\r\n\r\n  3953\tΥΔΚΤΗΣ\r\nκείμενο 5555\r\n3995 διπλό\r\n";
+		expect(parseRestricted(text)).toEqual(["3995", "3953"]);
+	});
+
+	test("the shipped ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt is readable and saved with a UTF-8 BOM", () => {
+		const bytes = readFileSync("update/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt");
+		expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+		expect(parseRestricted(bytes.toString("utf8"))).toContain("3995");
 	});
 
 	test("update.ps1 uses the same markers and is saved with a UTF-8 BOM", () => {

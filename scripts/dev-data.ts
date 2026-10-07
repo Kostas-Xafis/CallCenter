@@ -8,7 +8,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildPayload, dataBlock, injectData, restrictedFromScript } from "./lib/payload.ts";
+import { buildPayload, dataBlock, injectData, parseRestricted } from "./lib/payload.ts";
 import { build, OUTPUT } from "./build.ts";
 
 const ROOT = join(import.meta.dir, "..");
@@ -27,7 +27,7 @@ const csv = pick(".csv");
 const txt = pick(".txt");
 if (!csv && !txt) throw new Error(`No .csv or .txt files in ${dataDir}`);
 
-const restricted = restrictedFromScript(readFileSync(join(ROOT, "update/update.ps1"), "utf8"));
+const restricted = parseRestricted(readFileSync(join(ROOT, "update/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"), "utf8"));
 const payload = buildPayload({ csv, txt, restricted });
 
 if (!existsSync(OUTPUT)) await build();

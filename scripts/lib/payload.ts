@@ -67,10 +67,18 @@ export function extractDataBlock(html: string): string | null {
 	return a >= 0 && b > a ? html.slice(a, b + DATA_END.length) : null;
 }
 
-/** Reads the restricted-numbers list from update.ps1 (single source of truth). */
-export function restrictedFromScript(ps1: string): string[] {
-	const m = ps1.match(/\$RestrictedNumbers\s*=\s*@\(([\s\S]*?)\)/);
-	return m ? [...m[1].matchAll(/["'](\d+)["']/g)].map(x => x[1]) : [];
+/**
+ * Restricted numbers from ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt (same rule as update.ps1): the
+ * number at the start of each line; anything after it, and lines starting
+ * with #, are ignored.
+ */
+export function parseRestricted(text: string): string[] {
+	const out: string[] = [];
+	for (const line of text.replace(/^\uFEFF/, "").split(/\r\n|\r|\n/)) {
+		const m = line.match(/^\s*(\d+)/);
+		if (m && !out.includes(m[1])) out.push(m[1]);
+	}
+	return out;
 }
 
 export function buildPayload(opts: { csv: string | null; txt: string | null; restricted: string[] }): Payload {

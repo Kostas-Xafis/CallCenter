@@ -22,6 +22,9 @@
     Συγκεκριμένο αρχείο DECT (.csv) αντί για αυτόματη αναζήτηση στο DataDir.
 .PARAMETER Directory
     Συγκεκριμένο αρχείο καταλόγου (.txt) αντί για αυτόματη αναζήτηση στο DataDir.
+.PARAMETER Restricted
+    Αρχείο με τους αριθμούς στους οποίους δεν συνδέουμε κλήσεις.
+    Προεπιλογή: ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt δίπλα στο script.
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File update.ps1
@@ -33,16 +36,12 @@ param(
     [string]$Html,
     [string]$DataDir,
     [string]$Dect,
-    [string]$Directory
+    [string]$Directory,
+    [string]$Restricted
 )
 
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
-
-# ── Περιορισμένοι αριθμοί ────────────────────────────────────────────
-# Αριθμοί στους οποίους ΔΕΝ συνδέουμε κλήσεις (εμφανίζονται με κόκκινη απόχρωση).
-# Προσωρινή λίστα· θα αντικατασταθεί από ανάγνωση του αρχείου DECT.
-$RestrictedNumbers = @("3995", "3955", "3953", "3738", "3974", "3780", "3808", "3535", "3915", "1745", "3997", "3598")
 
 # ── Σταθερές ─────────────────────────────────────────────────────────
 $DataBegin = '<!--CATALOG-DATA-BEGIN-->'
@@ -51,6 +50,7 @@ $BackupsToKeep = 10
 $Invariant = [System.Globalization.CultureInfo]::InvariantCulture
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $ScriptDir = $PSScriptRoot
+$RestrictedFileName = 'ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt'
 
 function Write-Ok([string]$Message) { Write-Host "  ✓ $Message" -ForegroundColor Green }
 function Write-Warn([string]$Message) { Write-Host "  ! $Message" -ForegroundColor Yellow }
@@ -118,6 +118,25 @@ function Find-DataFile([string]$Folder, [string]$Extension, [string]$What) {
     return $files[0].FullName
 }
 
+# Αριθμοί στους οποίους δεν συνδέουμε κλήσεις: ο αριθμός στην αρχή κάθε γραμμής.
+# Οι γραμμές που ξεκινούν με # αγνοούνται, όπως και ό,τι ακολουθεί τον αριθμό.
+function Read-RestrictedNumbers([string]$Path) {
+    $list = New-Object System.Collections.Generic.List[string]
+    # Αν λείπει, σταματάμε: αλλιώς θα χάνονταν σιωπηλά όλες οι κόκκινες σημάνσεις.
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Δεν βρέθηκε το αρχείο $RestrictedFileName ('$Path'). Επαναφέρετέ το δίπλα στο update.cmd (αν δεν θέλετε κανέναν περιορισμένο αριθμό, αφήστε το κενό)."
+    }
+    # Σημειωματάριο: UTF-8, UTF-16 (με BOM) ή ANSI — τα ψηφία διαβάζονται σωστά σε όλα.
+    $bytes = Read-SharedBytes $Path
+    $reader = New-Object System.IO.StreamReader((New-Object System.IO.MemoryStream(, $bytes)), [System.Text.Encoding]::UTF8, $true)
+    try { $text = $reader.ReadToEnd() } finally { $reader.Dispose() }
+    foreach ($line in ($text -split "`r`n|`r|`n")) {
+        $m = [regex]::Match($line, '^\s*(\d+)')
+        if ($m.Success -and -not $list.Contains($m.Groups[1].Value)) { $list.Add($m.Groups[1].Value) }
+    }
+    return , $list.ToArray()
+}
+
 function Find-HtmlFile {
     $default = Join-Path $ScriptDir 'katalogos.html'
     if (Test-Path -LiteralPath $default) { return $default }
@@ -147,10 +166,12 @@ try {
     if (-not $Directory) { $Directory = Find-DataFile $DataDir '.txt' 'καταλόγου' }
     $Dect = (Resolve-Path -LiteralPath $Dect).Path
     $Directory = (Resolve-Path -LiteralPath $Directory).Path
+    if (-not $Restricted) { $Restricted = Join-Path $ScriptDir $RestrictedFileName }
 
     Write-Host "Σελίδα:     $Html"
     Write-Host "DECT:       $Dect"
     Write-Host "Κατάλογος:  $Directory"
+    Write-Host "Περιορ.:    $Restricted"
     Write-Host ''
 
     $page = [System.IO.File]::ReadAllText($Html, [System.Text.Encoding]::UTF8)
@@ -163,7 +184,9 @@ try {
     $dirSource = ConvertTo-SourceJson $Directory
     Write-Ok ("Κατάλογος: {0:N0} bytes" -f $dirSource.size)
 
-    $restrictedJson = '[' + (($RestrictedNumbers | ForEach-Object { ConvertTo-JsonText ([string]$_) }) -join ',') + ']'
+    $restrictedNumbers = Read-RestrictedNumbers $Restricted
+    Write-Ok "Περιορισμένοι αριθμοί («Μη συνδέετε»): $($restrictedNumbers.Length)"
+    $restrictedJson = '[' + (($restrictedNumbers | ForEach-Object { ConvertTo-JsonText ([string]$_) }) -join ',') + ']'
     $json = '{"schema":2' +
         ',"generatedAt":' + (ConvertTo-JsonText (Get-IsoDate (Get-Date))) +
         ',"generator":' + (ConvertTo-JsonText ('update.ps1 / PowerShell ' + $PSVersionTable.PSVersion.ToString())) +

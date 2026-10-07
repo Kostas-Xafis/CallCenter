@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Ενημέρωση Τηλεφωνικού Καταλόγου — Οδηγίες</title>
+<style>
+	@page {
+		size: A4;
+		margin: 16mm 16mm 18mm;
+	}
+
+	:root {
+		--blue: #3e54ad;
+		--blue-soft: #e7ebf8;
+		--green: #2f7d5b;
+		--green-soft: #e3f3ea;
+		--red: #b42332;
+		--red-soft: #fbe5e7;
+		--amber: #8a5300;
+		--amber-soft: #fdf1dc;
+		--ink: #1f2640;
+		--muted: #4a5470;
+		--line: #c9d0dc;
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	body {
+		margin: 0;
+		font-family: Calibri, Carlito, "Noto Sans", "DejaVu Sans", sans-serif;
+		font-size: 12pt;
+		line-height: 1.4;
+		color: var(--ink);
+	}
+
+	h1 {
+		font-size: 24pt;
+		line-height: 1.15;
+		margin: 0 0 4px;
+		color: var(--blue);
+	}
+
+	h2 {
+		font-size: 16pt;
+		margin: 0 0 8px;
+		color: var(--blue);
+	}
+
+	p {
+		margin: 6px 0;
+	}
+
+	.lead {
+		font-size: 13.5pt;
+		color: var(--muted);
+		margin-bottom: 14px;
+	}
+
+	.cover {
+		display: flex;
+		gap: 18px;
+		align-items: center;
+		padding-bottom: 12px;
+		border-bottom: 3px solid var(--blue);
+		margin-bottom: 14px;
+	}
+
+	.cover img {
+		width: 78px;
+		height: 78px;
+	}
+
+	.box {
+		border-radius: 10px;
+		padding: 10px 14px;
+		margin: 10px 0;
+		break-inside: avoid;
+	}
+
+	.box.info {
+		background: var(--blue-soft);
+	}
+
+	.box.ok {
+		background: var(--green-soft);
+		border-left: 6px solid var(--green);
+	}
+
+	.box.warn {
+		background: var(--amber-soft);
+		border-left: 6px solid var(--amber);
+	}
+
+	.box.stop {
+		background: var(--red-soft);
+		border-left: 6px solid var(--red);
+	}
+
+	.box h3 {
+		margin: 0 0 4px;
+		font-size: 13pt;
+	}
+
+	ul,
+	ol {
+		margin: 4px 0;
+		padding-left: 22px;
+	}
+
+	li {
+		margin: 3px 0;
+	}
+
+	/* ── Steps ── */
+
+	.step {
+		display: grid;
+		grid-template-columns: 46px 1fr;
+		gap: 12px;
+		margin: 14px 0 6px;
+	}
+
+	.num {
+		width: 46px;
+		height: 46px;
+		border-radius: 50%;
+		background: var(--blue);
+		color: #fff;
+		font-size: 22pt;
+		font-weight: 700;
+		display: grid;
+		place-items: center;
+	}
+
+	.step h2 {
+		margin-top: 8px;
+	}
+
+	.actions {
+		counter-reset: a;
+		list-style: none;
+		padding: 0;
+		margin: 6px 0;
+	}
+
+	.actions li {
+		counter-increment: a;
+		position: relative;
+		padding-left: 30px;
+		margin: 6px 0;
+		break-inside: avoid;
+	}
+
+	.actions li::before {
+		content: counter(a) ".";
+		position: absolute;
+		left: 0;
+		width: 24px;
+		text-align: right;
+		font-weight: 700;
+		color: var(--blue);
+	}
+
+	/* What to click / choose */
+	.ui {
+		display: inline-block;
+		padding: 0 7px;
+		border: 1px solid #9aa6bf;
+		border-bottom-width: 2px;
+		border-radius: 5px;
+		background: #f4f6fa;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.file {
+		font-family: Consolas, "Cascadia Mono", "DejaVu Sans Mono", monospace;
+		font-size: 11pt;
+		background: #f1f3f7;
+		padding: 0 5px;
+		border-radius: 4px;
+	}
+
+	/* Mock dialog field */
+	.field {
+		display: grid;
+		grid-template-columns: 170px 1fr;
+		align-items: center;
+		gap: 10px;
+		margin: 8px 0 8px 30px;
+		font-size: 11.5pt;
+	}
+
+	.field .label {
+		text-align: right;
+		color: var(--muted);
+	}
+
+	.field .value {
+		border: 2px solid var(--blue);
+		border-radius: 4px;
+		padding: 3px 8px;
+		background: #fff;
+		font-weight: 700;
+		box-shadow: 0 0 0 4px var(--blue-soft);
+	}
+
+	.field .value.off::before {
+		content: "☐ ";
+		font-weight: 400;
+	}
+
+	/* Folder picture */
+	.folder {
+		font-family: Consolas, "Cascadia Mono", "DejaVu Sans Mono", monospace;
+		font-size: 11pt;
+		line-height: 1.6;
+		background: #f7f8fb;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		padding: 10px 14px;
+		margin: 8px 0;
+		white-space: pre;
+		break-inside: avoid;
+	}
+
+	.folder b {
+		color: var(--blue);
+	}
+
+	.folder i {
+		font-style: normal;
+		color: var(--muted);
+		font-family: Calibri, Carlito, sans-serif;
+	}
+
+	/* Console picture */
+	.console {
+		background: #0c0c0c;
+		color: #cccccc;
+		font-family: Consolas, "Cascadia Mono", "DejaVu Sans Mono", monospace;
+		font-size: 9.5pt;
+		line-height: 1.45;
+		border-radius: 8px;
+		padding: 10px 14px;
+		margin: 8px 0 8px 30px;
+		white-space: pre-wrap;
+		break-inside: avoid;
+	}
+
+	.console .c {
+		color: #61d6d6;
+	}
+
+	.console .g {
+		color: #16c60c;
+	}
+
+	.console .r {
+		color: #e74856;
+	}
+
+	.shot {
+		display: block;
+		margin: 8px 0 8px 30px;
+		width: 300px;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+	}
+
+	.page-shot {
+		display: block;
+		width: 100%;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		margin: 6px 0;
+	}
+
+	/* Troubleshooting */
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 10.5pt;
+		margin: 6px 0;
+	}
+
+	th,
+	td {
+		text-align: left;
+		vertical-align: top;
+		padding: 5px 8px;
+		border-bottom: 1px solid var(--line);
+	}
+
+	th {
+		background: var(--blue-soft);
+		color: var(--blue);
+	}
+
+	tr {
+		break-inside: avoid;
+	}
+
+	td:first-child {
+		width: 44%;
+		font-weight: 700;
+	}
+
+	.page-break {
+		break-before: page;
+	}
+
+	.small {
+		font-size: 11pt;
+		color: var(--muted);
+	}
+
+	.check {
+		list-style: none;
+		padding-left: 0;
+	}
+
+	.check li::before {
+		content: "☐  ";
+		font-size: 13pt;
+	}
+</style>
+</head>
+<body>
+
+<div class="cover">
+	<img src="../../app/assets/logo-128.png" alt="">
+	<div>
+		<h1>Ενημέρωση του Τηλεφωνικού Καταλόγου</h1>
+		<div class="lead">Οδηγίες για τον διαχειριστή · περίπου 5 λεπτά</div>
+	</div>
+</div>
+
+<p>Κάνετε αυτή τη διαδικασία <b>κάθε φορά που αλλάζει</b> ο τηλεφωνικός κατάλογος (Word) ή η λίστα με τα ασύρματα τηλέφωνα (Excel).</p>
+
+<div class="box info">
+	<h3>Τι θα χρειαστείτε</h3>
+	<ul>
+		<li>Το αρχείο Excel <span class="file">DECT ΑΠΟΓΡΑΦΗ</span> (τα <b>ασύρματα</b>)</li>
+		<li>Το αρχείο Word <span class="file">THL_KATALOGOS_251_GNA</span> (τα <b>σταθερά</b>)</li>
+		<li>Τον φάκελο του καταλόγου. Μέσα του υπάρχουν τα εξής:</li>
+	</ul>
+	<div class="folder"><b>📁 Κατάλογος</b>
+├─ 📄 katalogos.html      <i>← η σελίδα που ανοίγουν οι υπάλληλοι</i>
+├─ ⚙️ update.cmd          <i>← με αυτό γίνεται η ενημέρωση</i>
+├─ ⚙️ update.ps1          <i>← (μην το αγγίζετε)</i>
+├─ 📝 ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt   <i>← οι αριθμοί «Μη συνδέετε» (σελ. 6)</i>
+├─ 📁 <b>data</b>               <i>← εδώ βάζετε τα 2 νέα αρχεία</i>
+└─ 📁 backup             <i>← αντίγραφα ασφαλείας (δημιουργείται μόνος του)</i></div>
+</div>
+
+<div class="box stop">
+	<h3>Μην αλλάξετε ποτέ</h3>
+	Τα ονόματα <span class="file">katalogos.html</span>, <span class="file">update.cmd</span>, <span class="file">update.ps1</span>, <span class="file">ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt</span> και του φακέλου <span class="file">data</span>.
+</div>
+
+<p><b>Με λίγα λόγια:</b> αποθηκεύετε το Excel ως <b>.csv</b> και το Word ως <b>.txt</b> μέσα στον φάκελο <span class="file">data</span>, και μετά κάνετε διπλό κλικ στο <span class="file">update.cmd</span>.</p>
+
+<!-- ── Step 1 ── -->
+<div class="step page-break">
+	<div class="num">1</div>
+	<div>
+		<h2>Αποθήκευση του Excel ως .csv</h2>
+		<ol class="actions">
+			<li>Ανοίξτε το αρχείο <span class="file">DECT ΑΠΟΓΡΑΦΗ</span> στο Excel.</li>
+			<li>Κάτω αριστερά, πατήστε το <b>πρώτο</b> φύλλο: <span class="ui">Φύλλο1</span><br>
+				<span class="small">Σημαντικό: αποθηκεύεται μόνο το φύλλο που βλέπετε εκείνη τη στιγμή.</span></li>
+			<li>Πατήστε <span class="ui">Αρχείο</span> → <span class="ui">Αποθήκευση ως</span> → <span class="ui">Αναζήτηση</span> (ή <span class="ui">Περισσότερες επιλογές</span>).</li>
+			<li>Πηγαίνετε μέσα στον φάκελο <span class="file">data</span> του καταλόγου.</li>
+			<li>Στο κουτί «Αποθήκευση ως τύπου» επιλέξτε:</li>
+		</ol>
+		<div class="field"><span class="label">Αποθήκευση ως τύπου:</span><span class="value">CSV UTF-8 (οριοθετημένο με κόμματα) (*.csv)</span></div>
+		<ol class="actions" start="6" style="counter-reset: a 5">
+			<li>Πατήστε <span class="ui">Αποθήκευση</span>.</li>
+			<li>Αν το Excel ρωτήσει κάτι («μόνο το ενεργό φύλλο», «ορισμένες δυνατότητες θα χαθούν»), πατήστε <span class="ui">OK</span> ή <span class="ui">Ναι</span>. Το αρχικό αρχείο δεν πειράζεται.</li>
+			<li>Κλείστε το Excel. Αν σας ρωτήσει αν θέλετε να αποθηκεύσετε, πατήστε <span class="ui">Να μην αποθηκευτεί</span>.</li>
+		</ol>
+		<p class="small">Αν δεν υπάρχει η επιλογή «CSV UTF-8», διαλέξτε απλώς «CSV (οριοθετημένο με κόμματα)». Λειτουργεί κι αυτό.</p>
+	</div>
+</div>
+
+<!-- ── Step 2 ── -->
+<div class="step page-break">
+	<div class="num">2</div>
+	<div>
+		<h2>Αποθήκευση του Word ως .txt</h2>
+		<ol class="actions">
+			<li>Ανοίξτε το αρχείο <span class="file">THL_KATALOGOS_251_GNA</span> στο Word.</li>
+			<li>Πατήστε <span class="ui">Αρχείο</span> → <span class="ui">Αποθήκευση ως</span> → <span class="ui">Αναζήτηση</span>.</li>
+			<li>Πηγαίνετε μέσα στον φάκελο <span class="file">data</span> του καταλόγου.</li>
+			<li>Στο κουτί «Αποθήκευση ως τύπου» επιλέξτε:</li>
+		</ol>
+		<div class="field"><span class="label">Αποθήκευση ως τύπου:</span><span class="value">Απλό κείμενο (*.txt)</span></div>
+		<ol class="actions" start="5" style="counter-reset: a 4">
+			<li>Πατήστε <span class="ui">Αποθήκευση</span>. Θα ανοίξει το παράθυρο «Μετατροπή αρχείου». Ρυθμίστε το έτσι:</li>
+		</ol>
+		<div class="field"><span class="label">Κωδικοποίηση κειμένου:</span><span class="value">Άλλη κωδικοποίηση → Unicode (UTF-8)</span></div>
+		<div class="field"><span class="label">Εισαγωγή αλλαγών γραμμής:</span><span class="value off">να ΜΗΝ είναι τσεκαρισμένο</span></div>
+		<ol class="actions" start="6" style="counter-reset: a 5">
+			<li>Πατήστε <span class="ui">OK</span>.</li>
+			<li>Κλείστε το Word. Αν σας ρωτήσει αν θέλετε να αποθηκεύσετε, πατήστε <span class="ui">Να μην αποθηκευτεί</span>.</li>
+		</ol>
+		<p class="small">Το «Windows (προεπιλογή)» λειτουργεί επίσης. <b>Μην</b> επιλέξετε «MS-DOS».</p>
+	</div>
+</div>
+
+<div class="box ok" style="margin-left:58px">
+	<h3>Έλεγχος: ο φάκελος data πρέπει να έχει τώρα</h3>
+	<div class="folder" style="background:transparent;border:none;padding:4px 0;margin:0"><b>📁 data</b>
+├─ 📄 DECT ΑΠΟΓΡΑΦΗ.csv
+└─ 📄 THL_KATALOGOS_251_GNA.txt</div>
+	<p class="small">Αν υπάρχουν και παλιότερα .csv / .txt, χρησιμοποιείται αυτόματα το πιο πρόσφατο. Για να είστε σίγουροι, μπορείτε να διαγράψετε τα παλιά.</p>
+</div>
+
+<!-- ── Step 3 ── -->
+<div class="step page-break">
+	<div class="num">3</div>
+	<div>
+		<h2>Διπλό κλικ στο update.cmd</h2>
+		<ol class="actions">
+			<li>Στον φάκελο του καταλόγου, κάντε <b>διπλό κλικ</b> στο <span class="file">update.cmd</span>.</li>
+			<li>Ανοίγει ένα μαύρο παράθυρο. Αν όλα πήγαν καλά, θα δείτε <b style="color:var(--green)">πράσινα ✓</b>:</li>
+		</ol>
+		<div class="console"><span class="c">Ενημέρωση τηλεφωνικού καταλόγου</span>
+
+Σελίδα:     ...\Κατάλογος\katalogos.html
+DECT:       ...\Κατάλογος\data\DECT ΑΠΟΓΡΑΦΗ.csv
+Κατάλογος:  ...\Κατάλογος\data\THL_KATALOGOS_251_GNA.txt
+Περιορ.:    ...\Κατάλογος\ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt
+
+<span class="g">  ✓ DECT: 47.017 bytes</span>
+<span class="g">  ✓ Κατάλογος: 38.705 bytes</span>
+<span class="g">  ✓ Περιορισμένοι αριθμοί («Μη συνδέετε»): 12</span>
+
+<span class="g">  ✓ Η σελίδα ενημερώθηκε.</span> Αντίγραφο ασφαλείας: ...\backup\katalogos_...html
+
+Πιέστε οποιοδήποτε πλήκτρο για συνέχεια. . .</div>
+		<ol class="actions" start="3" style="counter-reset: a 2">
+			<li>Πατήστε ένα οποιοδήποτε πλήκτρο για να κλείσει το παράθυρο.</li>
+		</ol>
+		<div class="box stop" style="margin-left:30px">
+			Αν δείτε <b style="color:var(--red)">κόκκινο ✗ Σφάλμα</b>, η σελίδα <b>δεν</b> άλλαξε. Δείτε τον πίνακα «Αν κάτι πάει στραβά» στην τελευταία σελίδα.
+		</div>
+	</div>
+</div>
+
+<!-- ── Step 4 ── -->
+<div class="step page-break">
+	<div class="num">4</div>
+	<div>
+		<h2>Έλεγχος της σελίδας</h2>
+		<ol class="actions">
+			<li>Ανοίξτε το <span class="file">katalogos.html</span> με διπλό κλικ.</li>
+			<li>Πάνω αριστερά, κάτω από τον τίτλο, η <b>«Τελευταία ενημέρωση»</b> πρέπει να δείχνει τη <b>σημερινή</b> ημερομηνία και ώρα:</li>
+		</ol>
+		<img class="shot" src="header.png" alt="Πάνω αριστερά στη σελίδα: Τελευταία ενημέρωση και προειδοποίηση">
+		<ol class="actions" start="3" style="counter-reset: a 2">
+			<li>Κάντε μια δοκιμαστική αναζήτηση (π.χ. ένα όνομα ή ένα τμήμα που ξέρετε) και δείτε ότι βγαίνει σωστά.</li>
+		</ol>
+		<div class="box warn" style="margin-left:30px">
+			<h3>Αν εμφανίζεται «⚠ προειδοποίηση»</h3>
+			Η σελίδα λειτουργεί κανονικά, αλλά κάποια γραμμή του Word (ή του Excel) δεν διαβάστηκε σωστά.
+			<ul>
+				<li>Πατήστε πάνω στο <b>⚠</b> για να δείτε <b>ποια γραμμή</b> και τι πρόβλημα έχει.</li>
+				<li>Διορθώστε τη γραμμή στο αρχικό Word ή Excel.</li>
+				<li>Επαναλάβετε τα <b>βήματα 1–3</b>.</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<!-- ── Step 5 ── -->
+<div class="step">
+	<div class="num">5</div>
+	<div>
+		<h2>Μοιράστε τη σελίδα</h2>
+		<ol class="actions">
+			<li>Αντιγράψτε <b>μόνο</b> το αρχείο <span class="file">katalogos.html</span> στους υπολογιστές του τηλεφωνικού κέντρου (ή στον κοινόχρηστο φάκελο), <b>αντικαθιστώντας</b> το παλιό.</li>
+			<li>Οι υπάλληλοι το ανοίγουν με διπλό κλικ. Δεν χρειάζεται τίποτε άλλο: ούτε internet, ούτε εγκατάσταση.</li>
+		</ol>
+		<div class="box ok">✓ Τέλος! Η ενημέρωση ολοκληρώθηκε.</div>
+	</div>
+</div>
+
+<!-- ── Restricted numbers ── -->
+<h2 class="page-break">Αριθμοί «Μη συνδέετε» (κόκκινοι)</h2>
+<p>Ορισμένοι αριθμοί εμφανίζονται στη σελίδα με <b style="color:var(--red)">κόκκινη απόχρωση</b> και την ένδειξη <b>«Μη συνδέετε»</b>: σε αυτούς οι υπάλληλοι <b>δεν</b> συνδέουν κλήσεις.</p>
+
+<div class="box warn">
+	<h3>Γιατί δεν αλλάζουν από το Excel</h3>
+	Όταν το Excel αποθηκεύεται ως .csv (βήμα 1), <b>χάνονται τα χρώματα και η μορφοποίηση</b>. Γι' αυτό οι αριθμοί αυτοί γράφονται χωριστά, στο αρχείο <span class="file">ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt</span>, δίπλα στο <span class="file">update.cmd</span>.
+</div>
+
+<div class="step" style="margin-top:6px">
+	<div class="num">✎</div>
+	<div>
+		<h2>Πώς τους αλλάζετε</h2>
+		<ol class="actions">
+			<li>Στον φάκελο του καταλόγου, κάντε <b>δεξί κλικ</b> στο <span class="file">ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt</span> → <span class="ui">Άνοιγμα με</span> → <span class="ui">Σημειωματάριο</span>.</li>
+			<li>Γράψτε <b>έναν αριθμό σε κάθε γραμμή</b>, στην αρχή της γραμμής. Μετά τον αριθμό μπορείτε να γράψετε ένα όνομα για να θυμάστε ποιος είναι:</li>
+		</ol>
+		<div class="folder" style="margin-left:30px"><i># Οι γραμμές που ξεκινούν με # αγνοούνται</i>
+3995  ΧΕΙΜΩΝΑΣ ΑΝΤΩΝΙΟΣ — ΔΚΤΗΣ
+3953  ΒΟΥΡΔΑΣ ΔΗΜΗΤΡΙΟΣ — ΥΔΚΤΗΣ Α'
+3738  ΔΕΡΖΕΚΟΣ ΗΛΙΑΣ — ΥΔΚΤΗΣ Β'</div>
+		<ol class="actions" start="3" style="counter-reset: a 2">
+			<li>Για να <b>προσθέσετε</b> αριθμό: γράψτε τον σε μια νέα γραμμή. Για να τον <b>αφαιρέσετε</b>: σβήστε όλη τη γραμμή.</li>
+			<li>Αποθηκεύστε (<span class="ui">Ctrl</span> + <span class="ui">S</span>) και κλείστε το Σημειωματάριο.</li>
+			<li>Κάντε διπλό κλικ στο <span class="file">update.cmd</span> (βήμα 3) και μοιράστε τη σελίδα (βήμα 5).</li>
+		</ol>
+		<div class="box stop">
+			<b>Μη σβήσετε και μη μετονομάσετε</b> το αρχείο. Αν λείπει, η ενημέρωση σταματά (για να μη χαθούν οι κόκκινες σημάνσεις). Αν δεν θέλετε κανέναν τέτοιο αριθμό, αφήστε το αρχείο <b>κενό</b>.
+		</div>
+	</div>
+</div>
+
+<!-- ── Troubleshooting ── -->
+<h2 class="page-break">Αν κάτι πάει στραβά</h2>
+<table>
+	<tr><th>Τι βλέπετε</th><th>Τι κάνετε</th></tr>
+	<tr>
+		<td>«Δεν βρέθηκε αρχείο DECT (.csv)» ή «Δεν βρέθηκε αρχείο καταλόγου (.txt)»</td>
+		<td>Το αρχείο δεν αποθηκεύτηκε μέσα στον φάκελο <span class="file">data</span>, ή αποθηκεύτηκε με άλλο τύπο. Ξανακάντε το βήμα 1 ή 2 και προσέξτε τον φάκελο και τον τύπο.</td>
+	</tr>
+	<tr>
+		<td>«Δεν βρέθηκε ο φάκελος δεδομένων»</td>
+		<td>Ο φάκελος <span class="file">data</span> λείπει ή μετονομάστηκε. Δημιουργήστε φάκελο με όνομα ακριβώς <span class="file">data</span> δίπλα στο <span class="file">update.cmd</span>.</td>
+	</tr>
+	<tr>
+		<td>«Δεν βρέθηκε το αρχείο ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt»</td>
+		<td>Το αρχείο σβήστηκε ή μετονομάστηκε. Δημιουργήστε το ξανά δίπλα στο <span class="file">update.cmd</span> (Σημειωματάριο → Αποθήκευση ως <span class="file">ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt</span>) με τους αριθμούς — ή κενό.</td>
+	</tr>
+	<tr>
+		<td>«Κλείστε το αρχείο αν είναι ανοιχτό»</td>
+		<td>Κλείστε το Excel και το Word και κάντε ξανά διπλό κλικ στο <span class="file">update.cmd</span>.</td>
+	</tr>
+	<tr>
+		<td>Μπλε παράθυρο «Τα Windows προστάτευσαν τον υπολογιστή σας»</td>
+		<td>Πατήστε <span class="ui">Περισσότερες πληροφορίες</span> → <span class="ui">Εκτέλεση οπωσδήποτε</span>. Χρειάζεται μόνο την πρώτη φορά.</td>
+	</tr>
+	<tr>
+		<td>Το μαύρο παράθυρο ανοίγει και κλείνει αμέσως, ή γράφει για «execution policy»</td>
+		<td>Ζητήστε από το τμήμα πληροφορικής να επιτρέψει την εκτέλεση PowerShell scripts για το <span class="file">update.ps1</span>.</td>
+	</tr>
+	<tr>
+		<td>Στη σελίδα: «⚠ … δεν περιέχει ελληνικούς χαρακτήρες — πιθανώς λάθος κωδικοποίηση»</td>
+		<td>Ξανακάντε το βήμα 2 (ή 1) και επιλέξτε <b>Unicode (UTF-8)</b> / <b>CSV UTF-8</b>.</td>
+	</tr>
+	<tr>
+		<td>Στη σελίδα λείπουν όλα τα ασύρματα, ή «⚠ Δεν βρέθηκε γραμμή επικεφαλίδων…»</td>
+		<td>Στο Excel αποθηκεύτηκε λάθος φύλλο. Ξανακάντε το βήμα 1 και πατήστε πρώτα το <span class="ui">Φύλλο1</span>.</td>
+	</tr>
+	<tr>
+		<td>Η σελίδα χάλασε μετά την ενημέρωση</td>
+		<td>Στον φάκελο <span class="file">backup</span> υπάρχουν οι προηγούμενες εκδόσεις. Αντιγράψτε την πιο πρόσφατη στον φάκελο του καταλόγου και μετονομάστε τη σε <span class="file">katalogos.html</span>.</td>
+	</tr>
+</table>
+
+<div class="box info" style="margin-top:10px; break-inside:auto; font-size:11pt">
+	<h3>Για όσους γράφουν τον κατάλογο στο Word</h3>
+	<ul>
+		<li>Οι ενότητες χωρίζονται με <b>μία κενή γραμμή</b>.</li>
+		<li>Η πρώτη γραμμή κάθε ενότητας είναι ο τίτλος, με τη συντομογραφία σε παρένθεση: <span class="file">Διεύθυνση Τομέα Εργαστηρίων (ΔΤΕ)</span></li>
+		<li>Κάθε γραμμή: περιγραφή, <b>Tab</b>, αριθμοί: <span class="file">Γραμματεία ⇥ 4235</span></li>
+		<li>Πολλοί αριθμοί με κόμμα: <span class="file">4011,4012,4014</span> · διάστημα: <span class="file">5501 έως 5511</span> · εξωτερική γραμμή μετά από δεύτερο Tab: <span class="file">210-7799410</span></li>
+		<li>Οι εσωτερικοί αριθμοί είναι πάντα <b>τετραψήφιοι</b>. Εξαίρεση: το <span class="file">09</span> (τηλεφωνικό κέντρο) εμφανίζεται αυτόματα ως <b>3399</b>.</li>
+		<li>Υποενότητες με τελεία: <span class="file">Βιοπαθολογία. Αιμοδοσία</span></li>
+	</ul>
+	<h3 style="margin-top:8px">Στο Excel</h3>
+	<ul>
+		<li>Η γραμμή επικεφαλίδων πρέπει να έχει τις στήλες <b>ΑΡΙΘΜΟΣ, ΟΝΟΜΑΤΕΠΩΝΥΜΟ, ΔΙΕΥΘΥΝΣΗ, ΘΕΣΗ, ΕΠΙΣΤΑΣΙΑ</b>.</li>
+		<li>Ονόματα που ξεκινούν με <b>*</b> εμφανίζονται ως «Κοινόχρηστο» (συσκευή υπηρεσίας/εφημερίας).</li>
+	</ul>
+</div>
+
+</body>
+</html>

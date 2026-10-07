@@ -52,7 +52,7 @@ export async function build() {
 
 	mkdirSync(DIST, { recursive: true });
 	writeFileSync(OUTPUT, html);
-	for (const f of ["update.ps1", "update.cmd", "ΟΔΗΓΙΕΣ.txt"]) copyFileSync(join(ROOT, "update", f), join(DIST, f));
+	for (const f of ["update.ps1", "update.cmd", "ΟΔΗΓΙΕΣ.pdf", "ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"]) copyFileSync(join(ROOT, "update", f), join(DIST, f));
 	mkdirSync(join(DIST, "data"), { recursive: true });
 
 	return { size: Buffer.byteLength(html) };

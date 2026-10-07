@@ -6,7 +6,8 @@
 		"build": "bun run scripts/build.ts",
 		"data:dev": "bun run scripts/dev-data.ts",
 		"dev": "bun run build && bun run data:dev",
-		"test": "bun test tests"
+		"test": "bun test tests",
+		"guide": "bun run scripts/guide.ts"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

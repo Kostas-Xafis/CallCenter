@@ -18,7 +18,7 @@ network and no installation. Users open `katalogos.html` with a double click.
 - `katalogos.html` contains the whole app (HTML, CSS, JS, icon) **and** the
   data, inside a block delimited by `<!--CATALOG-DATA-BEGIN-->` /
   `<!--CATALOG-DATA-END-->`.
-- The administrator exports the two source files (see `update/ΟΔΗΓΙΕΣ.txt`):
+- The administrator exports the two source files (see `update/ΟΔΗΓΙΕΣ.pdf`):
   the DECT spreadsheet's first sheet as **.csv** and the directory document as
   **.txt**, into `data\`.
 - `update.ps1` (run through `update.cmd`, Windows PowerShell 5.1+) embeds the
@@ -64,10 +64,12 @@ there are any), so the administrator can fix the source.
 ### Restricted numbers
 
 Numbers that calls must never be transferred to are shown with a red tint and
-a «Μη συνδέετε» tag. The list currently lives in `$RestrictedNumbers` at the
-top of `update/update.ps1` and is written into the data block (the dev script
-reads the same list). It will be derived from the DECT spreadsheet once the
-final file format is known.
+a «Μη συνδέετε» tag. The Excel colouring that used to mark them is lost in the
+CSV export, so they are kept in `update/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt` (shipped next to
+`update.cmd`): one number at the start of each line, anything after it and
+`#` lines ignored. `update.ps1` refuses to run if the file is missing, so the
+red marks can never disappear by accident; an empty file means "none". The
+dev script reads the same file.
 
 ## Development
 
@@ -109,7 +111,10 @@ app/
 update/
   update.ps1            Windows data updater (PowerShell 5.1+, UTF-8 BOM)
   update.cmd            double-click wrapper
-  ΟΔΗΓΙΕΣ.txt           instructions for administrators (Greek): how to export and update
+  ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt     restricted («Μη συνδέετε») numbers, edited by the administrators
+  ΟΔΗΓΙΕΣ.pdf           step-by-step guide for administrators (Greek); `bun run guide`
+  guide/ΟΔΗΓΙΕΣ.html    source of the guide (print-styled HTML, rendered with headless Chrome)
+  guide/header.png      screenshot used in the guide
 scripts/
   build.ts, dev-data.ts, lib/payload.ts
 tests/
@@ -118,7 +123,7 @@ tests/
 ## Release
 
 Give the administrators the contents of `dist/` (`katalogos.html`,
-`update.cmd`, `update.ps1`, `ΟΔΗΓΙΕΣ.txt`, empty `data/`). After that they
+`update.cmd`, `update.ps1`, `ΟΔΗΓΙΕΣ.pdf`, `ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt`, empty `data/`). After that they
 only re-export the .csv/.txt into `data\` and run `update.cmd`; a new build is needed
 only when the app itself changes (the data block is preserved by
 `bun run build`, but on their side they would replace `katalogos.html` and
