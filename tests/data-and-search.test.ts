@@ -168,6 +168,8 @@ describe("search", () => {
 	test("phone type can be part of the query", () => {
 		const types = (q: string) => [...new Set(search(index, q).map(r => r.record.source))];
 		expect(types("ασυρματοι")).toEqual(["dect"]);
+		expect(types("ασυρματα")).toEqual(["dect"]);
+		expect(types("σταθεροι")).toEqual(["dir"]);
 		expect(types("dect")).toEqual(["dect"]);
 		expect(types("σταθερα")).toEqual(["dir"]);
 		expect(top("ασυρματο ωρλ")).toEqual(["3870 ΠΑΠΑΔΟΠΟΥΛΟΣ, ΙΩΑΝΝΗΣ"]);

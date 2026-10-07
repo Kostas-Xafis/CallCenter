@@ -32,8 +32,8 @@ export const SOURCES = {
 // Extra searchable words per source, so "ασύρματο καρδιολογ" or "σταθερό γραμματεία"
 // narrows the results to that kind of phone. Low weight: the type never outranks a real match.
 const SOURCE_TERMS = {
-	dir: { text: "Σταθερά σταθερό", weight: 0.3 },
-	dect: { text: "Ασύρματοι ασύρματο DECT", weight: 0.3 }
+	dir: { text: "Σταθερά σταθερό σταθερός σταθεροί", weight: 0.3 },
+	dect: { text: "Ασύρματα ασύρματο ασύρματος ασύρματοι DECT", weight: 0.3 }
 };
 
 /** Reads the JSON payload embedded in the page. */

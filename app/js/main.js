@@ -4,6 +4,7 @@ import { buildModel, readEmbeddedPayload, SOURCES } from "./data.js";
 import { buildIndex, escapeHtml, highlight, search } from "./search.js";
 import { updateSearchHint } from "./greek-layout.js";
 import { initializeTheme, toggleTheme } from "./theme.js";
+import { abbrKey, fold } from "./normalize.js";
 
 const BATCH_SIZE = 150;
 const SEARCH_DEBOUNCE_MS = 120;
@@ -57,10 +58,10 @@ function renderRecord(record, hl = {}) {
 	const dirTitle = record.dirTitle && record.dirTitle !== record.dir ? record.dirTitle : "";
 	return `<div class="${classes.join(" ")}" role="row">
 		<div class="c-num"><span class="src-icon src-${record.source}" title="${SOURCES[record.source].long}"></span><div class="nums">${renderNumbers(record, hl)}</div></div>
+		<div class="c-dir">${record.dir ? `<button type="button" class="dir-badge" data-dir="${escapeHtml(record.dirKey)}" title="${escapeHtml(dirTitle ? dirTitle + " · " : "")}Φιλτράρισμα">${highlight(record.dir, hl.dir?.filter(([a]) => a < record.dir.length))}</button>` : ""}</div>
 		<div class="c-name">${name}</div>
 		<div class="c-pos">${highlight(record.position, hl.position)}</div>
 		<div class="c-unit">${highlight(record.unit, hl.unit)}</div>
-		<div class="c-dir">${record.dir ? `<button type="button" class="dir-badge" data-dir="${escapeHtml(record.dirKey)}" title="${escapeHtml(dirTitle ? dirTitle + " · " : "")}Φιλτράρισμα">${highlight(record.dir, hl.dir?.filter(([a]) => a < record.dir.length))}</button>` : ""}</div>
 	</div>`;
 }
 
@@ -260,39 +261,82 @@ async function copyText(text) {
 	toast(`Αντιγράφηκε: ${text}`);
 }
 
+// ── Page state ↔ URL ─────────────────────────────────────────────────
+//
+// The search, the phone type and the directorate live in the address bar,
+// e.g. katalogos.html#q=καρδιολ&τυπος=ασυρματα&διευθυνση=ΔΤΕ, so a reload or a
+// bookmark brings the same view back.
+
+const URL_TYPE = { dir: "σταθερα", dect: "ασυρματα" };
+
+/** Readable URL value for a directorate: its abbreviation, or its name. */
+const directorateParam = key => {
+	const d = model.directorates.find(x => x.key === key);
+	return d ? (d.hasAbbr ? d.abbr : d.title) : key;
+};
+
+function directorateFromParam(value) {
+	if (!value) return "";
+	const d = model.directorates.find(x => x.key === value || x.abbr === value || x.title === value || x.key === abbrKey(value));
+	return d ? d.key : "";
+}
+
+function syncUrl() {
+	const params = new URLSearchParams();
+	if (state.query) params.set("q", state.query);
+	if (state.source !== "all") params.set("τυπος", URL_TYPE[state.source]);
+	if (state.dirKey) params.set("διευθυνση", directorateParam(state.dirKey));
+	const hash = params.toString();
+	try {
+		history.replaceState(null, "", hash ? `#${hash}` : location.pathname + location.search);
+	} catch {
+		/* some browsers restrict history on file:// */
+	}
+}
+
+function readUrl() {
+	const params = new URLSearchParams(location.hash.replace(/^#/, ""));
+	const type = fold(params.get("τυπος") ?? "");
+	const source = Object.keys(URL_TYPE).find(k => URL_TYPE[k] === type) ?? "all";
+	return { query: (params.get("q") ?? "").trim(), source, dirKey: directorateFromParam(params.get("διευθυνση")) };
+}
+
+/** Applies a full state to the controls and redraws once. */
+function applyState({ query, source, dirKey }) {
+	state.query = query;
+	state.source = source;
+	state.dirKey = dirKey;
+	$("searchInput").value = query;
+	updateSearchHint(query);
+	$("dirFilter").value = dirKey;
+	for (const tab of document.querySelectorAll("#sourceTabs [data-source]")) {
+		tab.setAttribute("aria-selected", String(tab.dataset.source === source));
+	}
+	syncUrl();
+	refresh();
+}
+
 function setSource(source) {
 	state.source = source;
 	for (const tab of document.querySelectorAll("#sourceTabs [data-source]")) {
 		tab.setAttribute("aria-selected", String(tab.dataset.source === source));
 	}
+	syncUrl();
 	update();
 }
 
 function setDirectorate(key) {
 	state.dirKey = key;
 	$("dirFilter").value = key;
+	syncUrl();
 	refresh();
 }
 
 function setQuery(raw) {
 	state.query = raw.trim();
 	updateSearchHint(state.query);
-	try {
-		history.replaceState(null, "", state.query ? `#q=${encodeURIComponent(state.query)}` : location.pathname + location.search);
-	} catch {
-		/* some browsers restrict history on file:// */
-	}
+	syncUrl();
 	refresh();
-}
-
-function queryFromHash() {
-	const m = location.hash.match(/^#q=(.*)$/);
-	if (!m) return "";
-	try {
-		return decodeURIComponent(m[1]);
-	} catch {
-		return "";
-	}
 }
 
 function bindEvents() {
@@ -336,16 +380,9 @@ function bindEvents() {
 		if (tab) setSource(tab.dataset.source);
 	});
 	$("dirFilter").addEventListener("change", e => setDirectorate(e.target.value));
-	$("resetFilters").addEventListener("click", () => {
-		input.value = "";
-		state.query = "";
-		updateSearchHint("");
-		state.source = "all";
-		for (const tab of document.querySelectorAll("#sourceTabs [data-source]")) {
-			tab.setAttribute("aria-selected", String(tab.dataset.source === "all"));
-		}
-		setDirectorate("");
-	});
+	$("resetFilters").addEventListener("click", () => applyState({ query: "", source: "all", dirKey: "" }));
+	// Address edited by hand (or a bookmark opened in the same tab)
+	window.addEventListener("hashchange", () => applyState(readUrl()));
 
 	$("results").addEventListener("click", e => {
 		const num = e.target.closest("[data-copy]");
@@ -379,13 +416,7 @@ function init() {
 		$("resultsCount").textContent = "";
 		return;
 	}
-	const initial = queryFromHash();
-	if (initial) {
-		$("searchInput").value = initial;
-		setQuery(initial);
-	} else {
-		refresh();
-	}
+	applyState(readUrl());
 	$("searchInput").focus();
 }
 
