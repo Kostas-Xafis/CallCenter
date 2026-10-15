@@ -108,18 +108,36 @@ function ConvertTo-SourceJson([string]$Path) {
     return @{ json = $json; size = $bytes.Length }
 }
 
-# Το πιο πρόσφατο αρχείο με την κατάληξη· προειδοποίηση αν υπάρχουν περισσότερα.
-function Find-DataFile([string]$Folder, [string]$Extension, [string]$What) {
-    $files = @(Get-ChildItem -LiteralPath $Folder -File |
+# Τα αρχεία του φακέλου με την κατάληξη, το πιο πρόσφατο πρώτο (χωρίς αρχεία κλειδώματος).
+function Get-DataFiles([string]$Folder, [string]$Extension) {
+    return @(Get-ChildItem -LiteralPath $Folder -File |
             Where-Object { $_.Extension -ieq $Extension -and -not $_.Name.StartsWith('~$') -and -not $_.Name.StartsWith('.~lock') } |
             Sort-Object LastWriteTime -Descending)
-    if ($files.Count -eq 0) {
-        throw "Δεν βρέθηκε αρχείο $What ($Extension) στον φάκελο '$Folder'."
+}
+
+# Το πιο πρόσφατο αρχείο· προειδοποίηση αν υπάρχουν περισσότερα.
+function Select-Newest([object[]]$Files, [string]$Extension) {
+    if ($Files.Count -gt 1) {
+        Write-Warn "Βρέθηκαν $($Files.Count) αρχεία $Extension στον φάκελο data — χρησιμοποιείται το πιο πρόσφατο: $($Files[0].Name)"
     }
-    if ($files.Count -gt 1) {
-        Write-Warn "Βρέθηκαν $($files.Count) αρχεία $Extension στον φάκελο data — χρησιμοποιείται το πιο πρόσφατο: $($files[0].Name)"
+    return $Files[0].FullName
+}
+
+# Excel «Κείμενο Unicode» αποθηκεύει το DECT ως .txt, που αλλιώς θα διαβαζόταν
+# ως τηλεφωνικός κατάλογος. Το αναγνωρίζουμε από τις επικεφαλίδες των στηλών του.
+$DectSniffEncodings = @([System.Text.Encoding]::UTF8, [System.Text.Encoding]::Unicode, [System.Text.Encoding]::BigEndianUnicode)
+foreach ($codePage in 1253, 737) {
+    try { $DectSniffEncodings += [System.Text.Encoding]::GetEncoding($codePage) } catch { }
+}
+
+function Test-DectTable([string]$Path) {
+    $bytes = Read-SharedBytes $Path
+    $length = [Math]::Min($bytes.Length, 65536)
+    foreach ($encoding in $DectSniffEncodings) {
+        $text = $encoding.GetString($bytes, 0, $length)
+        if ($text.Contains('ΑΡΙΘΜΟΣ') -and $text.Contains('ΟΝΟΜΑΤΕΠΩΝΥΜΟ')) { return $true }
     }
-    return $files[0].FullName
+    return $false
 }
 
 # Αριθμοί στους οποίους δεν συνδέουμε κλήσεις: ο αριθμός στην αρχή κάθε γραμμής.
@@ -188,8 +206,39 @@ try {
             throw "Δεν βρέθηκε ο φάκελος δεδομένων '$DataDir'."
         }
     }
-    if (-not $Dect) { $Dect = Find-DataFile $DataDir '.csv' 'DECT' }
-    if (-not $Directory) { $Directory = Find-DataFile $DataDir '.txt' 'καταλόγου' }
+    $dectTxt = @()
+    $dirTxt = @()
+    if (-not $Dect -or -not $Directory) {
+        foreach ($f in (Get-DataFiles $DataDir '.txt')) {
+            if (Test-DectTable $f.FullName) { $dectTxt += $f } else { $dirTxt += $f }
+        }
+    }
+    if (-not $Dect) {
+        $csvFiles = @(Get-DataFiles $DataDir '.csv')
+        if ($csvFiles.Count -gt 0) {
+            $Dect = Select-Newest $csvFiles '.csv'
+        } elseif ($dectTxt.Count -gt 0) {
+            $Dect = $dectTxt[0].FullName
+            Write-Warn "Δεν βρέθηκε .csv — το DECT διαβάζεται από το «$($dectTxt[0].Name)»."
+        } else {
+            throw "Δεν βρέθηκε αρχείο DECT (.csv) στον φάκελο '$DataDir'."
+        }
+    }
+    if (-not $Directory) {
+        foreach ($f in $dectTxt) {
+            if ($f.FullName -ne $Dect) {
+                Write-Warn "Το «$($f.Name)» έχει τις στήλες του DECT (ΑΡΙΘΜΟΣ, ΟΝΟΜΑΤΕΠΩΝΥΜΟ) — δεν χρησιμοποιείται ως τηλεφωνικός κατάλογος."
+            }
+        }
+        if ($dirTxt.Count -eq 0) {
+            $message = "Δεν βρέθηκε αρχείο καταλόγου (.txt) στον φάκελο '$DataDir'."
+            if ($dectTxt.Count -gt 0) {
+                $message += "`n    Τα αρχεία .txt του φακέλου είναι εξαγωγές του DECT. Αποθηκεύστε τον κατάλογο από το Word ως «Απλό κείμενο» (.txt)."
+            }
+            throw $message
+        }
+        $Directory = Select-Newest $dirTxt '.txt'
+    }
     $Dect = (Resolve-Path -LiteralPath $Dect).Path
     $Directory = (Resolve-Path -LiteralPath $Directory).Path
     if (-not $Restricted) { $Restricted = Join-Path $ScriptDir $RestrictedFileName }
@@ -223,20 +272,29 @@ try {
     $block = $DataBegin + '<script id="catalog-data" type="application/json">' + $json + '</script>' + $DataEnd
     $newPage = $page.Substring(0, $begin) + $block + $page.Substring($end + $DataEnd.Length)
 
-    # Αντίγραφο ασφαλείας (κρατούνται τα $BackupsToKeep πιο πρόσφατα)
-    $backupDir = Join-Path (Split-Path -Parent $Html) 'backup'
-    if (-not (Test-Path -LiteralPath $backupDir)) { [void](New-Item -ItemType Directory -Path $backupDir) }
-    $stamp = (Get-Date).ToString('yyyyMMdd_HHmmss', $Invariant)
-    $backup = Join-Path $backupDir ([System.IO.Path]::GetFileNameWithoutExtension($Html) + "_$stamp.html")
-    Copy-Item -LiteralPath $Html -Destination $backup
-    Get-ChildItem -LiteralPath $backupDir -Filter '*.html' -File | Sort-Object LastWriteTime -Descending |
-        Select-Object -Skip $BackupsToKeep | Remove-Item -Force
-
-    # Ασφαλής εγγραφή: πρώτα σε προσωρινό αρχείο και μετά αντικατάσταση.
     $tmp = $Html + '.tmp'
-    [System.IO.File]::WriteAllText($tmp, $newPage, $Utf8NoBom)
-    [System.IO.File]::Copy($tmp, $Html, $true)
-    Remove-Item -LiteralPath $tmp -Force
+    try {
+        # Αντίγραφο ασφαλείας (κρατούνται τα $BackupsToKeep πιο πρόσφατα)
+        $backupDir = Join-Path (Split-Path -Parent $Html) 'backup'
+        if (-not (Test-Path -LiteralPath $backupDir)) { [void](New-Item -ItemType Directory -Path $backupDir) }
+        $stamp = (Get-Date).ToString('yyyyMMdd_HHmmss', $Invariant)
+        $backup = Join-Path $backupDir ([System.IO.Path]::GetFileNameWithoutExtension($Html) + "_$stamp.html")
+        Copy-Item -LiteralPath $Html -Destination $backup
+        Get-ChildItem -LiteralPath $backupDir -Filter '*.html' -File | Sort-Object LastWriteTime -Descending |
+            Select-Object -Skip $BackupsToKeep | Remove-Item -Force
+
+        # Ασφαλής εγγραφή: πρώτα σε προσωρινό αρχείο και μετά αντικατάσταση.
+        [System.IO.File]::WriteAllText($tmp, $newPage, $Utf8NoBom)
+        [System.IO.File]::Copy($tmp, $Html, $true)
+    } catch {
+        $reason = $_.Exception.Message
+        if ($_.Exception.InnerException) { $reason = $_.Exception.InnerException.Message }
+        throw "Δεν ήταν δυνατή η αποθήκευση της σελίδας '$Html'.`n" +
+            "    Ελέγξτε ότι το αρχείο δεν είναι «Μόνο για ανάγνωση» (δεξί κλικ → Ιδιότητες) και ότι ο φάκελος επιτρέπει αλλαγές`n" +
+            "    (όχι CD/USB μόνο για ανάγνωση ή κοινόχρηστος φάκελος χωρίς δικαίωμα εγγραφής). ($reason)"
+    } finally {
+        if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
+    }
 
     Write-Host ''
     Write-Ok "Η σελίδα ενημερώθηκε. Αντίγραφο ασφαλείας: $backup"

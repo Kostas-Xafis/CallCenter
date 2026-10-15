@@ -121,11 +121,24 @@ describe("decodeBytes", () => {
 		expect(decodeBytes(new Uint8Array([0xff, 0xfe, ...le])).text).toBe(greek);
 		expect(decodeBytes(new Uint8Array(Buffer.from("ABCDEF 3400", "utf16le"))).encoding).toBe("UTF-16 LE");
 	});
+	test("UTF-16 without BOM, mostly Greek (few NUL bytes)", () => {
+		const text = "Διεύθυνση Παθολογικού Τομέα – Γραμματεία\t4270";
+		expect(decodeBytes(new Uint8Array(Buffer.from(text, "utf16le")))).toEqual({ text, encoding: "UTF-16 LE" });
+		const be = Buffer.from(text, "utf16le").swap16();
+		expect(decodeBytes(new Uint8Array(be))).toEqual({ text, encoding: "UTF-16 BE" });
+	});
 	test("Windows-1253 (Greek ANSI)", () => {
 		// "ΑΡΙΘΜΟΣ" in Windows-1253
 		const r = decodeBytes(new Uint8Array([0xc1, 0xd1, 0xc9, 0xc8, 0xcc, 0xcf, 0xd3]));
 		expect(r).toEqual({ text: "ΑΡΙΘΜΟΣ", encoding: "Windows-1253" });
 		expect(looksGreek(r.text)).toBe(true);
+		// "Χειμώνας": lowercase must not be mistaken for code page 737
+		expect(decodeBytes(new Uint8Array([0xd7, 0xe5, 0xe9, 0xec, 0xfe, 0xed, 0xe1, 0xf2]))).toEqual({ text: "Χειμώνας", encoding: "Windows-1253" });
+	});
+	test("code page 737 (Excel «CSV (MS-DOS)»)", () => {
+		// "ΑΡΙΘΜΟΣ;Χειμώνας" in code page 737
+		const bytes = [0x80, 0x90, 0x88, 0x87, 0x8b, 0x8e, 0x91, 0x3b, 0x95, 0x9c, 0xa0, 0xa3, 0xe9, 0xa4, 0x98, 0xaa];
+		expect(decodeBytes(new Uint8Array(bytes))).toEqual({ text: "ΑΡΙΘΜΟΣ;Χειμώνας", encoding: "DOS 737" });
 	});
 	test("wrong encoding is reported by the model", () => {
 		const m = buildModel({ ...payload, directory: { ...payload.directory, base64: b64("abc\t4011") } });
