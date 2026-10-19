@@ -1,5 +1,5 @@
 // dist/ is committed and downloaded by administrators as is, so it must be
-// complete, up to date with app/ and update/, and free of personal data.
+// complete, up to date with app/ and admin/, and free of personal data.
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
@@ -17,10 +17,10 @@ describe("dist/ release folder", () => {
 		expect(page === (await buildPage())).toBe(true);
 	});
 
-	test("scripts, guide and restricted list match update/ (run `bun run build`)", () => {
+	test("scripts, guide and restricted list match admin/ (run `bun run build`)", () => {
 		for (const f of RELEASE_FILES) {
 			expect(existsSync(`dist/${f}`)).toBe(true);
-			expect(Buffer.compare(readFileSync(`dist/${f}`), readFileSync(`update/${f}`))).toBe(0);
+			expect(Buffer.compare(readFileSync(`dist/${f}`), readFileSync(`admin/${f}`))).toBe(0);
 		}
 	});
 

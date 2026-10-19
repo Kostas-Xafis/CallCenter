@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { expandRanges, parseDirectory, parseHeading, parseNumbers, splitPath } from "../app/js/parse-directory.js";
 import { readFileSync } from "node:fs";
+import { decodeBytes } from "../app/js/decode.js";
 
 const SAMPLE = [
 	"251 ΓΕΝΙΚΟ ΝΟΣΟΚΟΜΕΙΟ ΑΕΡΟΠΟΡΙΑΣ",
@@ -158,6 +159,12 @@ describe("parseDirectory", () => {
 		expect(r.warnings[0].message).toContain("η εγγραφή παραλείπεται");
 	});
 
+	test("page numbers left at the end by Word are ignored without a warning", () => {
+		const r = parseDirectory("Διοικητής\t4057\n\nΤμήμα\n\n13\n\n\n1\n");
+		expect(r.entries.map(e => e.label)).toEqual(["Διοικητής"]);
+		expect(r.warnings.map(w => w.raw)).toEqual(["Τμήμα"]);
+	});
+
 	test("unparseable numbers are reported", () => {
 		const r = parseDirectory("Διοικητής\t4057\n\nΤμήμα\nΚάτι\t4011 ή κάτι άλλο");
 		expect(r.warnings.length).toBe(1);
@@ -168,7 +175,7 @@ describe("parseDirectory", () => {
 const REAL_TXT = "actual_data/THL_KATALOGOS_251_GNA.txt";
 describe.skipIf(!existsSync(REAL_TXT))("real directory file", () => {
 	test("parses without warnings", () => {
-		const r = parseDirectory(readFileSync(REAL_TXT, "utf8"));
+		const r = parseDirectory(decodeBytes(new Uint8Array(readFileSync(REAL_TXT))).text);
 		expect(r.warnings).toEqual([]);
 		expect(r.entries.length).toBeGreaterThan(600);
 		expect(r.sections.length).toBeGreaterThan(40);

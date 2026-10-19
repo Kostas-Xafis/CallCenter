@@ -1,4 +1,4 @@
-// ── Data payload helpers (development counterpart of update/update.ps1) ──
+// ── Data payload helpers (development counterpart of admin/update.ps1) ──
 //
 // update.ps1 is what administrators run on Windows. This module produces the
 // same payload on the development machine so the app can be built and tested

@@ -57,7 +57,7 @@ export async function build(outDir = DIST) {
 	const html = await buildPage();
 	mkdirSync(join(outDir, "data"), { recursive: true });
 	writeFileSync(join(outDir, "katalogos.html"), html);
-	for (const f of RELEASE_FILES) copyFileSync(join(ROOT, "update", f), join(outDir, f));
+	for (const f of RELEASE_FILES) copyFileSync(join(ROOT, "admin", f), join(outDir, f));
 	// Keeps the empty data/ folder in git; update.ps1 only looks at .csv/.txt.
 	writeFileSync(join(outDir, "data", ".gitkeep"), "");
 	return { size: Buffer.byteLength(html) };

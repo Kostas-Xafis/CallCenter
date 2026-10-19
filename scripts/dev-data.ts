@@ -1,6 +1,6 @@
 // ── Development preview with real data ───────────────────────────────
 //
-// Does on Linux/macOS what update/update.ps1 does on Windows: embeds the
+// Does on Linux/macOS what admin/update.ps1 does on Windows: embeds the
 // DECT export (.csv), the directory export (.txt) and the restricted numbers
 // into the page, and writes it to preview/katalogos.html.
 //
@@ -31,7 +31,7 @@ const csv = pick(".csv");
 const txt = pick(".txt");
 if (!csv && !txt) throw new Error(`No .csv or .txt files in ${dataDir}`);
 
-const restricted = parseRestricted(readFileSync(join(ROOT, "update/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"), "utf8"));
+const restricted = parseRestricted(readFileSync(join(ROOT, "admin/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"), "utf8"));
 const payload = buildPayload({ csv, txt, restricted });
 
 mkdirSync(PREVIEW, { recursive: true });

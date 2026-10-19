@@ -333,10 +333,11 @@ export function parseDirectory(text) {
 		delete section.stripSegment;
 	}
 
-	// Sections that ended up with no entries are noise (e.g. stray headings)
+	// Sections that ended up with no entries are noise (e.g. stray headings).
+	// A lone number is a page number Word leaves in the text export: not worth a warning.
 	const used = new Set(entries.map(e => e.sectionId));
 	for (const s of sections) {
-		if (!used.has(s.id)) warnings.push({ line: null, raw: s.heading ?? s.name, message: "Ενότητα χωρίς αριθμούς" });
+		if (!used.has(s.id) && !/^\d+$/.test(s.name)) warnings.push({ line: null, raw: s.heading ?? s.name, message: "Ενότητα χωρίς αριθμούς" });
 	}
 
 	return { title, info, sections: sections.filter(s => used.has(s.id)), entries, warnings };

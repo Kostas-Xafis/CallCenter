@@ -1,4 +1,4 @@
-// ── Administrator guide: update/guide/ΟΔΗΓΙΕΣ.html → update/ΟΔΗΓΙΕΣ.pdf ──
+// ── Administrator guide: admin/guide/ΟΔΗΓΙΕΣ.html → admin/ΟΔΗΓΙΕΣ.pdf ──
 //
 // Renders the print-styled HTML guide with headless Chrome (Greek fonts are
 // embedded in the PDF). The PDF is committed and copied to dist/ by the build.
@@ -9,8 +9,8 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dir, "..");
-const SOURCE = join(ROOT, "update/guide/ΟΔΗΓΙΕΣ.html");
-const OUTPUT = join(ROOT, "update/ΟΔΗΓΙΕΣ.pdf");
+const SOURCE = join(ROOT, "admin/guide/ΟΔΗΓΙΕΣ.html");
+const OUTPUT = join(ROOT, "admin/ΟΔΗΓΙΕΣ.pdf");
 
 const chrome = ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser"].find(
 	bin => Bun.spawnSync(["which", bin]).exitCode === 0

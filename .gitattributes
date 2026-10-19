@@ -1,6 +1,6 @@
 # Windows scripts for administrators: keep CRLF (and the UTF-8 BOM already in the files)
-update/*.ps1 text eol=crlf
-update/*.cmd text eol=crlf
-update/*.txt text eol=crlf
+admin/*.ps1 text eol=crlf
+admin/*.cmd text eol=crlf
+admin/*.txt text eol=crlf
 # dist/ is downloaded from GitHub as is: store it byte for byte (CRLF, BOM)
 dist/** -text

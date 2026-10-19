@@ -1,4 +1,4 @@
-// Runs update/update.ps1 for real (PowerShell 7 stands in for Windows PowerShell 5.1).
+// Runs admin/update.ps1 for real (PowerShell 7 stands in for Windows PowerShell 5.1).
 // Skipped when PowerShell is not installed.
 
 import { describe, expect, test } from "bun:test";
@@ -21,7 +21,7 @@ const unicodeText = (rows: string[]) => Buffer.concat([Buffer.from([0xff, 0xfe])
 /** A release folder with an empty page, the scripts and the given data files. */
 function setup(files: Record<string, string | Buffer>) {
 	const dir = mkdtempSync(join(tmpdir(), "update-ps1-"));
-	for (const f of ["update.ps1", "ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"]) copyFileSync(join("update", f), join(dir, f));
+	for (const f of ["update.ps1", "ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt"]) copyFileSync(join("admin", f), join(dir, f));
 	writeFileSync(join(dir, "katalogos.html"), PAGE);
 	mkdirSync(join(dir, "data"));
 	for (const [name, content] of Object.entries(files)) writeFileSync(join(dir, "data", name), content);

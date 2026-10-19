@@ -18,7 +18,7 @@ network and no installation. Users open `katalogos.html` with a double click.
 - `katalogos.html` contains the whole app (HTML, CSS, JS, icon) **and** the
   data, inside a block delimited by `<!--CATALOG-DATA-BEGIN-->` /
   `<!--CATALOG-DATA-END-->`.
-- The administrator exports the two source files (see `update/ΟΔΗΓΙΕΣ.pdf`):
+- The administrator exports the two source files (see `admin/ΟΔΗΓΙΕΣ.pdf`):
   the DECT spreadsheet's first sheet as **.csv** and the directory document as
   **.txt**, into `data\`.
 - `update.ps1` (run through `update.cmd`, Windows PowerShell 5.1+) embeds the
@@ -69,19 +69,32 @@ there are any), so the administrator can fix the source.
 
 Numbers that calls must never be transferred to are shown with a red tint and
 a «Μη συνδέετε» tag. The Excel colouring that used to mark them is lost in the
-CSV export, so they are kept in `update/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt` (shipped next to
+CSV export, so they are kept in `admin/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt` (shipped next to
 `update.cmd`): one number at the start of each line, anything after it and
 `#` lines ignored. `update.ps1` refuses to run if the file is missing, so the
 red marks can never disappear by accident; an empty file means "none". The
 dev script reads the same file.
 
+## Folders
+
+| Folder         | What it is                                                        | In git | Changed by          |
+| -------------- | ----------------------------------------------------------------- | ------ | ------------------- |
+| `app/`         | source of the page                                                | yes    | you                 |
+| `admin/`       | source of the administrator kit: scripts, restricted list, guide  | yes    | you                 |
+| `dist/`        | what administrators download: the page **without data** + the kit | yes    | `bun run build` only |
+| `actual_data/` | real exports for development (newest at the top level, older ones in dated subfolders) | no | you |
+| `preview/`     | the page **with real data**, for checking locally                 | no     | `bun run data:dev` only |
+
+Never edit `dist/` by hand, and never put real exports in `dist/data/` — use
+`actual_data/`. `actual_data/` and `preview/` hold personal data.
+
 ## Development
 
 ```bash
 bun install
-bun run build        # app/ + update/ → dist/ (committed; page has NO data)
+bun run build        # app/ + admin/ → dist/ (committed; page has NO data)
 bun run data:dev     # page with the real data from ./actual_data → preview/ (git-ignored)
-bun run guide        # update/guide/ΟΔΗΓΙΕΣ.html → update/ΟΔΗΓΙΕΣ.pdf (needs Chrome)
+bun run guide        # admin/guide/ΟΔΗΓΙΕΣ.html → admin/ΟΔΗΓΙΕΣ.pdf (needs Chrome)
 bun test             # parsers, search, payload, update.ps1, and dist/ being up to date
 ```
 
@@ -99,8 +112,6 @@ bun test             # parsers, search, payload, update.ps1, and dist/ being up 
   (PowerShell 7, e.g. `sudo snap install powershell --classic`) and is
   skipped when it is not installed. It cannot cover Windows-only behaviour
   (PowerShell 5.1, SmartScreen, execution policy).
-
-`actual_data/` and `preview/` hold personal data and are git-ignored.
 
 ### Layout
 
@@ -123,7 +134,7 @@ app/
     normalize.js        text folding helpers
     greek-layout.js     Latin-keyboard → Greek conversion
     theme.js            light/dark theme
-update/
+admin/
   update.ps1            Windows data updater (PowerShell 5.1+, UTF-8 BOM)
   update.cmd            double-click wrapper
   ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt     restricted («Μη συνδέετε») numbers, edited by the administrators
@@ -131,7 +142,7 @@ update/
   guide/ΟΔΗΓΙΕΣ.html    source of the guide (print-styled HTML, rendered with headless Chrome)
   guide/header.png      screenshot used in the guide
 scripts/
-  build.ts              app/ + update/ → dist/
+  build.ts              app/ + admin/ → dist/
   dev-data.ts           page with real data → preview/ (Linux/macOS update.ps1)
   guide.ts              guide HTML → PDF (headless Chrome)
   lib/payload.ts        data block helpers shared by build, dev-data and tests

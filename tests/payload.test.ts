@@ -25,13 +25,13 @@ describe("payload helpers", () => {
 	});
 
 	test("the shipped ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt is readable and saved with a UTF-8 BOM", () => {
-		const bytes = readFileSync("update/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt");
+		const bytes = readFileSync("admin/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt");
 		expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
 		expect(parseRestricted(bytes.toString("utf8"))).toContain("3995");
 	});
 
 	test("update.ps1 uses the same markers and is saved with a UTF-8 BOM", () => {
-		const bytes = readFileSync("update/update.ps1");
+		const bytes = readFileSync("admin/update.ps1");
 		expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
 		const text = bytes.toString("utf8");
 		expect(text).toContain(`'${DATA_BEGIN}'`);
