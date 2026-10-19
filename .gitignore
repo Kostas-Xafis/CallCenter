@@ -1,47 +1,18 @@
 # dependencies (bun install)
 node_modules
 
-# output
-out
-*.tgz
-
-# code coverage
-coverage
-*.lcov
-
-# logs
-logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
-
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# caches
-.eslintcache
-.cache
-*.tsbuildinfo
-
-# IntelliJ based IDEs
+# editor / OS
+.vscode/
 .idea
-
-# Finder (MacOS) folder config
 .DS_Store
 
-*.csv
-**/*.db*
-**/*.sql
-.wrangler
-**/*.bak
-seeds/
+# environment files (never commit secrets)
+.env*
 
 # source data (contains personal data — never commit)
 actual_data/
 preview/
+*.csv
 
 # dist/ is committed (administrators download it from GitHub), but never
 # the files an administrator adds there: exports and backups hold personal data

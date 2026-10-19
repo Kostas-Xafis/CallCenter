@@ -8,6 +8,8 @@ import { join } from "node:path";
 import { dataBlock } from "../scripts/lib/payload.ts";
 
 const pwsh = Bun.which("pwsh") ?? (existsSync("/snap/bin/pwsh") ? "/snap/bin/pwsh" : null);
+// A cold PowerShell start alone can take several seconds.
+const TIMEOUT = 30_000;
 
 const DECT_ROWS = ["Α/Α;ΑΡΙΘΜΟΣ;ΟΝΟΜΑΤΕΠΩΝΥΜΟ;ΔΙΕΥΘΥΝΣΗ;ΘΕΣΗ;ΕΠΙΣΤΑΣΙΑ", "1;3995;ΧΕΙΜΩΝΑΣ ΑΝΤΩΝΙΟΣ;251 ΓΝΑ;ΔΚΤΗΣ;."];
 const DIRECTORY = "Διοικητής\t4057\r\n\r\nΔιεύθυνση Παθολογικού Τομέα (ΔΠΤ)\r\nΓραμματεία\t4270\r\n";
@@ -40,7 +42,7 @@ describe.skipIf(!pwsh)("update.ps1", () => {
 		expect(payload.dect.file).toBe("DECT.csv");
 		expect(payload.directory.file).toBe("KATALOGOS.txt");
 		expect(payload.restricted).toContain("3995");
-	});
+	}, TIMEOUT);
 
 	test("a DECT table saved as .txt (Excel «Κείμενο Unicode») is not used as the directory", () => {
 		const dir = setup({ "DECT.csv": DECT_ROWS.join("\r\n"), "KATALOGOS.txt": DIRECTORY, "DECT.txt": unicodeText(DECT_ROWS) });
@@ -50,14 +52,14 @@ describe.skipIf(!pwsh)("update.ps1", () => {
 		expect(code).toBe(0);
 		expect(payload.directory.file).toBe("KATALOGOS.txt");
 		expect(out).toContain("«DECT.txt» έχει τις στήλες του DECT");
-	});
+	}, TIMEOUT);
 
 	test("without a .csv, a DECT table saved as .txt is used for DECT", () => {
 		const { code, payload } = run(setup({ "KATALOGOS.txt": DIRECTORY, "DECT.txt": unicodeText(DECT_ROWS) }));
 		expect(code).toBe(0);
 		expect(payload.dect.file).toBe("DECT.txt");
 		expect(payload.directory.file).toBe("KATALOGOS.txt");
-	});
+	}, TIMEOUT);
 
 	test("only DECT tables as .txt: explains that the directory is missing", () => {
 		const { code, out, payload } = run(setup({ "DECT.csv": DECT_ROWS.join("\r\n"), "DECT.txt": unicodeText(DECT_ROWS) }));
@@ -65,7 +67,7 @@ describe.skipIf(!pwsh)("update.ps1", () => {
 		expect(out).toContain("Δεν βρέθηκε αρχείο καταλόγου");
 		expect(out).toContain("εξαγωγές του DECT");
 		expect(payload).toBeNull();
-	});
+	}, TIMEOUT);
 
 	test.skipIf(process.getuid?.() === 0)("read-only page: clear message, page untouched, no .tmp left", () => {
 		const dir = setup({ "DECT.csv": DECT_ROWS.join("\r\n"), "KATALOGOS.txt": DIRECTORY });
@@ -76,5 +78,5 @@ describe.skipIf(!pwsh)("update.ps1", () => {
 		expect(out).toContain("Μόνο για ανάγνωση");
 		expect(payload).toBeNull();
 		expect(readdirSync(dir).filter(f => f.endsWith(".tmp"))).toEqual([]);
-	});
+	}, TIMEOUT);
 });

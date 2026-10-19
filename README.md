@@ -23,9 +23,13 @@ network and no installation. Users open `katalogos.html` with a double click.
   **.txt**, into `data\`.
 - `update.ps1` (run through `update.cmd`, Windows PowerShell 5.1+) embeds the
   two files **byte for byte** (base64) in the data block. It does no parsing
-  and needs nothing beyond stock Windows.
+  and needs nothing beyond stock Windows. It takes the newest `.csv` and
+  `.txt` in `data\`; a `.txt` whose header has the DECT columns (Excel
+  «Κείμενο Unicode») is never used as the directory — it is used as the DECT
+  file when there is no `.csv`, and skipped with a warning otherwise.
 - The page does everything else when it opens (`app/js`):
-  - `decode.js` — encoding detection: UTF-8 (± BOM), UTF-16, Windows-1253;
+  - `decode.js` — encoding detection: UTF-8 (± BOM), UTF-16 LE/BE (± BOM),
+    Windows-1253 and code page 737 (Excel «CSV (MS-DOS)»);
   - `parse-csv.js` — RFC 4180 CSV, separator detected (`,` `;` or tab);
   - `parse-dect.js`, `parse-directory.js` — the actual data model.
 
@@ -78,7 +82,7 @@ bun install
 bun run build        # app/ + update/ → dist/ (committed; page has NO data)
 bun run data:dev     # page with the real data from ./actual_data → preview/ (git-ignored)
 bun run guide        # update/guide/ΟΔΗΓΙΕΣ.html → update/ΟΔΗΓΙΕΣ.pdf (needs Chrome)
-bun test             # parsers, search, payload, and dist/ being up to date
+bun test             # parsers, search, payload, update.ps1, and dist/ being up to date
 ```
 
 - **`dist/` is committed** because administrators cannot run Bun/Node: they
@@ -91,6 +95,10 @@ bun test             # parsers, search, payload, and dist/ being up to date
 - `bun run data:dev [folder]` is the Linux/macOS equivalent of `update.ps1`.
   The real script can also be run here with PowerShell for Linux:
   `pwsh -File dist/update.ps1` (in a copy of dist/, not in the repo).
+- `tests/update-script.test.ts` runs the real `update.ps1` with `pwsh`
+  (PowerShell 7, e.g. `sudo snap install powershell --classic`) and is
+  skipped when it is not installed. It cannot cover Windows-only behaviour
+  (PowerShell 5.1, SmartScreen, execution policy).
 
 `actual_data/` and `preview/` hold personal data and are git-ignored.
 
@@ -123,8 +131,16 @@ update/
   guide/ΟΔΗΓΙΕΣ.html    source of the guide (print-styled HTML, rendered with headless Chrome)
   guide/header.png      screenshot used in the guide
 scripts/
-  build.ts, dev-data.ts, lib/payload.ts
+  build.ts              app/ + update/ → dist/
+  dev-data.ts           page with real data → preview/ (Linux/macOS update.ps1)
+  guide.ts              guide HTML → PDF (headless Chrome)
+  lib/payload.ts        data block helpers shared by build, dev-data and tests
 tests/
+  data-and-search.test.ts   decoding, CSV/DECT parsing, model, search
+  parse-directory.test.ts   directory text rules and edge cases
+  payload.test.ts           data block, restricted numbers, script markers
+  update-script.test.ts     the real update.ps1 (needs pwsh)
+  release.test.ts           dist/ is complete, current and data-free
 ```
 
 ## Release
