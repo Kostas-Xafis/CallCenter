@@ -1,7 +1,7 @@
 // ── Data model ───────────────────────────────────────────────────────
 //
-// Turns the payload embedded by update.ps1 into display records shared by
-// both sources:
+// Turns a schema-3 catalog (docs/CONTRACT.md) into display records shared by
+// both phone types:
 //
 //   Record {
 //     key, source: "dir" | "dect", order,
@@ -15,13 +15,9 @@
 //     dirKey, dirTitle
 //     shared         DECT handset used by a role/duty rather than a person
 //     restricted     never transfer calls to this number
-//     section        directory section (for grouping)
+//     section        { id, abbr, name, parent } for desk phones (for grouping), null for DECT
 //   }
 
-import { parseDirectory, expandRanges } from "./parse-directory.js";
-import { parseDect } from "./parse-dect.js";
-import { parseCsv } from "./parse-csv.js";
-import { base64ToBytes, decodeBytes, looksGreek } from "./decode.js";
 import { abbrKey } from "./normalize.js";
 
 export const SOURCES = {
@@ -40,138 +36,99 @@ const SOURCE_TERMS = {
 	dect: { text: "Ασύρματα ασύρματο ασύρματος ασύρματοι DECT", weight: 0.3 }
 };
 
-/** Reads the JSON payload embedded in the page. */
-export function readEmbeddedPayload(doc = document) {
-	const el = doc.getElementById("catalog-data");
-	if (!el) return null;
-	try {
-		return JSON.parse(el.textContent || "null");
-	} catch (err) {
-		console.error("Μη έγκυρα ενσωματωμένα δεδομένα", err);
-		return null;
-	}
+const MAX_RANGE_EXPANSION = 100;
+
+/** Splits "5501-5511" into { from, to }; anything else is a plain extension. */
+function parseRange(token) {
+	const m = /^\s*(\d+)\s*[-–]\s*(\d+)\s*$/.exec(token);
+	return m ? { from: m[1], to: m[2] } : null;
 }
 
-/**
- * Decodes one embedded source file ({ file, modified, base64 }).
- * @returns {{ text: string, encoding: string } | null}
- */
-function decodeSource(source, label, warnings, key) {
-	if (!source) return null;
-	try {
-		const decoded = decodeBytes(base64ToBytes(source.base64 ?? ""));
-		if (decoded.text.trim() && !looksGreek(decoded.text)) {
-			warnings.push({
-				source: key,
-				message: `Το αρχείο ${label} «${source.file}» δεν περιέχει ελληνικούς χαρακτήρες — πιθανώς αποθηκεύτηκε με λάθος κωδικοποίηση (επιλέξτε UTF-8).`
-			});
-		}
-		return decoded;
-	} catch (err) {
-		warnings.push({ source: key, message: `Αδύνατη η ανάγνωση του αρχείου ${label} «${source.file}»: ${err.message}` });
-		return null;
+/** Expands ranges ({ from, to }[]) into individual numbers (used for searching). */
+export function expandRanges(ranges) {
+	const out = [];
+	for (const { from, to } of ranges) {
+		const a = Number(from);
+		const b = Number(to);
+		if (!(b >= a) || b - a > MAX_RANGE_EXPANSION) continue;
+		for (let n = a; n <= b; n++) out.push(String(n).padStart(from.length, "0"));
 	}
+	return out;
 }
 
-/** Builds the application model from the payload. */
-export function buildModel(payload) {
-	const warnings = [];
-	const records = [];
-	const restricted = new Set((payload?.restricted ?? []).map(String));
+const NO_SECTION = { id: "none", abbr: "", name: "—", parent: "" };
+
+/** Builds the application model from a catalog (schema 3). */
+export function buildModel(catalog) {
+	const sections = new Map();
+	const rawSections = catalog?.sections ?? [];
+	const rawById = new Map(rawSections.map(s => [s.id, s]));
+	rawSections.forEach((s, i) => {
+		const parent = s.parentId ? rawById.get(s.parentId) : null;
+		sections.set(s.id, { id: s.id, abbr: s.abbr || "", name: s.name || "", parent: parent ? parent.abbr || parent.name || "" : "", order: i });
+	});
+
 	const directorates = new Map(); // dirKey → { key, abbr, title, count, hasAbbr }
-
 	const addDirectorate = (key, abbr, title) => {
 		let d = directorates.get(key);
 		if (!d) directorates.set(key, (d = { key, abbr, title, count: 0, hasAbbr: Boolean(abbr) }));
-		if (!d.title && title) d.title = title;
 		d.count++;
-		return d;
 	};
 
-	// ── Decode & parse ──
-	const dectSource = decodeSource(payload?.dect, "DECT", warnings, "dect");
-	const dirSource = decodeSource(payload?.directory, "καταλόγου", warnings, "dir");
+	const phones = (catalog?.phones ?? []).map((p, i) => ({ p, i, section: sections.get(p.sectionId) ?? NO_SECTION }));
+	// Desk phones grouped by section (section order, then array order); DECT after them, by number.
+	const dirs = phones.filter(x => x.p.type !== "dect").sort((a, b) => (a.section.order ?? Infinity) - (b.section.order ?? Infinity) || a.i - b.i);
+	const dects = phones
+		.filter(x => x.p.type === "dect")
+		.sort((a, b) => Number(a.p.numbers[0]) - Number(b.p.numbers[0]) || String(a.p.numbers[0]).localeCompare(String(b.p.numbers[0])) || a.i - b.i);
 
-	const dect = parseDect(dectSource ? parseCsv(dectSource.text) : []);
-	if (dectSource) warnings.push(...dect.warnings.map(w => ({ source: "dect", ...w })));
+	const records = [];
+	for (const { p, section } of [...dirs, ...dects]) {
+		const source = p.type === "dect" ? "dect" : "dir";
+		const abbr = section.abbr;
+		const dirKey = abbr ? abbrKey(abbr) : `name:${section.name}`;
+		addDirectorate(dirKey, abbr, section.name);
 
-	const directory = dirSource ? parseDirectory(dirSource.text) : null;
-	if (directory) warnings.push(...directory.warnings.map(w => ({ source: "dir", ...w })));
-
-	// Full directorate names come from the directory headings ("Διεύθυνση Τομέα Εργαστηρίων (ΔΤΕ)").
-	const lookup = new Map();
-	for (const s of directory?.sections ?? []) {
-		if (s.abbr && !lookup.has(abbrKey(s.abbr))) lookup.set(abbrKey(s.abbr), s.name);
-	}
-
-	if (directory) {
-		const sectionById = new Map(directory.sections.map(s => [s.id, s]));
-		for (const e of directory.entries) {
-			const section = sectionById.get(e.sectionId);
-			const abbr = section.abbr;
-			const key = abbr ? abbrKey(abbr) : `name:${section.name}`;
-			const title = section.name;
-			addDirectorate(key, abbr, title);
-
-			const numbers = [...e.extensions, ...e.ranges.map(r => `${r.from}–${r.to}`)];
-			records.push({
-				key: `dir:${e.id}`,
-				source: "dir",
-				order: records.length,
-				numbers,
-				searchNumbers: [...e.extensions, ...expandRanges(e.ranges), ...e.ranges.map(r => r.from), ...e.external.map(x => x.replace(/\D/g, ""))],
-				external: e.external,
-				name: e.label,
-				position: "",
-				unit: e.path.join(" › "),
-				dir: abbr || section.name,
-				dirKey: key,
-				dirTitle: title,
-				shared: false,
-				restricted: [...e.extensions, ...expandRanges(e.ranges)].some(n => restricted.has(n)),
-				section,
-				raw: e.raw,
-				searchFields: {
-					name: { text: e.label, weight: 1 },
-					unit: { text: e.path.join(" › "), weight: 0.85 },
-					abbr: { text: abbr ?? "", weight: ABBR_WEIGHT },
-					parent: { text: section.parent ?? "", weight: ABBR_WEIGHT },
-					dir: { text: section.name, weight: 0.6 },
-					source: SOURCE_TERMS.dir
-				}
-			});
+		const extensions = [];
+		const ranges = [];
+		for (const n of p.numbers ?? []) {
+			const r = parseRange(n);
+			if (r) ranges.push(r);
+			else extensions.push(String(n).trim());
 		}
-	}
+		const external = p.external ?? [];
+		const numbers = (p.numbers ?? []).map(n => {
+			const r = parseRange(n);
+			return r ? `${r.from}–${r.to}` : String(n).trim();
+		});
+		const unit = p.unit ?? "";
+		const position = p.position ?? "";
+		const name = p.name ?? "";
 
-	// ── DECT records (sorted by number) ──
-	const dectSorted = [...dect.records].sort((a, b) => Number(a.number) - Number(b.number) || a.number.localeCompare(b.number));
-	for (const r of dectSorted) {
-		const key = r.dir ? abbrKey(r.dir) : "name:—";
-		const title = lookup.get(abbrKey(r.dir)) || "";
-		addDirectorate(key, r.dir || "—", title);
 		records.push({
-			key: `dect:${r.id}`,
-			source: "dect",
+			key: `${source}:${p.id}`,
+			source,
 			order: records.length,
-			numbers: [r.number],
-			searchNumbers: [r.number],
-			external: [],
-			name: r.name,
-			position: r.position,
-			unit: r.unit,
-			dir: r.dir,
-			dirKey: key,
-			dirTitle: title,
-			shared: r.shared,
-			restricted: restricted.has(r.number),
-			section: null,
+			numbers,
+			searchNumbers: [...extensions, ...expandRanges(ranges), ...ranges.map(r => r.from), ...external.map(x => x.replace(/\D/g, ""))],
+			external,
+			name,
+			position,
+			unit,
+			dir: abbr || section.name,
+			dirKey,
+			dirTitle: section.name,
+			shared: Boolean(p.shared),
+			restricted: Boolean(p.restricted),
+			section: source === "dir" ? section : null,
 			searchFields: {
-				name: { text: r.name, weight: 1 },
-				position: { text: r.position, weight: 0.8 },
-				unit: { text: r.unit, weight: 0.85 },
-				abbr: { text: r.dir, weight: ABBR_WEIGHT },
-				dir: { text: title, weight: 0.6 },
-				source: SOURCE_TERMS.dect
+				name: { text: name, weight: 1 },
+				...(source === "dect" ? { position: { text: position, weight: 0.8 } } : {}),
+				unit: { text: unit, weight: 0.85 },
+				abbr: { text: abbr, weight: ABBR_WEIGHT },
+				...(source === "dir" ? { parent: { text: section.parent, weight: ABBR_WEIGHT } } : {}),
+				dir: { text: section.name, weight: 0.6 },
+				source: SOURCE_TERMS[source]
 			}
 		});
 	}
@@ -179,18 +136,8 @@ export function buildModel(payload) {
 	return {
 		records,
 		directorates: [...directorates.values()].sort((a, b) => (a.abbr || a.title).localeCompare(b.abbr || b.title, "el")),
-		title: directory?.title ?? null,
-		info: directory?.info ?? [],
-		warnings,
-		meta: {
-			generatedAt: payload?.generatedAt ?? null,
-			dect: dectSource
-				? { file: payload.dect.file, modified: payload.dect.modified, encoding: dectSource.encoding, count: dect.records.length }
-				: null,
-			directory: dirSource
-				? { file: payload.directory.file, modified: payload.directory.modified, encoding: dirSource.encoding, count: directory.entries.length }
-				: null,
-			restrictedCount: restricted.size
-		}
+		title: catalog?.title ?? null,
+		info: catalog?.info ?? [],
+		meta: { generatedAt: catalog?.updatedAt ?? null }
 	};
 }

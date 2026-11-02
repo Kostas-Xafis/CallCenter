@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Διαχείριση καταλόγου · 251 ΓΝΑ</title>
+	<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+	<script>
+		(function () {
+			var t = null;
+			try { t = localStorage.getItem("callcenter-theme"); } catch (e) {}
+			if (!t) t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+			if (t === "dark") document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="admin.css">
+	<script type="module" src="js/admin.js"></script>
+</head>
+<body class="adm" hidden>
+	<div class="adm-shell">
+		<header class="card adm-header">
+			<div class="adm-title">
+				<h1>Διαχείριση καταλόγου</h1>
+				<p class="subtitle" id="lastSaved"></p>
+			</div>
+			<nav class="adm-actions">
+				<a class="adm-btn" href="catalog.html">Προβολή καταλόγου</a>
+				<a class="adm-btn" href="print.html">Εκτύπωση</a>
+				<button class="adm-btn" id="passwordBtn" type="button">Αλλαγή κωδικού</button>
+				<button class="adm-btn adm-btn-exit" id="logoutBtn" type="button">Έξοδος</button>
+				<button class="icon-btn theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Εναλλαγή σκούρας εμφάνισης">
+					<svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+					<svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+				</button>
+			</nav>
+		</header>
+
+		<div class="adm-body">
+			<aside class="card adm-side">
+				<div class="adm-side-top">
+					<h2>Διευθύνσεις</h2>
+					<button class="adm-btn adm-btn-primary" id="newSectionBtn" type="button">+ Νέα διεύθυνση</button>
+					<input class="adm-input" id="sectionFilter" type="search" placeholder="Φίλτρο διευθύνσεων…" autocomplete="off" spellcheck="false" aria-label="Φίλτρο διευθύνσεων">
+				</div>
+				<ul class="adm-sections" id="sectionList" role="listbox" aria-label="Διευθύνσεις"></ul>
+			</aside>
+
+			<main class="card adm-main">
+				<div class="adm-main-top">
+					<div class="adm-current">
+						<h2 id="currentTitle"></h2>
+						<p class="adm-current-sub" id="currentSub"></p>
+					</div>
+					<div class="adm-main-buttons">
+						<button class="adm-btn" id="editSectionBtn" type="button" hidden>Επεξεργασία διεύθυνσης</button>
+						<button class="adm-btn adm-btn-primary" id="newPhoneBtn" type="button">+ Νέο τηλέφωνο</button>
+					</div>
+				</div>
+				<div class="adm-search">
+					<svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+					<input class="adm-input" id="phoneSearch" type="search" placeholder="Αναζήτηση σε όλα τα τηλέφωνα (όνομα ή αριθμός)…" autocomplete="off" spellcheck="false" aria-label="Αναζήτηση τηλεφώνων">
+				</div>
+				<div class="adm-table-wrap">
+					<table class="adm-table">
+						<thead>
+							<tr>
+								<th>Τύπος</th>
+								<th>Αριθμοί</th>
+								<th>Όνομα / Περιγραφή</th>
+								<th>Θέση</th>
+								<th>Τμήμα</th>
+								<th>Εξωτερικά</th>
+								<th class="col-section">Διεύθυνση</th>
+								<th class="col-restricted">Μη συνδέετε</th>
+							</tr>
+						</thead>
+						<tbody id="phoneRows"></tbody>
+					</table>
+					<p class="empty" id="phonesEmpty" hidden></p>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+	<!-- Section editor -->
+	<dialog id="sectionDialog" class="adm-dialog">
+		<form id="sectionForm" method="dialog" novalidate>
+			<h2 id="sectionDialogTitle">Διεύθυνση</h2>
+			<label class="adm-field">
+				<span>Όνομα</span>
+				<input class="adm-input" name="name" type="text" autocomplete="off" placeholder="π.χ. Διεύθυνση Τομέα Εργαστηρίων">
+			</label>
+			<label class="adm-field">
+				<span>Συντομογραφία</span>
+				<input class="adm-input" name="abbr" type="text" autocomplete="off" placeholder="π.χ. ΔΤΕ (προαιρετικό)">
+			</label>
+			<label class="adm-field">
+				<span>Ανήκει στη διεύθυνση</span>
+				<select name="parentId"></select>
+			</label>
+			<p class="adm-error" data-error hidden></p>
+			<div class="adm-dialog-buttons">
+				<button class="adm-btn adm-btn-danger" type="button" data-delete>Διαγραφή διεύθυνσης</button>
+				<span class="spacer"></span>
+				<button class="adm-btn" type="button" data-cancel>Άκυρο</button>
+				<button class="adm-btn adm-btn-primary" type="submit">Αποθήκευση</button>
+			</div>
+		</form>
+	</dialog>
+
+	<!-- Phone editor -->
+	<dialog id="phoneDialog" class="adm-dialog adm-dialog-wide">
+		<form id="phoneForm" method="dialog" novalidate>
+			<h2 id="phoneDialogTitle">Τηλέφωνο</h2>
+
+			<label class="adm-restricted-toggle">
+				<input type="checkbox" name="restricted">
+				<span class="switch" aria-hidden="true"></span>
+				<span class="adm-restricted-text">
+					<strong>Μη συνδέετε κλήσεις</strong>
+					<small>Ενεργοποιήστε το αν δεν πρέπει να μεταφέρονται κλήσεις σε αυτό το τηλέφωνο.</small>
+				</span>
+			</label>
+
+			<fieldset class="adm-field adm-type">
+				<legend>Τύπος</legend>
+				<label><input type="radio" name="type" value="dir"><span class="src-icon src-dir" aria-hidden="true"></span>Σταθερό</label>
+				<label><input type="radio" name="type" value="dect"><span class="src-icon src-dect" aria-hidden="true"></span>Ασύρματο</label>
+			</fieldset>
+
+			<div class="adm-grid">
+				<label class="adm-field">
+					<span>Εσωτερικοί αριθμοί</span>
+					<input class="adm-input" name="numbers" type="text" inputmode="numeric" autocomplete="off" placeholder="π.χ. 4332, 4384, 5501-5511">
+					<small>Χωρίστε με κόμμα. Για σειρά αριθμών γράψτε π.χ. 5501-5511.</small>
+				</label>
+				<label class="adm-field">
+					<span>Εξωτερικές γραμμές</span>
+					<input class="adm-input" name="external" type="text" autocomplete="off" placeholder="π.χ. 210-7786449 (προαιρετικό)">
+					<small>Χωρίστε με κόμμα αν είναι περισσότερες.</small>
+				</label>
+				<label class="adm-field adm-span">
+					<span>Όνομα / Περιγραφή</span>
+					<input class="adm-input" name="name" type="text" autocomplete="off" placeholder="π.χ. Αιμοδοσία ή ΠΑΠΑΔΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ">
+				</label>
+				<label class="adm-field">
+					<span>Θέση</span>
+					<input class="adm-input" name="position" type="text" autocomplete="off" placeholder="π.χ. Διευθυντής (προαιρετικό)">
+				</label>
+				<label class="adm-field">
+					<span>Τμήμα / Επιστασία</span>
+					<input class="adm-input" name="unit" type="text" autocomplete="off" placeholder="προαιρετικό">
+				</label>
+				<label class="adm-field adm-span">
+					<span>Διεύθυνση</span>
+					<select name="sectionId"></select>
+				</label>
+				<label class="adm-check adm-span">
+					<input type="checkbox" name="shared">
+					<span><span class="tag tag-shared">Κοινόχρηστο</span> Συσκευή υπηρεσίας / εφημερίας</span>
+				</label>
+			</div>
+
+			<p class="adm-error" data-error hidden></p>
+			<div class="adm-dialog-buttons">
+				<button class="adm-btn adm-btn-danger" type="button" data-delete>Διαγραφή τηλεφώνου</button>
+				<span class="spacer"></span>
+				<button class="adm-btn" type="button" data-cancel>Άκυρο</button>
+				<button class="adm-btn adm-btn-primary" type="submit">Αποθήκευση</button>
+			</div>
+		</form>
+	</dialog>
+
+	<!-- Change password -->
+	<dialog id="passwordDialog" class="adm-dialog">
+		<form id="passwordForm" method="dialog" novalidate>
+			<h2>Αλλαγή κωδικού</h2>
+			<label class="adm-field">
+				<span>Τρέχων κωδικός</span>
+				<input class="adm-input" name="old" type="password" autocomplete="current-password">
+			</label>
+			<label class="adm-field">
+				<span>Νέος κωδικός</span>
+				<input class="adm-input" name="new1" type="password" autocomplete="new-password">
+			</label>
+			<label class="adm-field">
+				<span>Νέος κωδικός ξανά</span>
+				<input class="adm-input" name="new2" type="password" autocomplete="new-password">
+			</label>
+			<p class="adm-error" data-error hidden></p>
+			<div class="adm-dialog-buttons">
+				<span class="spacer"></span>
+				<button class="adm-btn" type="button" data-cancel>Άκυρο</button>
+				<button class="adm-btn adm-btn-primary" type="submit">Αλλαγή κωδικού</button>
+			</div>
+		</form>
+	</dialog>
+
+	<!-- Messages and confirmations -->
+	<dialog id="messageDialog" class="adm-dialog">
+		<form method="dialog">
+			<h2 id="messageTitle"></h2>
+			<p class="adm-message" id="messageText"></p>
+			<div class="adm-dialog-buttons">
+				<span class="spacer"></span>
+				<button class="adm-btn" type="submit" value="cancel" id="messageCancel">Άκυρο</button>
+				<button class="adm-btn adm-btn-primary" type="submit" value="ok" id="messageOk">Εντάξει</button>
+			</div>
+		</form>
+	</dialog>
+</body>
+</html>

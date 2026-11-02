@@ -1,16 +1,10 @@
-// ── Administrator guide: admin/guide/ΟΔΗΓΙΕΣ.html → admin/ΟΔΗΓΙΕΣ.pdf ──
-//
-// Renders the print-styled HTML guide with headless Chrome (Greek fonts are
-// embedded in the PDF). The PDF is committed and copied to dist/ by the build.
-//
-//   bun run guide
-
+// Renders guide/ΟΔΗΓΙΕΣ.html to guide/ΟΔΗΓΙΕΣ.pdf with headless Chrome.  bun run guide
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dir, "..");
-const SOURCE = join(ROOT, "admin/guide/ΟΔΗΓΙΕΣ.html");
-const OUTPUT = join(ROOT, "admin/ΟΔΗΓΙΕΣ.pdf");
+const SOURCE = join(ROOT, "guide/ΟΔΗΓΙΕΣ.html");
+const OUTPUT = join(ROOT, "guide/ΟΔΗΓΙΕΣ.pdf");
 
 const chrome = ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser"].find(
 	bin => Bun.spawnSync(["which", bin]).exitCode === 0
@@ -18,13 +12,8 @@ const chrome = ["google-chrome", "google-chrome-stable", "chromium", "chromium-b
 if (!chrome) throw new Error("Chrome/Chromium is needed to render the guide");
 
 const proc = Bun.spawnSync([
-	chrome,
-	"--headless=new",
-	"--disable-gpu",
-	"--no-sandbox",
-	"--no-pdf-header-footer",
-	`--print-to-pdf=${OUTPUT}`,
-	`file://${SOURCE}`
+	chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer",
+	`--print-to-pdf=${OUTPUT}`, `file://${SOURCE}`
 ]);
 if (proc.exitCode !== 0 || !existsSync(OUTPUT)) {
 	console.error(proc.stderr.toString());

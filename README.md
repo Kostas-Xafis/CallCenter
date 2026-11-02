@@ -1,166 +1,52 @@
-# 251 ΓΝΑ · Τηλεφωνικός Κατάλογος
+# Τηλεφωνικός Κατάλογος
 
-A single, self-contained HTML page for the hospital call center: search the
-telephone directory and the DECT handset inventory, with no server, no
-network and no installation. Users open `katalogos.html` with a double click.
+Phone directory for the call center of 251 ΓΝΑ. A small Tauri 2 desktop app
+(Windows): one portable `.exe` placed in a shared network folder, run by every
+call-center PC. Everyone can browse and search; an administrator (password)
+can edit sections and phones and print the list.
 
-```
-            development (this repo, Bun)                       administrator (Windows)
- app/  ──►  bun run build  ──►  dist/katalogos.html  ──copy──►  update.cmd  ──►  katalogos.html
-                                dist/update.cmd, update.ps1         ▲            (data block rewritten)
-                                                                    │
-                                          data\DECT ΑΠΟΓΡΑΦΗ.csv      (Excel → Save as → CSV)
-                                          data\THL_KATALOGOS_251_GNA.txt (Word → Save as → Plain text)
-```
+## Layout
 
-## How it works
+| folder | what |
+| --- | --- |
+| `app/` | the UI: plain HTML/CSS/ES modules, no bundler. `js/api.js` is the only code that talks to the backend (and has a browser mock). `assets/logo.png` is the source of the icons in `src-tauri/icons/` |
+| `src-tauri/` | Rust backend: reads/writes `catalog.json`, password, backups |
+| `docs/` | `CONTRACT.md`, the binding spec (data schema, backend commands, pages) |
+| `guide/` | the customer guide in Greek (`ΟΔΗΓΙΕΣ.html` -> `ΟΔΗΓΙΕΣ.pdf`, `bun run guide`) |
+| `tests/` | `bun test` for the search/data modules |
 
-- `katalogos.html` contains the whole app (HTML, CSS, JS, icon) **and** the
-  data, inside a block delimited by `<!--CATALOG-DATA-BEGIN-->` /
-  `<!--CATALOG-DATA-END-->`.
-- The administrator exports the two source files (see `admin/ΟΔΗΓΙΕΣ.pdf`):
-  the DECT spreadsheet's first sheet as **.csv** and the directory document as
-  **.txt**, into `data\`.
-- `update.ps1` (run through `update.cmd`, Windows PowerShell 5.1+) embeds the
-  two files **byte for byte** (base64) in the data block. It does no parsing
-  and needs nothing beyond stock Windows. It takes the newest `.csv` and
-  `.txt` in `data\`; a `.txt` whose header has the DECT columns (Excel
-  «Κείμενο Unicode») is never used as the directory — it is used as the DECT
-  file when there is no `.csv`, and skipped with a warning otherwise.
-- The page does everything else when it opens (`app/js`):
-  - `decode.js` — encoding detection: UTF-8 (± BOM), UTF-16 LE/BE (± BOM),
-    Windows-1253 and code page 737 (Excel «CSV (MS-DOS)»);
-  - `parse-csv.js` — RFC 4180 CSV, separator detected (`,` `;` or tab);
-  - `parse-dect.js`, `parse-directory.js` — the actual data model.
+## Data
 
-Payload (schema 2):
+Next to the exe, in the shared folder: `catalog.json` (the data), `admin.json`
+(password hash) and `backup/` (last 30 versions, one per save). Saves are
+refused with a conflict if someone else saved first, and the view polls for
+changes every 30 s. Details: [docs/CONTRACT.md](docs/CONTRACT.md).
 
-```js
-{ schema: 2, generatedAt, generator,
-  dect:      { file, modified, base64 },   // the .csv
-  directory: { file, modified, base64 },   // the .txt
-  restricted: ["3995", …] }
-```
-
-The DECT export is used exactly as maintained: columns are found by their
-header text (`ΑΡΙΘΜΟΣ`, `ΟΝΟΜΑΤΕΠΩΝΥΜΟ`, `ΔΙΕΥΘΥΝΣΗ`, `ΘΕΣΗ`, `ΕΠΙΣΤΑΣΙΑ`),
-unassigned numbers are skipped and `*`-prefixed names are shown as
-shared/duty handsets. Full directorate names come from the directory
-headings ("Διεύθυνση Τομέα Εργαστηρίων (ΔΤΕ)").
-
-The directory text is preprocessed into this schema (see
-`app/js/parse-directory.js` for all the rules and edge cases):
-
-```js
-Section { id, name, abbr, parent, heading }
-// "ΔΥΠ / Σμήνος Μεταφορικών Μέσων (ΣΜΜ)" → { name: "Σμήνος Μεταφορικών Μέσων", abbr: "ΣΜΜ", parent: "ΔΥΠ" }
-
-Entry { id, sectionId, path[], label, extensions[], ranges[], external[], raw, line }
-// "Βιοπαθολογία. Αιμοδοσία\t4332,4384\t\t210-7786449"
-//   → { path: ["Βιοπαθολογία"], label: "Αιμοδοσία", extensions: ["4332","4384"], external: ["210-7786449"] }
-```
-
-Problems (unrecognized lines, missing columns, duplicate numbers, a file that
-looks like it was saved with the wrong encoding) appear as a
-«⚠ προειδοποιήσεις» link under the «Τελευταία ενημέρωση» date (only when
-there are any), so the administrator can fix the source.
-
-### Restricted numbers
-
-Numbers that calls must never be transferred to are shown with a red tint and
-a «Μη συνδέετε» tag. The Excel colouring that used to mark them is lost in the
-CSV export, so they are kept in `admin/ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt` (shipped next to
-`update.cmd`): one number at the start of each line, anything after it and
-`#` lines ignored. `update.ps1` refuses to run if the file is missing, so the
-red marks can never disappear by accident; an empty file means "none". The
-dev script reads the same file.
-
-## Folders
-
-| Folder         | What it is                                                        | In git | Changed by          |
-| -------------- | ----------------------------------------------------------------- | ------ | ------------------- |
-| `app/`         | source of the page                                                | yes    | you                 |
-| `admin/`       | source of the administrator kit: scripts, restricted list, guide  | yes    | you                 |
-| `dist/`        | what administrators download: the page **without data** + the kit | yes    | `bun run build` only |
-| `actual_data/` | real exports for development (newest at the top level, older ones in dated subfolders) | no | you |
-| `preview/`     | the page **with real data**, for checking locally                 | no     | `bun run data:dev` only |
-
-Never edit `dist/` by hand, and never put real exports in `dist/data/` — use
-`actual_data/`. `actual_data/` and `preview/` hold personal data.
+Forgotten password: delete `admin.json`; the next «Διαχείριση» asks for a new one.
 
 ## Development
 
-```bash
+```sh
 bun install
-bun run build        # app/ + admin/ → dist/ (committed; page has NO data)
-bun run data:dev     # page with the real data from ./actual_data → preview/ (git-ignored)
-bun run guide        # admin/guide/ΟΔΗΓΙΕΣ.html → admin/ΟΔΗΓΙΕΣ.pdf (needs Chrome)
-bun test             # parsers, search, payload, update.ps1, and dist/ being up to date
+bun run tauri dev      # uses workspace/catalog.json, or the folder in CATALOG_DIR
 ```
 
-- **`dist/` is committed** because administrators cannot run Bun/Node: they
-  download the `static-catalog` branch ZIP from GitHub and copy it to their PC.
-  Always run `bun run build` before committing; `tests/release.test.ts` fails
-  if `dist/` is out of date or its page contains data.
-- `dist/data/*` and `dist/backup/` are git-ignored, so nothing an administrator
-  adds there can be committed by accident. `dist/**` is stored byte for byte
-  (`-text`) so the Windows scripts keep their CRLF and BOM in the ZIP.
-- `bun run data:dev [folder]` is the Linux/macOS equivalent of `update.ps1`.
-  The real script can also be run here with PowerShell for Linux:
-  `pwsh -File dist/update.ps1` (in a copy of dist/, not in the repo).
-- `tests/update-script.test.ts` runs the real `update.ps1` with `pwsh`
-  (PowerShell 7, e.g. `sudo snap install powershell --classic`) and is
-  skipped when it is not installed. It cannot cover Windows-only behaviour
-  (PowerShell 5.1, SmartScreen, execution policy).
+To work without Tauri, serve `app/` statically (e.g. `python3 -m http.server`
+inside `app/`) and open `index.html`. The mock in `api.js` loads
+`app/dev-catalog.json` (copy it from `workspace/catalog.json`), keeps edits in
+localStorage, and accepts the password `admin`. `workspace/`, `catalog.json`,
+`admin.json` and `app/dev-catalog.json` hold real staff data and are git-ignored.
 
-### Layout
+## Tests
 
-```
-app/
-  index.html            page template (placeholders for CSS/JS + empty data block)
-  styles.css
-  assets/
-    icon.svg            browser-tab icon (inlined by the build)
-    logo-128.png        header logo (inlined by the build; trimmed/downscaled from logo.png)
-    logo.png            original 1024×1024 logo (source only, not embedded)
-  js/
-    main.js             UI: search box, source tabs, directorate filter, results
-    data.js             payload → unified records for both sources
-    decode.js           embedded bytes → text (encoding detection)
-    parse-csv.js        CSV → rows (separator detection)
-    parse-directory.js  telephone directory text → sections/entries
-    parse-dect.js       DECT rows → handset records
-    search.js           word-based, accent-insensitive search + highlighting
-    normalize.js        text folding helpers
-    greek-layout.js     Latin-keyboard → Greek conversion
-    theme.js            light/dark theme
-admin/
-  update.ps1            Windows data updater (PowerShell 5.1+, UTF-8 BOM)
-  update.cmd            double-click wrapper
-  ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt     restricted («Μη συνδέετε») numbers, edited by the administrators
-  ΟΔΗΓΙΕΣ.pdf           step-by-step guide for administrators (Greek); `bun run guide`
-  guide/ΟΔΗΓΙΕΣ.html    source of the guide (print-styled HTML, rendered with headless Chrome)
-  guide/header.png      screenshot used in the guide
-scripts/
-  build.ts              app/ + admin/ → dist/
-  dev-data.ts           page with real data → preview/ (Linux/macOS update.ps1)
-  guide.ts              guide HTML → PDF (headless Chrome)
-  lib/payload.ts        data block helpers shared by build, dev-data and tests
-tests/
-  data-and-search.test.ts   decoding, CSV/DECT parsing, model, search
-  parse-directory.test.ts   directory text rules and edge cases
-  payload.test.ts           data block, restricted numbers, script markers
-  update-script.test.ts     the real update.ps1 (needs pwsh)
-  release.test.ts           dist/ is complete, current and data-free
+```sh
+bun test
+cd src-tauri && cargo test
 ```
 
 ## Release
 
-1. `bun run build` (and `bun run guide` if the guide changed), `bun test`.
-2. Commit and push to the **`static-catalog`** branch. Administrators download
-   it as `https://github.com/kostas-xafis/callcenter/archive/refs/heads/static-catalog.zip`
-   (the default branch, `main`, still holds the old server app).
-3. Administrators follow «Εγκατάσταση και νέες εκδόσεις» in `ΟΔΗΓΙΕΣ.pdf`:
-   first time, copy all of `dist/`; for a new version, replace only
-   `katalogos.html`, `update.cmd`, `update.ps1`, `ΟΔΗΓΙΕΣ.pdf` (never their
-   `ΠΕΡΙΟΡΙΣΜΕΝΟΙ.txt` or `data\`) and run `update.cmd`.
+1. Run the GitHub Actions workflow **Windows build** (it also runs the Rust tests).
+2. Download the `katalogos-windows` artifact (`Τηλεφωνικός Κατάλογος.exe`).
+3. Put the exe, `catalog.json` and `guide/ΟΔΗΓΙΕΣ.pdf` in the customer's shared folder.
+   Do not overwrite an existing `catalog.json` or `admin.json` when updating.

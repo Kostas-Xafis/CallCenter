@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Εκτύπωση καταλόγου · 251 ΓΝΑ</title>
+	<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+	<script>
+		(function () {
+			var t = null;
+			try { t = localStorage.getItem("callcenter-theme"); } catch (e) {}
+			if (!t) t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+			if (t === "dark") document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="admin.css">
+	<style>
+		/* The toolbar follows the theme; the "paper" is always black on white. */
+		body.prn {
+			overflow: auto;
+			padding: 0;
+			font-size: 15px;
+		}
+
+		.prn-toolbar {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 16px;
+			background: var(--surface);
+			box-shadow: 0 2px 8px var(--shadow-color);
+		}
+
+		.prn-toolbar .hint {
+			margin: 0;
+			flex: 1;
+			min-width: 200px;
+			font-size: 0.88em;
+		}
+
+		.paper {
+			max-width: 210mm;
+			margin: 20px auto 40px;
+			padding: 14mm 12mm;
+			background: #fff;
+			color: #000;
+			box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+			font-family: "Segoe UI", Arial, sans-serif;
+			font-size: 10pt;
+			line-height: 1.25;
+			color-scheme: light;
+		}
+
+		.paper h1 {
+			font-size: 15pt;
+			color: #000;
+			text-align: center;
+			margin-bottom: 4pt;
+		}
+
+		.paper .p-date {
+			text-align: center;
+			font-size: 8.5pt;
+			margin-bottom: 6pt;
+		}
+
+		.paper .p-info {
+			list-style: none;
+			margin: 0 0 10pt;
+			padding: 5pt 8pt;
+			border: 1px solid #000;
+			font-size: 9pt;
+		}
+
+		.paper .p-section {
+			margin-top: 9pt;
+		}
+
+		.paper .p-section .p-section {
+			margin-left: 10pt;
+			margin-top: 6pt;
+		}
+
+		.paper h2,
+		.paper h3 {
+			color: #000;
+			break-after: avoid;
+			page-break-after: avoid;
+		}
+
+		.paper h2 {
+			font-size: 11.5pt;
+			padding: 2pt 4pt;
+			background: #e6e6e6;
+			border-bottom: 1.5px solid #000;
+		}
+
+		.paper h3 {
+			font-size: 10.5pt;
+			padding: 1pt 0;
+			border-bottom: 1px solid #000;
+		}
+
+		.paper table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 2pt;
+		}
+
+		.paper td,
+		.paper th {
+			padding: 1.5pt 4pt;
+			border-bottom: 0.5pt solid #999;
+			vertical-align: top;
+			text-align: left;
+		}
+
+		.paper thead th {
+			font-size: 8pt;
+			font-weight: 700;
+			border-bottom: 1px solid #000;
+		}
+
+		.paper tr {
+			break-inside: avoid;
+			page-break-inside: avoid;
+		}
+
+		.paper .p-sub th {
+			padding-top: 4pt;
+			font-size: 8.5pt;
+			font-style: italic;
+			border-bottom: 1px solid #000;
+		}
+
+		.paper .c-n {
+			width: 21%;
+			font-weight: 700;
+			white-space: nowrap;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.paper .c-e {
+			width: 22%;
+			white-space: nowrap;
+		}
+
+		.paper .p-pos,
+		.paper .p-unit {
+			color: #333;
+		}
+
+		.paper .p-unit {
+			font-size: 8.5pt;
+		}
+
+		.paper .p-flag {
+			font-weight: 700;
+			font-size: 8pt;
+			white-space: nowrap;
+		}
+
+		.paper tr.p-restricted td {
+			background: #eee;
+		}
+
+		.paper tr.p-restricted .p-flag {
+			padding: 0 3pt;
+			border: 1px solid #000;
+			text-transform: uppercase;
+		}
+
+		.paper .p-empty {
+			text-align: center;
+			padding: 30pt;
+		}
+
+		/* Small sections stay on one page; long ones may break between rows. */
+		.paper .p-keep {
+			break-inside: avoid;
+			page-break-inside: avoid;
+		}
+
+		@page {
+			size: A4;
+			margin: 12mm 10mm;
+		}
+
+		@media print {
+			html,
+			html.dark-mode {
+				color-scheme: light;
+			}
+
+			body.prn {
+				background: #fff !important;
+				color: #000;
+				height: auto;
+				overflow: visible;
+			}
+
+			.prn-toolbar {
+				display: none !important;
+			}
+
+			.paper {
+				max-width: none;
+				margin: 0;
+				padding: 0;
+				box-shadow: none;
+				-webkit-print-color-adjust: exact;
+				print-color-adjust: exact;
+			}
+		}
+	</style>
+	<script type="module" src="js/print.js"></script>
+</head>
+<body class="prn">
+	<div class="prn-toolbar">
+		<button class="adm-btn" id="backBtn" type="button">← Πίσω</button>
+		<button class="adm-btn adm-btn-primary" id="printBtn" type="button">Εκτύπωση</button>
+		<p class="hint">Στο παράθυρο εκτύπωσης επιλέξτε χαρτί A4. Για αρχείο PDF επιλέξτε «Αποθήκευση ως PDF».</p>
+		<button class="icon-btn theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Εναλλαγή σκούρας εμφάνισης">
+			<svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+			<svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+		</button>
+	</div>
+	<article class="paper" id="paper">
+		<p class="p-empty">Φόρτωση…</p>
+	</article>
+</body>
+</html>

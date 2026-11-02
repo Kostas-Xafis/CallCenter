@@ -1,64 +1,51 @@
 import { describe, expect, test } from "bun:test";
-import { parseDect } from "../app/js/parse-dect.js";
-import { detectSeparator, parseCsv } from "../app/js/parse-csv.js";
-import { decodeBytes, looksGreek } from "../app/js/decode.js";
-import { buildModel } from "../app/js/data.js";
+import { buildModel, expandRanges } from "../app/js/data.js";
 import { buildIndex, highlight, search } from "../app/js/search.js";
 import { abbrKey, fold } from "../app/js/normalize.js";
 import { toGreekQuery } from "../app/js/greek-layout.js";
-import { existsSync, readFileSync } from "node:fs";
 
-const DECT_CSV = [
-	",,,,,",
-	"Α/Α,ΑΡΙΘΜΟΣ,ΟΝΟΜΑΤΕΠΩΝΥΜΟ,ΔΙΕΥΘΥΝΣΗ,ΘΕΣΗ,ΕΠΙΣΤΑΣΙΑ",
-	"1,3400,,,,",
-	"2,3995,ΧΕΙΜΩΝΑΣ ΑΝΤΩΝΙΟΣ,251 ΓΝΑ,ΔΚΤΗΣ,.",
-	"3,3451,*ΤΕΠ/ ΤΡΑΥΜΑΤΙΟΦΟΡΕΑΣ 1,ΤΕΠ,ΕΦΗΜΕΡΕΙΑ,ΤΕΠ",
-	"4,3478,ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ ,ΔΠΤ,ΕΠΙΜ.,ΚΑΡΔΙΟΛΟΓΙΚΗΣ",
-	'5,3870,"ΠΑΠΑΔΟΠΟΥΛΟΣ, ΙΩΑΝΝΗΣ",Ε.Ι.,ΕΠΙΜ.,ΩΡΛ'
-].join("\r\n");
+type P = { id: string; type: string; sectionId: string | null; numbers: string[]; external?: string[]; name: string; position?: string; unit?: string; shared?: boolean; restricted?: boolean };
+const phone = (id: string, type: string, sectionId: string | null, numbers: string[], name: string, o: Partial<P> = {}): P => ({
+	id, type, sectionId, numbers, external: [], name, position: "", unit: "", shared: false, restricted: false, ...o
+});
 
-const DIRECTORY = [
-	"Διοικητής\t4057",
-	"",
-	"Διεύθυνση Παθολογικού Τομέα (ΔΠΤ)",
-	"Γραμματεία\t4270",
-	"",
-	"Εξωτερικά Ιατρεία (ΕΙ)",
-	"Ω.Ρ.Λ. Επιμελητές\t4183",
-	"Ω.Ρ.Λ. Γραμματεία\t4182",
-	"",
-	"Διεύθυνση Οδοντιατρικού Τομέα (ΔΟΤ)",
-	"Γναθοχειρουργικό. Γραμματεία\t4289",
-	"",
-	"ΑΝΩΤΑΤΗ ΑΕΡΟΠΟΡΙΑΣ ΥΓΕΙΟΝΟΜΙΚΗ ΕΠΙΤΡΟΠΗ (AAYE)",
-	"Πρόεδρος\t5610",
-	"",
-	"ΔΥΠ / Σμήνος Τηλεπικοινωνιών – Ηλεκτρονικών (ΣΜ. Τ-Η)",
-	"Συνεργείο Τηλεπικοινωνιών. Βλάβες\t3010",
-	"",
-	"Διεύθυνση Οικονομικών Υπηρεσιών (ΔΟΥ)",
-	"Λογιστήριο\t4136",
-	"",
-	"Οικήματα Αγάμων",
-	"Δωμάτιο Δουλγεράκη\t4888",
-	"",
-	"Κλινικές",
-	"Γ΄ Παθολογική. Δωμάτια Ασθενών\t5501 έως 5511",
-	"Καρδιολογική. Γραφείο Ιατρών\t4452\t\t210-7700315"
-].join("\n");
-
-const b64 = (text: string) => Buffer.from(text, "utf8").toString("base64");
-const payload = {
-	schema: 2,
-	generatedAt: "2026-10-06T10:00:00.000Z",
-	generator: "test",
-	dect: { file: "dect.csv", modified: "2026-10-06T09:00:00.000Z", base64: b64("\uFEFF" + DECT_CSV) },
-	directory: { file: "dir.txt", modified: "2026-10-06T09:00:00.000Z", base64: b64(DIRECTORY) },
-	restricted: ["3995"]
+const catalog = {
+	schema: 3,
+	updatedAt: "2026-10-06T10:00:00.000Z",
+	title: "ΚΑΤΑΛΟΓΟΣ",
+	info: ["Κέντρο: 210-7463399"],
+	sections: [
+		{ id: "s0", abbr: "", name: "Διοίκηση", parentId: null },
+		{ id: "s1", abbr: "ΔΠΤ", name: "Διεύθυνση Παθολογικού Τομέα", parentId: null },
+		{ id: "s2", abbr: "Ε.Ι.", name: "Εξωτερικά Ιατρεία", parentId: null },
+		{ id: "s3", abbr: "ΔΟΤ", name: "Διεύθυνση Οδοντιατρικού Τομέα", parentId: null },
+		{ id: "s4", abbr: "AAYE", name: "ΑΝΩΤΑΤΗ ΑΕΡΟΠΟΡΙΑΣ ΥΓΕΙΟΝΟΜΙΚΗ ΕΠΙΤΡΟΠΗ", parentId: null },
+		{ id: "s5", abbr: "ΣΜ. Τ-Η", name: "ΔΥΠ / Σμήνος Τηλεπικοινωνιών – Ηλεκτρονικών", parentId: null },
+		{ id: "s6", abbr: "ΔΟΥ", name: "Διεύθυνση Οικονομικών Υπηρεσιών", parentId: null },
+		{ id: "s7", abbr: "", name: "Οικήματα Αγάμων", parentId: null },
+		{ id: "s8", abbr: "", name: "Κλινικές", parentId: null },
+		{ id: "s9", abbr: "ΤΕΠ", name: "Τμήμα Επειγόντων", parentId: "s1" }
+	],
+	phones: [
+		phone("d1", "dir", "s0", ["4057"], "Διοικητής"),
+		phone("d2", "dir", "s1", ["4270"], "Γραμματεία"),
+		phone("d3", "dir", "s2", ["4183"], "Επιμελητές", { unit: "Ω.Ρ.Λ." }),
+		phone("d4", "dir", "s2", ["4182"], "Γραμματεία", { unit: "Ω.Ρ.Λ." }),
+		phone("d5", "dir", "s3", ["4289"], "Γραμματεία", { unit: "Γναθοχειρουργικό" }),
+		phone("d6", "dir", "s4", ["5610"], "Πρόεδρος"),
+		phone("d7", "dir", "s5", ["3010"], "Βλάβες", { unit: "Συνεργείο Τηλεπικοινωνιών" }),
+		phone("d8", "dir", "s6", ["4136"], "Λογιστήριο"),
+		phone("d9", "dir", "s7", ["4888"], "Δωμάτιο Δουλγεράκη"),
+		phone("d10", "dir", "s8", ["5501-5511"], "Δωμάτια Ασθενών", { unit: "Γ΄ Παθολογική" }),
+		phone("d11", "dir", "s8", ["4452"], "Γραφείο Ιατρών", { unit: "Καρδιολογική", external: ["210-7700315"] }),
+		phone("c1", "dect", "s1", ["3478"], "ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ", { position: "ΕΠΙΜ.", unit: "ΚΑΡΔΙΟΛΟΓΙΚΗΣ" }),
+		phone("c2", "dect", null, ["3995"], "ΧΕΙΜΩΝΑΣ ΑΝΤΩΝΙΟΣ", { position: "ΔΚΤΗΣ", restricted: true }),
+		phone("c3", "dect", "s9", ["3451"], "ΤΕΠ/ ΤΡΑΥΜΑΤΙΟΦΟΡΕΑΣ 1", { position: "ΕΦΗΜΕΡΕΙΑ", unit: "ΤΕΠ", shared: true }),
+		phone("c4", "dect", "s2", ["3870"], "ΠΑΠΑΔΟΠΟΥΛΟΣ, ΙΩΑΝΝΗΣ", { position: "ΕΠΙΜ.", unit: "ΩΡΛ" })
+	]
 };
 
-const model = buildModel(payload);
+const model = buildModel(catalog);
 const index = buildIndex(model.records);
 const top = (q: string) => search(index, q).map(r => `${r.record.numbers.join(",")} ${r.record.name}`);
 
@@ -77,94 +64,47 @@ describe("normalize", () => {
 	});
 });
 
-describe("parseDect", () => {
-	const r = parseDect(parseCsv(DECT_CSV));
-	test("finds header row, skips unassigned numbers, cleans values", () => {
-		expect(r.records.map(x => x.number)).toEqual(["3995", "3451", "3478", "3870"]);
-		expect(r.records[0]).toMatchObject({ name: "ΧΕΙΜΩΝΑΣ ΑΝΤΩΝΙΟΣ", dir: "251 ΓΝΑ", position: "ΔΚΤΗΣ", unit: "", shared: false });
-		expect(r.records[1]).toMatchObject({ name: "ΤΕΠ/ ΤΡΑΥΜΑΤΙΟΦΟΡΕΑΣ 1", shared: true });
-		expect(r.records[2].name).toBe("ΤΣΙΤΛΑΚΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ");
-		expect(r.records[3].name).toBe("ΠΑΠΑΔΟΠΟΥΛΟΣ, ΙΩΑΝΝΗΣ");
-	});
-	test("columns are found by header, in any order", () => {
-		const rows = parseCsv("ΘΕΣΗ;ΑΡΙΘΜΟΣ;ΟΝΟΜΑΤΕΠΩΝΥΜΟ\nΔΝΤΗΣ;3501;ΚΑΠΟΙΟΣ");
-		expect(parseDect(rows).records[0]).toMatchObject({ number: "3501", name: "ΚΑΠΟΙΟΣ", position: "ΔΝΤΗΣ", dir: "" });
-	});
-	test("missing header is reported", () => {
-		expect(parseDect([["a", "b"]]).warnings).toHaveLength(1);
-	});
-	test("duplicate numbers are reported", () => {
-		const rows = parseCsv("ΑΡΙΘΜΟΣ,ΟΝΟΜΑΤΕΠΩΝΥΜΟ\n3500,Α\n3500,Β");
-		expect(parseDect(rows).warnings.filter(w => /πολλές φορές/.test(w.message)).map(w => w.line)).toEqual([3]);
-	});
-});
-
-describe("parseCsv", () => {
-	test("quotes, escaped quotes, line breaks inside quotes, CRLF", () => {
-		expect(parseCsv('a,"b ""c"", d",e\r\n"x\ny",z\r\n')).toEqual([["a", 'b "c", d', "e"], ["x\ny", "z"]]);
-	});
-	test("separator detection (Greek Excel uses ;)", () => {
-		expect(detectSeparator("Α/Α;ΑΡΙΘΜΟΣ;ΟΝΟΜΑΤΕΠΩΝΥΜΟ\n1;3400;Χ, Ψ")).toBe(";");
-		expect(detectSeparator(";;;\nΑ/Α,ΑΡΙΘΜΟΣ,ΟΝΟΜΑΤΕΠΩΝΥΜΟ")).toBe(",");
-		expect(detectSeparator("Α/Α\tΑΡΙΘΜΟΣ\tΟΝΟΜΑΤΕΠΩΝΥΜΟ")).toBe("\t");
-	});
-});
-
-describe("decodeBytes", () => {
-	const greek = "ΑΡΙΘΜΟΣ Χειμώνας";
-	test("UTF-8 with and without BOM", () => {
-		expect(decodeBytes(new Uint8Array([0xef, 0xbb, 0xbf, ...Buffer.from(greek)]))).toEqual({ text: greek, encoding: "UTF-8 (BOM)" });
-		expect(decodeBytes(new Uint8Array(Buffer.from(greek))).text).toBe(greek);
-	});
-	test("UTF-16 LE with BOM and without", () => {
-		const le = Buffer.from(greek, "utf16le");
-		expect(decodeBytes(new Uint8Array([0xff, 0xfe, ...le])).text).toBe(greek);
-		expect(decodeBytes(new Uint8Array(Buffer.from("ABCDEF 3400", "utf16le"))).encoding).toBe("UTF-16 LE");
-	});
-	test("UTF-16 without BOM, mostly Greek (few NUL bytes)", () => {
-		const text = "Διεύθυνση Παθολογικού Τομέα – Γραμματεία\t4270";
-		expect(decodeBytes(new Uint8Array(Buffer.from(text, "utf16le")))).toEqual({ text, encoding: "UTF-16 LE" });
-		const be = Buffer.from(text, "utf16le").swap16();
-		expect(decodeBytes(new Uint8Array(be))).toEqual({ text, encoding: "UTF-16 BE" });
-	});
-	test("Windows-1253 (Greek ANSI)", () => {
-		// "ΑΡΙΘΜΟΣ" in Windows-1253
-		const r = decodeBytes(new Uint8Array([0xc1, 0xd1, 0xc9, 0xc8, 0xcc, 0xcf, 0xd3]));
-		expect(r).toEqual({ text: "ΑΡΙΘΜΟΣ", encoding: "Windows-1253" });
-		expect(looksGreek(r.text)).toBe(true);
-		// "Χειμώνας": lowercase must not be mistaken for code page 737
-		expect(decodeBytes(new Uint8Array([0xd7, 0xe5, 0xe9, 0xec, 0xfe, 0xed, 0xe1, 0xf2]))).toEqual({ text: "Χειμώνας", encoding: "Windows-1253" });
-	});
-	test("code page 737 (Excel «CSV (MS-DOS)»)", () => {
-		// "ΑΡΙΘΜΟΣ;Χειμώνας" in code page 737
-		const bytes = [0x80, 0x90, 0x88, 0x87, 0x8b, 0x8e, 0x91, 0x3b, 0x95, 0x9c, 0xa0, 0xa3, 0xe9, 0xa4, 0x98, 0xaa];
-		expect(decodeBytes(new Uint8Array(bytes))).toEqual({ text: "ΑΡΙΘΜΟΣ;Χειμώνας", encoding: "DOS 737" });
-	});
-	test("wrong encoding is reported by the model", () => {
-		const m = buildModel({ ...payload, directory: { ...payload.directory, base64: b64("abc\t4011") } });
-		expect(m.warnings.some(w => /κωδικοποίηση/.test(w.message))).toBe(true);
-	});
-});
-
 describe("model", () => {
 	test("records from both sources", () => {
 		expect(model.records.filter(r => r.source === "dir")).toHaveLength(11);
-		expect(model.warnings).toEqual([]);
 		expect(model.records.filter(r => r.source === "dect")).toHaveLength(4);
 	});
-	test("restricted numbers are flagged", () => {
-		expect(model.records.filter(r => r.restricted).map(r => r.numbers[0])).toEqual(["3995"]);
+	test("desk phones keep section order, DECT follows sorted by number", () => {
+		expect(model.records.slice(0, 3).map(r => r.numbers[0])).toEqual(["4057", "4270", "4183"]);
+		expect(model.records.filter(r => r.source === "dect").map(r => r.numbers[0])).toEqual(["3451", "3478", "3870", "3995"]);
 	});
-	test("directorates are shared between sources (Ε.Ι. = ΕΙ)", () => {
+	test("restricted and shared flags come from the phone", () => {
+		expect(model.records.filter(r => r.restricted).map(r => r.numbers[0])).toEqual(["3995"]);
+		expect(model.records.filter(r => r.shared).map(r => r.numbers[0])).toEqual(["3451"]);
+	});
+	test("ranges are displayed with an en dash and expanded for search", () => {
+		const r = model.records.find(x => x.numbers[0] === "5501–5511")!;
+		expect(r.searchNumbers).toEqual(expect.arrayContaining(["5501", "5505", "5511"]));
+		expect(r.searchNumbers).toHaveLength(12);
+		expect(expandRanges([{ from: "1", to: "1000" }])).toEqual([]);
+		expect(expandRanges([{ from: "0098", to: "0100" }])).toEqual(["0098", "0099", "0100"]);
+	});
+	test("outside lines are searchable by their digits", () => {
+		expect(model.records.find(r => r.numbers[0] === "4452")!.searchNumbers).toContain("2107700315");
+	});
+	test("directorates are shared between types (Ε.Ι. = ΕΙ)", () => {
 		const ei = model.directorates.find(d => d.key === abbrKey("ΕΙ"))!;
 		expect(ei.count).toBe(3);
 		expect(ei.title).toBe("Εξωτερικά Ιατρεία");
 	});
-	test("DECT directorate names come from the directory headings", () => {
-		const dect = model.records.find(r => r.numbers[0] === "3478")!;
-		expect(dect.dirTitle).toBe("Διεύθυνση Παθολογικού Τομέα");
+	test("sections without an abbreviation are keyed by name; missing section is «—»", () => {
+		expect(model.directorates.find(d => d.key === "name:Κλινικές")!.hasAbbr).toBe(false);
+		expect(model.records.find(r => r.numbers[0] === "3995")!.dir).toBe("—");
 	});
-	test("missing payload", () => {
+	test("DECT phones know their directorate name", () => {
+		expect(model.records.find(r => r.numbers[0] === "3478")!.dirTitle).toBe("Διεύθυνση Παθολογικού Τομέα");
+	});
+	test("title, info and last update", () => {
+		expect(model.title).toBe("ΚΑΤΑΛΟΓΟΣ");
+		expect(model.info).toEqual(["Κέντρο: 210-7463399"]);
+		expect(model.meta.generatedAt).toBe("2026-10-06T10:00:00.000Z");
+	});
+	test("missing catalog", () => {
 		expect(buildModel(null).records).toEqual([]);
 	});
 });
@@ -244,16 +184,5 @@ describe("search", () => {
 	});
 	test("highlight escapes HTML and merges ranges", () => {
 		expect(highlight("<a&b>", [[0, 2], [1, 3]])).toBe("<mark>&lt;a&amp;</mark>b&gt;");
-	});
-});
-
-const REAL_CSV = "actual_data/DECT ΑΠΟΓΡΑΦΗ.csv";
-describe.skipIf(!existsSync(REAL_CSV))("real DECT export", () => {
-	test("parses without warnings", () => {
-		const { text } = decodeBytes(new Uint8Array(readFileSync(REAL_CSV)));
-		const r = parseDect(parseCsv(text));
-		expect(r.warnings).toEqual([]);
-		expect(r.records.length).toBeGreaterThan(450);
-		expect(r.records.every(x => /^\d+$/.test(x.number))).toBe(true);
 	});
 });

@@ -1,6 +1,7 @@
 // ── Application entry point ──────────────────────────────────────────
 
-import { buildModel, readEmbeddedPayload, SOURCES } from "./data.js";
+import { buildModel, SOURCES } from "./data.js";
+import { catalogVersion, loadCatalog } from "./api.js";
 import { buildIndex, escapeHtml, highlight, search } from "./search.js";
 import { updateSearchHint } from "./greek-layout.js";
 import { initializeTheme, toggleTheme } from "./theme.js";
@@ -8,6 +9,7 @@ import { abbrKey, fold } from "./normalize.js";
 
 const BATCH_SIZE = 150;
 const SEARCH_DEBOUNCE_MS = 120;
+const POLL_MS = 30000;
 
 const $ = id => document.getElementById(id);
 
@@ -45,7 +47,15 @@ function renderNumbers(record, hl) {
 		const hit = hits.some(h => h.number === x.replace(/\D/g, ""));
 		return `<button type="button" class="num num-ext${hit ? " num-hit" : ""}" data-copy="${escapeHtml(x)}" title="Εξωτερική γραμμή · ${ICON_COPY_TITLE}">${escapeHtml(x)}</button>`;
 	});
-	return parts.join("") + external.join("");
+	return `<div class="nums">${parts.join("")}</div>` + (external.length ? `<div class="nums nums-ext">${external.join("")}</div>` : "");
+}
+
+/** «Θέση · Επιστασία / Τμήμα» as one muted line under the name; empty parts are left out. */
+function renderMeta(record, hl) {
+	const parts = [];
+	if (record.position) parts.push(highlight(record.position, hl.position));
+	if (record.unit) parts.push(highlight(record.unit, hl.unit));
+	return parts.length ? `<div class="meta">${parts.join('<span class="sep"> · </span>')}</div>` : "";
 }
 
 function renderRecord(record, hl = {}) {
@@ -53,15 +63,20 @@ function renderRecord(record, hl = {}) {
 	if (record.restricted) classes.push("restricted");
 	const name =
 		highlight(record.name, hl.name) +
-		(record.shared ? ' <span class="tag tag-shared">Κοινόχρηστο</span>' : "") +
+		(record.shared ? ' <span class="tag tag-shared" title="Συσκευή υπηρεσίας / εφημερίας">Κοινόχρηστο</span>' : "") +
 		(record.restricted ? ' <span class="tag tag-restricted" title="Δεν συνδέουμε κλήσεις σε αυτόν τον αριθμό">Μη συνδέετε</span>' : "");
-	const dirTitle = record.dirTitle && record.dirTitle !== record.dir ? record.dirTitle : "";
+	// Only wireless rows carry a type icon; desk-phone rows keep the slot empty so numbers line up.
+	const icon = record.source === "dect" ? `<span class="src-icon src-dect" title="${SOURCES.dect.long}"></span>` : '<span class="src-slot"></span>';
+	// The directorate badge only while searching: browse mode already groups rows under section headings.
+	let dir = "";
+	if (state.query) {
+		const dirTitle = record.dirTitle && record.dirTitle !== record.dir ? record.dirTitle : "";
+		dir = `<div class="c-dir">${record.dir ? `<button type="button" class="dir-badge" data-dir="${escapeHtml(record.dirKey)}" title="${escapeHtml(dirTitle ? dirTitle + " · " : "")}Φιλτράρισμα">${highlight(record.dir, record.searchFields.abbr.text ? hl.abbr : hl.dir)}</button>` : ""}</div>`;
+	}
 	return `<div class="${classes.join(" ")}" role="row">
-		<div class="c-num"><span class="src-icon src-${record.source}" title="${SOURCES[record.source].long}"></span><div class="nums">${renderNumbers(record, hl)}</div></div>
-		<div class="c-dir">${record.dir ? `<button type="button" class="dir-badge" data-dir="${escapeHtml(record.dirKey)}" title="${escapeHtml(dirTitle ? dirTitle + " · " : "")}Φιλτράρισμα">${highlight(record.dir, record.searchFields.abbr.text ? hl.abbr : hl.dir)}</button>` : ""}</div>
-		<div class="c-name">${name}</div>
-		<div class="c-pos">${highlight(record.position, hl.position)}</div>
-		<div class="c-unit">${highlight(record.unit, hl.unit)}</div>
+		<div class="c-num">${icon}<div class="num-list">${renderNumbers(record, hl)}</div></div>
+		<div class="c-name"><div class="name">${name}</div>${renderMeta(record, hl)}</div>
+		${dir}
 	</div>`;
 }
 
@@ -139,6 +154,7 @@ function update() {
 	$("resetFilters").hidden = !state.query && state.source === "all" && !state.dirKey;
 	$("clearBtn").hidden = !state.query;
 
+	$("resultsScroll").classList.toggle("searching", Boolean(state.query));
 	$("resultsScroll").scrollTop = 0;
 	$("results").innerHTML = "";
 	if (!count) {
@@ -187,7 +203,6 @@ const formatDate = iso => {
 
 function renderSidePanel() {
 	if (model.info.length) {
-		$("infoCard").hidden = false;
 		$("infoList").innerHTML = model.info
 			.map(line => {
 				const i = line.lastIndexOf(":");
@@ -200,23 +215,9 @@ function renderSidePanel() {
 			.join("");
 	}
 
-	if (model.meta.generatedAt) {
-		$("lastUpdate").hidden = false;
-		$("lastUpdate").textContent = `Τελευταία ενημέρωση: ${formatDate(model.meta.generatedAt)}`;
-	}
-
-	if (model.warnings.length) {
-		const btn = $("warningsBtn");
-		btn.hidden = false;
-		btn.textContent = model.warnings.length === 1 ? "⚠ 1 προειδοποίηση επεξεργασίας" : `⚠ ${model.warnings.length} προειδοποιήσεις επεξεργασίας`;
-		$("warningsList").innerHTML = model.warnings
-			.map(
-				w =>
-					`<li><strong>${SOURCES[w.source]?.label ?? ""}${w.line ? ` · γραμμή ${w.line}` : ""}:</strong> ${escapeHtml(w.message)}${w.raw ? `<pre>${escapeHtml(w.raw)}</pre>` : ""}</li>`
-			)
-			.join("");
-		btn.addEventListener("click", () => $("warningsDialog").showModal());
-	}
+	$("infoBlock").hidden = !model.info.length;
+	$("lastUpdate").hidden = !model.meta.generatedAt;
+	if (model.meta.generatedAt) $("lastUpdate").textContent = `Τελευταία ενημέρωση: ${formatDate(model.meta.generatedAt)}`;
 }
 
 function renderDirectorateFilter() {
@@ -227,6 +228,7 @@ function renderDirectorateFilter() {
 	};
 	const withAbbr = model.directorates.filter(d => d.hasAbbr);
 	const others = model.directorates.filter(d => !d.hasAbbr);
+	select.innerHTML = '<option value="">Όλες οι διευθύνσεις</option>';
 	select.insertAdjacentHTML(
 		"beforeend",
 		`<optgroup label="Διευθύνσεις & Υπηρεσίες">${withAbbr.map(option).join("")}</optgroup>` +
@@ -365,7 +367,6 @@ function bindEvents() {
 	// Type anywhere to search
 	document.addEventListener("keydown", e => {
 		if (e.target === input || e.ctrlKey || e.metaKey || e.altKey) return;
-		if ($("warningsDialog").open) return;
 		if (e.key === "/" || (e.key.length === 1 && !/\s/.test(e.key) && !(e.target instanceof HTMLSelectElement))) {
 			if (e.key === "/") e.preventDefault();
 			input.focus();
@@ -401,23 +402,66 @@ function bindEvents() {
 
 // ── Boot ─────────────────────────────────────────────────────────────
 
-function init() {
-	initializeTheme();
-	const payload = readEmbeddedPayload();
-	model = buildModel(payload);
-	index = buildIndex(model.records);
+let version = null;
 
+function setCatalog(catalog) {
+	model = buildModel(catalog);
+	index = buildIndex(model.records);
+	searchCache = { query: null, results: [] };
 	renderSidePanel();
 	renderDirectorateFilter();
-	bindEvents();
+}
 
-	if (!payload) {
-		renderEmpty("Δεν υπάρχουν δεδομένα. Εκτελέστε το <code>update.cmd</code> για να φορτωθούν τα σταθερά και τα ασύρματα τηλέφωνα.");
+/** Reloads after another user's edit, keeping query, filters and scroll position. */
+async function reload() {
+	const { catalog, version: v } = await loadCatalog();
+	version = v;
+	const scroll = $("resultsScroll");
+	const top = scroll.scrollTop;
+	const keep = { query: state.query, source: state.source, dirKey: state.dirKey };
+	setCatalog(catalog);
+	// A directorate that no longer exists must not leave an empty, unexplained view.
+	if (keep.dirKey && !model.directorates.some(d => d.key === keep.dirKey)) keep.dirKey = "";
+	applyState(keep);
+	// Re-render enough rows to restore the scroll offset.
+	let guard = 100;
+	while (state.rendered < state.items.length && scroll.scrollHeight < top + scroll.clientHeight && guard--) renderBatch();
+	scroll.scrollTop = top;
+}
+
+function startPolling() {
+	let busy = false;
+	setInterval(async () => {
+		if (busy || document.hidden) return;
+		busy = true;
+		try {
+			const v = await catalogVersion();
+			if (v !== version) await reload();
+		} catch (err) {
+			console.warn("Έλεγχος ενημερώσεων απέτυχε", err);
+		} finally {
+			busy = false;
+		}
+	}, POLL_MS);
+}
+
+async function init() {
+	initializeTheme();
+	bindEvents();
+	try {
+		const { catalog, version: v } = await loadCatalog();
+		version = v;
+		setCatalog(catalog);
+	} catch (err) {
+		console.error(err);
+		renderEmpty("Δεν ήταν δυνατή η φόρτωση του καταλόγου. Ελέγξτε ότι το αρχείο <code>catalog.json</code> βρίσκεται δίπλα στην εφαρμογή.");
 		$("resultsCount").textContent = "";
+		startPolling();
 		return;
 	}
 	applyState(readUrl());
 	$("searchInput").focus();
+	startPolling();
 }
 
 init();

@@ -15,6 +15,7 @@
 	--accent-contrast: #ffffff;
 	--border-color: #bcc8dc;
 	--row-border: #cdd5e2;
+	--group-bg: #d3d9ea;
 	--badge-bg: #d4e6ff;
 	--badge-text: #0a366a;
 	--highlight-bg: #ffd96a;
@@ -31,7 +32,7 @@
 	--src-dir: #2f7d5b;
 	--src-dect: #3e54ad;
 	--radius: 12px;
-	--head-h: 40px;
+	--head-h: 30px;
 	color-scheme: light;
 }
 
@@ -50,6 +51,7 @@ html.dark-mode {
 	--accent-contrast: #111a33;
 	--border-color: #3a435f;
 	--row-border: #2e3650;
+	--group-bg: #2a3352;
 	--badge-bg: #26365c;
 	--badge-text: #cddfff;
 	--highlight-bg: #6b5716;
@@ -185,7 +187,17 @@ mark {
 	grid-template-columns: auto 1fr auto;
 	align-items: center;
 	gap: 12px;
-	padding: 16px;
+	padding: 16px 16px 10px;
+}
+
+.brand-foot {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0 10px;
+	margin-top: -4px;
 }
 
 .brand-logo {
@@ -208,9 +220,9 @@ h1 {
 }
 
 .updated {
-	margin-top: 4px;
-	font-size: 0.75em;
+	font-size: 0.72em;
 	color: var(--text-muted);
+	opacity: 0.85;
 }
 
 .icon-btn {
@@ -246,11 +258,21 @@ html.dark-mode .theme-toggle .icon-sun {
 }
 
 .side-card h2 {
-	font-size: 0.78em;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--text-muted);
-	margin-bottom: 10px;
+	font-size: 0.95em;
+	color: var(--accent);
+	margin-bottom: 8px;
+}
+
+.side-card h3 {
+	font-size: 0.82em;
+	font-weight: 700;
+	color: var(--text-secondary);
+	margin: 0 0 4px;
+}
+
+.side-card dl + div h3,
+.side-card dl + h3 {
+	margin-top: 12px;
 }
 
 .info-list {
@@ -301,31 +323,6 @@ html.dark-mode .theme-toggle .icon-sun {
 	color: var(--text-muted);
 }
 
-.legend {
-	list-style: none;
-	display: grid;
-	gap: 8px;
-	font-size: 0.85em;
-}
-
-.legend li {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.swatch {
-	flex-shrink: 0;
-	width: 22px;
-	height: 14px;
-	border-radius: 3px;
-}
-
-.swatch-restricted {
-	background: var(--restricted-bg);
-	border-left: 4px solid var(--restricted-edge);
-}
-
 .hint {
 	margin-top: 12px;
 	font-size: 0.8em;
@@ -365,14 +362,12 @@ html.dark-mode .theme-toggle .icon-sun {
 
 .src-dir {
 	color: var(--src-dir);
-	/* desk phone */
-	--icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='10' width='18' height='11' rx='2'/%3E%3Cpath d='M7 10V6a5 5 0 0 1 10 0v4'/%3E%3Cpath d='M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01M16 17h.01'/%3E%3C/svg%3E");
+	--icon: url("assets/icons/landline.svg");
 }
 
 .src-dect {
 	color: var(--src-dect);
-	/* cordless handset */
-	--icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='5' width='10' height='17' rx='2'/%3E%3Cpath d='M10 2v3M10 9h4M10 13h.01M14 13h.01M10 16h.01M14 16h.01M10 19h.01M14 19h.01'/%3E%3C/svg%3E");
+	--icon: url("assets/icons/wireless.svg");
 }
 
 .tag {
@@ -556,12 +551,24 @@ select:focus {
 
 .results-header {
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
+	gap: 6px 14px;
 	padding: 0 4px 10px;
 	color: var(--text-secondary);
 	font-size: 0.9em;
 	flex-shrink: 0;
+}
+
+.results-hint {
+	margin-left: auto;
+	font-size: 0.85em;
+	color: var(--text-muted);
+	text-align: right;
+}
+
+.results-hint kbd {
+	font-size: 0.8em;
+	padding: 0 5px;
 }
 
 .results-scroll {
@@ -580,13 +587,20 @@ select:focus {
 	border-radius: 4px;
 }
 
+/* Browse mode: number · name. While searching (results mixed from all
+   sections) a third column shows the directorate badge. */
 .grid-head,
 .row {
 	display: grid;
-	grid-template-columns: minmax(150px, 0.9fr) minmax(90px, 0.7fr) minmax(180px, 2fr) minmax(90px, 0.8fr) minmax(140px, 1.5fr);
-	column-gap: 12px;
+	grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+	column-gap: 16px;
 	align-items: center;
 	padding: 0 10px;
+}
+
+.searching .grid-head,
+.searching .row {
+	grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) minmax(90px, 190px);
 }
 
 .grid-head {
@@ -594,13 +608,19 @@ select:focus {
 	top: 0;
 	z-index: 3;
 	height: var(--head-h);
-	font-size: 0.78em;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
+	font-size: 0.8em;
+	font-weight: 600;
 	color: var(--text-muted);
-	background: var(--surface-muted);
-	border-radius: 8px;
+	background: var(--surface);
+}
+
+/* Line the header up with the numbers, past the icon slot. */
+.grid-head .h-num {
+	padding-left: 28px;
+}
+
+.results-scroll:not(.searching) .h-dir {
+	display: none;
 }
 
 .group {
@@ -610,9 +630,14 @@ select:focus {
 	display: flex;
 	align-items: baseline;
 	gap: 10px;
-	padding: 10px 10px 6px;
-	background: var(--surface);
-	border-bottom: 2px solid var(--accent);
+	margin-top: 14px;
+	padding: 7px 10px;
+	border-radius: 8px;
+	background: var(--group-bg);
+}
+
+.group:first-child {
+	margin-top: 2px;
 }
 
 .group-title {
@@ -635,7 +660,7 @@ select:focus {
 	min-height: 44px;
 	padding-top: 6px;
 	padding-bottom: 6px;
-	border-bottom: 1px solid var(--row-border);
+	border-radius: 6px;
 	border-left: 4px solid transparent;
 }
 
@@ -667,8 +692,15 @@ select:focus {
 	gap: 8px;
 }
 
-.c-num .src-icon {
+.c-num .src-icon,
+.src-slot {
+	flex-shrink: 0;
+	width: 16px;
 	margin-top: 4px;
+}
+
+.num-list {
+	min-width: 0;
 }
 
 .nums {
@@ -692,10 +724,11 @@ select:focus {
 	color: var(--badge-text);
 }
 
+/* Outside lines: secondary, so the eye lands on the extension. */
 .num-ext {
-	font-weight: 600;
-	font-size: 0.85em;
-	color: var(--text-secondary);
+	font-weight: 500;
+	font-size: 0.78em;
+	color: var(--text-muted);
 }
 
 .num-hit {
@@ -711,11 +744,11 @@ select:focus {
 	font-weight: 500;
 }
 
-.c-pos,
-.c-unit {
-	font-size: 0.9em;
-	font-weight: 500;
-	color: var(--text-secondary);
+.c-name .meta {
+	margin-top: 1px;
+	font-size: 0.82em;
+	font-weight: 400;
+	color: var(--text-muted);
 }
 
 .dir-badge {
@@ -826,7 +859,12 @@ dialog button[type="submit"] {
 
 	.grid-head,
 	.row {
-		grid-template-columns: minmax(120px, 0.9fr) minmax(70px, 0.6fr) minmax(160px, 2fr) minmax(80px, 0.8fr) minmax(120px, 1.3fr);
+		grid-template-columns: 150px minmax(0, 1fr);
+	}
+
+	.searching .grid-head,
+	.searching .row {
+		grid-template-columns: 150px minmax(0, 1fr) 110px;
 	}
 }
 
@@ -887,45 +925,184 @@ dialog button[type="submit"] {
 		max-width: none;
 	}
 
-	.row {
+	.row,
+	.searching .row {
 		grid-template-columns: minmax(96px, 36%) minmax(0, 1fr);
 		grid-template-areas:
 			"num name"
-			"num pos"
-			"num unit"
 			"num dir";
 		row-gap: 2px;
 		align-items: start;
 		padding: 8px;
 	}
 
-	.c-num {
-		grid-area: num;
+	.results-hint {
+		display: none;
 	}
 
-	.num-ext {
-		font-size: 0.78em;
+	.c-num {
+		grid-area: num;
 	}
 
 	.c-name {
 		grid-area: name;
 	}
 
-	.c-pos {
-		grid-area: pos;
-	}
-
-	.c-unit {
-		grid-area: unit;
-	}
-
 	.c-dir {
 		grid-area: dir;
 	}
 
-	.c-pos:empty,
-	.c-unit:empty,
 	.c-dir:empty {
 		display: none;
 	}
+}
+
+/* ── Home button in the brand card ─────────────────────────────────── */
+
+.home-btn {
+	display: inline-block;
+	margin-left: -6px;
+	font-size: 0.75em;
+	font-weight: 500;
+	color: var(--text-muted);
+	padding: 1px 6px;
+	border-radius: 6px;
+	text-decoration: none;
+}
+
+.home-btn:hover {
+	background: var(--surface-hover);
+	color: var(--accent);
+}
+
+/* ── Start screen (index.html) ─────────────────────────────────────── */
+
+.start {
+	height: 100%;
+	overflow: auto;
+	display: grid;
+	place-items: center;
+}
+
+.start-card {
+	width: min(560px, 100%);
+	padding: 40px 36px 36px;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+}
+
+.start-logo {
+	width: 112px;
+	height: 112px;
+	border-radius: 20px;
+	background: #fff;
+	box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.start-card h1 {
+	font-size: 1.8em;
+	margin-top: 8px;
+}
+
+.start-card .subtitle {
+	font-size: 1.05em;
+	margin-bottom: 14px;
+}
+
+.start-actions {
+	width: 100%;
+	display: grid;
+	gap: 16px;
+}
+
+.big-btn {
+	display: block;
+	width: 100%;
+	padding: 22px 16px;
+	border-radius: var(--radius);
+	font-size: 1.35em;
+	font-weight: 700;
+	text-align: center;
+	text-decoration: none;
+	background: var(--accent);
+	color: var(--accent-contrast);
+	box-shadow: 0 2px 6px var(--shadow-color);
+	transition: background 0.2s;
+}
+
+.big-btn:hover {
+	background: var(--accent-hover);
+}
+
+.big-btn.secondary {
+	background: var(--surface-muted);
+	color: var(--text-primary);
+	border: 2px solid var(--border-color);
+	box-shadow: none;
+}
+
+.big-btn.secondary:hover {
+	background: var(--surface-hover);
+}
+
+.big-btn:focus-visible,
+.login-form input:focus-visible {
+	outline: 3px solid var(--accent);
+	outline-offset: 2px;
+}
+
+.login-form {
+	width: 100%;
+	display: grid;
+	gap: 12px;
+	text-align: left;
+}
+
+.login-form[hidden] {
+	display: none;
+}
+
+.login-form h2 {
+	font-size: 1.15em;
+	color: var(--text-primary);
+	text-align: center;
+}
+
+.login-form input {
+	width: 100%;
+	padding: 16px;
+	font-size: 1.2em;
+	border-radius: var(--radius);
+	border: 2px solid var(--border-color);
+	background: var(--surface-alt);
+	color: var(--text-primary);
+}
+
+.login-error {
+	color: var(--restricted-tag-bg);
+	font-weight: 600;
+	text-align: center;
+}
+
+html.dark-mode .login-error {
+	color: var(--restricted-edge);
+}
+
+.login-cancel {
+	justify-self: center;
+	font-size: 1em;
+}
+
+.start-theme {
+	position: fixed;
+	top: 16px;
+	right: 16px;
+}
+
+.start-actions[hidden],
+.login-form [hidden] {
+	display: none;
 }
