@@ -27,7 +27,6 @@
 	--restricted-tag-text: #ffffff;
 	--shared-bg: #e5dcf7;
 	--shared-text: #4b2a8c;
-	--warn: #9a5b00;
 	--shadow-color: rgba(15, 26, 52, 0.22);
 	--src-dir: #2f7d5b;
 	--src-dect: #3e54ad;
@@ -63,7 +62,6 @@ html.dark-mode {
 	--restricted-tag-text: #2a0b10;
 	--shared-bg: #3a2e5c;
 	--shared-text: #d9ccff;
-	--warn: #ffc266;
 	--shadow-color: rgba(0, 0, 0, 0.4);
 	--src-dir: #5fd1a0;
 	--src-dect: #8ea6ff;
@@ -338,14 +336,6 @@ html.dark-mode .theme-toggle .icon-sun {
 
 .link-btn:hover {
 	text-decoration: underline;
-}
-
-.link-btn.warn {
-	display: block;
-	color: var(--warn);
-	font-size: 0.75em;
-	margin-top: 2px;
-	text-align: left;
 }
 
 /* ── Source icons & tags ───────────────────────────────────────────── */
@@ -740,10 +730,6 @@ select:focus {
 	font-weight: 600;
 }
 
-.row-dir .c-name {
-	font-weight: 500;
-}
-
 .c-name .meta {
 	margin-top: 1px;
 	font-size: 0.82em;
@@ -824,30 +810,6 @@ dialog::backdrop {
 
 dialog h2 {
 	font-size: 1.1em;
-}
-
-dialog ul {
-	margin: 12px 0 16px 18px;
-	display: grid;
-	gap: 8px;
-	font-size: 0.9em;
-}
-
-dialog pre {
-	margin-top: 4px;
-	padding: 6px 8px;
-	border-radius: 6px;
-	background: var(--surface-muted);
-	white-space: pre-wrap;
-	font-size: 0.9em;
-}
-
-dialog button[type="submit"] {
-	padding: 8px 18px;
-	border-radius: 8px;
-	background: var(--accent);
-	color: var(--accent-contrast);
-	font-weight: 600;
 }
 
 /* ── Narrow screens ────────────────────────────────────────────────── */

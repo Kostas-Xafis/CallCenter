@@ -42,10 +42,3 @@ export function abbrKey(text) {
 		.replace(/[̀-ͯ]/g, "")
 		.replace(/[\s.]/g, "");
 }
-
-/** Collapses whitespace and trims. */
-export function clean(text) {
-	return String(text ?? "")
-		.replace(/[\s ]+/g, " ")
-		.trim();
-}

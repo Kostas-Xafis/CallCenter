@@ -7,8 +7,6 @@
 
 const tauri = globalThis.__TAURI__?.core;
 
-export const isTauri = Boolean(tauri);
-
 /** Error thrown by saveCatalog when someone else saved in the meantime. */
 export const CONFLICT = "conflict";
 

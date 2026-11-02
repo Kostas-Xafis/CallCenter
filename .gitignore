@@ -12,3 +12,6 @@ admin.json
 
 # local Claude Code config
 .claude/
+
+# customer package (contains real data)
+release/

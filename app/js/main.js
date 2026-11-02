@@ -266,7 +266,7 @@ async function copyText(text) {
 // ── Page state ↔ URL ─────────────────────────────────────────────────
 //
 // The search, the phone type and the directorate live in the address bar,
-// e.g. katalogos.html#q=καρδιολ&τυπος=ασυρματα&διευθυνση=ΔΤΕ, so a reload or a
+// e.g. catalog.html#q=καρδιολ&τυπος=ασυρματα&διευθυνση=ΔΤΕ, so a reload or a
 // bookmark brings the same view back.
 
 const URL_TYPE = { dir: "σταθερα", dect: "ασυρματα" };
